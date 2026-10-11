@@ -1,0 +1,165 @@
+{
+  "item": {
+    "melvorD:Chicken": "Cooked chicken",
+    "melvorD:Chicken_Perfect": "Cooked chicken",
+    "melvorD:Beef": "Cooked meat",
+    "melvorD:Beef_Perfect": "Cooked meat",
+    "melvorD:Bird_Nest": "File:Bird nest (empty).png",
+    "melvorD:Ancient_Shield": "Ancient kiteshield",
+    "melvorD:Ancient_Shield_T_G": "Ancient kiteshield",
+    "melvorD:Ancient_Shield_T_S": "Ancient kiteshield",
+    "melvorD:Lemonade": "Fruit blast",
+    "melvorD:Gingerbread_House": "Bird house",
+    "melvorF:Summoning_Familiar_Octopus": {
+      "tablet": "File:Pet Kraken.png"
+    },
+    "melvorAoD:Bell": null,
+    "melvorF:Summoning_Familiar_Bear": {
+      "tablet": "File:Callisto cub.png"
+    },
+    "melvorF:Summoning_Familiar_Centaur": {
+      "tablet": "File:Centaur (male).png"
+    },
+    "melvorF:Summoning_Familiar_Crow": {
+      "tablet": "File:Crow.png"
+    },
+    "melvorF:Summoning_Familiar_Cyclops": {
+      "tablet": "File:Cyclops.png"
+    },
+    "melvorF:Summoning_Familiar_Devil": {
+      "tablet": "File:Lesser demon.png"
+    },
+    "melvorF:Summoning_Familiar_Dragon": {
+      "tablet": "File:Prince Black Dragon.png"
+    },
+    "melvorF:Summoning_Familiar_Ent": {
+      "tablet": "File:Ent (lv 86).png"
+    },
+    "melvorF:Summoning_Familiar_Golbin_Thief": {
+      "tablet": "File:Goblin.png"
+    },
+    "melvorF:Summoning_Familiar_Leprechaun": {
+      "tablet": "File:Tool Leprechaun.png"
+    },
+    "melvorF:Summoning_Familiar_Minotaur": {
+      "tablet": "File:Minotaur.png"
+    },
+    "melvorF:Summoning_Familiar_Mole": {
+      "tablet": "File:Baby Mole.png"
+    },
+    "melvorF:Summoning_Familiar_Monkey": {
+      "tablet": "File:Monkey (Monkey Madness I).png"
+    },
+    "melvorF:Summoning_Familiar_Occultist": {
+      "tablet": "File:Cultist.png"
+    },
+    "melvorF:Summoning_Familiar_Pig": {
+      "tablet": "File:Pig.png"
+    },
+    "melvorF:Summoning_Familiar_Salamander": {
+      "tablet": "File:Orange salamander.png"
+    },
+    "melvorF:Summoning_Familiar_Unicorn": {
+      "tablet": "File:Unicorn.png"
+    },
+    "melvorF:Summoning_Familiar_Witch": {
+      "tablet": "File:Witch (historical).png"
+    },
+    "melvorF:Summoning_Familiar_Wolf": {
+      "tablet": "File:Wolf.png"
+    },
+    "melvorF:Summoning_Familiar_Yak": {
+      "tablet": "File:Yak.png"
+    },
+    "melvorF:Thievers_Cape": "Black cape",
+    "melvorD:Signet_Ring_Half_A": null,
+    "melvorD:Signet_Ring_Half_B": null
+  },
+  "monster": {
+    "melvorD:BlackKnight": "File:Black Knight (male).png",
+    "melvorD:Skeleton": "File:Skeleton (level 21, 1).png",
+    "melvorD:Zombie": "File:Zombie (Tarn's Lair, Level 40).png",
+    "melvorF:Thief": "File:Thief (Varrock, 1).png",
+    "melvorF:Statue": "Gargoyle",
+    "melvorF:StoneSnake": "Earthen Nagua",
+    "melvorF:SpikedRedClaw": "Scorpion",
+    "melvorF:SandBeast": "Desert Lizard",
+    "melvorD:WetMonster": "Waterfiend",
+    "melvorD:MoistMonster": "Minotaur",
+    "melvorD:SweatyMonster": "Giant frog",
+    "melvorF:ManyEyedMonster": "File:Eyes (Abyss).png",
+    "melvorF:StrangeEyedMonster": "Eye (Abyssal Nexus)",
+    "melvorF:Pegasus": "Unicorn",
+    "melvorF:Angel": "Commander Zilyana",
+    "melvorF:Priest": "High Priest (Entrana)",
+    "melvorF:Phoenix": "File:Phoenix (follower).png"
+  },
+  "npc": {
+    "melvorF:GOLBIN": "File:Goblin.png",
+    "melvorTotH:ADVENTURER": null
+  },
+  "rock": {
+    "melvorD:Dragonite_Ore": "File:Blood crystal (small).png"
+  },
+  "prayer": {
+    "melvorF:Protect_from_Ranged": "File:Protect from Missiles.png"
+  },
+  "spell": {
+    "melvorF:Confusion": "Confuse",
+    "melvorF:SuperheatI": "Superheat Item",
+    "melvorF:SuperheatII": "Superheat Item",
+    "melvorF:SuperheatIII": "Superheat Item",
+    "melvorF:SuperheatIV": "Superheat Item",
+    "melvorF:WeakeningI": "Weaken",
+    "melvorF:WeakeningII": "Weaken",
+    "melvorF:WeakeningIII": "Weaken"
+  },
+  "shop": {
+    "melvorD:Normal_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Logs.png"
+    },
+    "melvorD:Oak_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Oak logs.png"
+    },
+    "melvorD:Willow_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Willow logs.png"
+    },
+    "melvorD:Teak_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Teak logs.png"
+    },
+    "melvorD:Maple_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Maple logs.png"
+    },
+    "melvorD:Mahogany_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Mahogany logs.png"
+    },
+    "melvorD:Yew_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Yew logs.png"
+    },
+    "melvorD:Magic_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Magic logs.png"
+    },
+    "melvorD:Redwood_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Redwood logs.png"
+    },
+    "melvorD:Multi_Tree": {
+      "row": [
+        "File:Oak tree.png",
+        "File:Willow tree.png",
+        "File:Maple tree.png"
+      ]
+    }
+  },
+  "media": {
+    "assets/media/main/coins.png": "File:Coins 10000.png"
+  }
+}

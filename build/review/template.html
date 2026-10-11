@@ -1,0 +1,424 @@
+<title>OSRS Art Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400&family=Pixelify+Sans:wght@500;700&display=swap">
+<style>
+/* Layout: sticky stone control bar over one long list of review rows, one tab stop per row. Single dark look modeled on the OSRS interface. */
+:root {
+  --stone: #241f1a;
+  --panel: #332c24;
+  --panel-raised: #3f372d;
+  --edge: #5b5040;
+  --ink: #eadfc4;
+  --muted: #b3a585;
+  --gold: #ffcc33;
+  --real: #4cd44f;
+  --thematic: #ff9a2e;
+  --reject: #f0594b;
+  --menu-item: #ff9040;
+  --menu-npc: #ffff00;
+  --menu-object: #00ffff;
+  --menu-spell: #00ff00;
+  --display: "Pixelify Sans", "Courier New", monospace;
+  --body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --cell: 72px;
+  --head: 160px;
+  color-scheme: dark;
+}
+html { scroll-padding-top: var(--head); }
+body { background: var(--stone); color: var(--ink); font: 15px/1.45 var(--body); }
+.wrap { padding-inline: 16px; max-width: 1180px; margin-inline: auto; }
+header.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--panel); border-bottom: 2px solid var(--edge);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.35);
+}
+header .wrap { display: grid; gap: 10px; padding-block: 12px; }
+.top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 20px; }
+h1 { font: 700 24px/1.1 var(--display); color: var(--gold); margin: 0; letter-spacing: 0.02em; }
+.progress { font-variant-numeric: tabular-nums; color: var(--muted); }
+.progress b { color: var(--ink); font-weight: 600; }
+.meter { height: 6px; background: var(--stone); border: 1px solid var(--edge); display: flex; }
+.meter i { display: block; height: 100%; }
+.meter .ok { background: var(--real); }
+.meter .no { background: var(--reject); }
+.keys { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--muted); font-size: 13px; }
+kbd { font: 12px var(--mono); color: var(--ink); background: var(--stone); border: 1px solid var(--edge); border-bottom-width: 2px; padding: 0 5px; border-radius: 3px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.filters { display: flex; flex-wrap: wrap; gap: 4px; }
+.filters button, .tool { font: 500 13px var(--body); color: var(--ink); background: var(--panel-raised); border: 1px solid var(--edge); padding: 4px 10px; cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--gold); color: var(--stone); border-color: var(--gold); }
+#search { font: 14px var(--body); color: var(--ink); background: var(--stone); border: 1px solid var(--edge); padding: 4px 8px; min-width: 0; width: 220px; max-width: 100%; }
+label.toggle { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+.status { font-size: 13px; color: var(--muted); margin-left: auto; }
+.status.warn { color: var(--thematic); }
+main { padding-block: 16px 64px; display: grid; gap: 28px; }
+section h2 { font: 500 18px/1.2 var(--display); color: var(--gold); margin: 0 0 8px; text-wrap: balance; display: flex; gap: 10px; align-items: baseline; }
+section h2 small { font: 13px var(--body); color: var(--muted); }
+.rows { display: grid; gap: 4px; }
+.row {
+  display: grid; align-items: center; gap: 4px 14px;
+  grid-template-columns: var(--cell) minmax(0, 1fr) 18px var(--cell) minmax(0, 1.5fr) auto;
+  grid-template-areas: "m who arrow o pick verdict" "m who arrow o note verdict";
+  background: var(--panel); border: 1px solid var(--edge); border-left: 5px solid var(--edge);
+  padding: 6px 10px 6px 8px; outline: none;
+}
+.row:focus-visible, .row:focus-within { background: var(--panel-raised); border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
+.row[data-v="approve"] { border-left-color: var(--real); }
+.row[data-v="reject"] { border-left-color: var(--reject); }
+.art { grid-area: m; width: var(--cell); height: var(--cell); background-repeat: no-repeat; background-color: rgb(0 0 0 / 0.22); }
+.art.melvor { background-image: url("melvor.webp"); }
+.art.osrs { grid-area: o; background-image: url("osrs.webp"); image-rendering: pixelated; }
+.art.none { display: grid; place-items: center; background-image: none; color: var(--muted); font: 12px var(--mono); text-align: center; }
+.arrow { grid-area: arrow; width: 10px; height: 10px; border-top: 2px solid var(--muted); border-right: 2px solid var(--muted); transform: rotate(45deg); justify-self: center; }
+.who { grid-area: who; min-width: 0; display: grid; }
+.who .name { font-weight: 600; }
+.meta, .also { font-size: 12px; color: var(--muted); }
+.also { font-style: italic; }
+.pick { grid-area: pick; min-width: 0; display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: baseline; }
+.oname { font-weight: 600; }
+.oname.pool-item { color: var(--menu-item); }
+.oname.pool-npc, .oname.pool-monster { color: var(--menu-npc); }
+.oname.pool-scenery { color: var(--menu-object); }
+.oname.pool-spell, .oname.pool-prayer { color: var(--menu-spell); }
+.oname.none { color: var(--muted); font-weight: 500; }
+.chip { font: 11px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; padding: 0 6px; border: 1px solid currentColor; }
+.chip.real { color: var(--real); }
+.chip.thematic { color: var(--thematic); }
+.chip.skip { color: var(--muted); }
+.why { flex-basis: 100%; margin: 0; font-size: 13px; color: var(--muted); }
+.notebox { grid-area: note; min-width: 0; display: grid; gap: 2px; }
+.notebox input { font: 14px var(--body); color: var(--ink); background: var(--stone); border: 1px solid var(--gold); padding: 3px 6px; width: 100%; }
+.notetext { margin: 0; font-size: 13px; color: var(--gold); }
+.verdict { grid-area: verdict; display: grid; gap: 4px; justify-items: stretch; }
+.verdict button { font: 500 12px var(--body); color: var(--ink); background: var(--stone); border: 1px solid var(--edge); padding: 2px 8px; cursor: pointer; text-align: left; white-space: nowrap; }
+.verdict button kbd { margin-right: 4px; }
+.row[data-v="approve"] [data-act="approve"] { background: var(--real); color: var(--stone); border-color: var(--real); }
+.row[data-v="reject"] [data-act="reject"] { background: var(--reject); color: var(--stone); border-color: var(--reject); }
+.empty { color: var(--muted); padding: 24px 0; }
+@media (max-width: 760px) {
+  .row {
+    grid-template-columns: var(--cell) minmax(0, 1fr);
+    grid-template-areas: "m who" "o pick" "note note" "verdict verdict";
+  }
+  .arrow { display: none; }
+  .verdict { grid-template-columns: repeat(3, 1fr); }
+  .status { margin-left: 0; }
+}
+@media (prefers-reduced-motion: no-preference) { .row { transition: background-color 120ms, box-shadow 120ms; } }
+</style>
+
+<header class="bar" id="bar">
+  <div class="wrap">
+    <div class="top">
+      <h1>OSRS Art Review</h1>
+      <span class="progress" id="progress"></span>
+      <span class="status" id="status">Loading saved decisions...</span>
+    </div>
+    <div class="meter" aria-hidden="true"><i class="ok" id="meter-ok"></i><i class="no" id="meter-no"></i></div>
+    <div class="keys" aria-label="Keyboard shortcuts">
+      <span><kbd>Tab</kbd> next row</span>
+      <span><kbd>Shift</kbd>+<kbd>Tab</kbd> previous</span>
+      <span><kbd>1</kbd> approve (or keep Melvor art)</span>
+      <span><kbd>2</kbd> reject (or ask for art)</span>
+      <span><kbd>3</kbd> add a note</span>
+      <span><kbd>0</kbd> clear</span>
+    </div>
+    <div class="controls">
+      <div class="filters" id="filters" role="group" aria-label="Show">
+        <button type="button" data-filter="all" aria-pressed="true">All</button>
+        <button type="button" data-filter="pending" aria-pressed="false">Pending</button>
+        <button type="button" data-filter="reject" aria-pressed="false">Rejected</button>
+        <button type="button" data-filter="real" aria-pressed="false">Real</button>
+        <button type="button" data-filter="thematic" aria-pressed="false">Thematic</button>
+        <button type="button" data-filter="skip" aria-pressed="false">No pick</button>
+      </div>
+      <input id="search" type="search" placeholder="Search names" aria-label="Search names">
+      <label class="toggle"><input type="checkbox" id="advance"> Jump to next row after 1 or 2</label>
+      <button type="button" class="tool" id="copy">Copy decisions</button>
+    </div>
+  </div>
+</header>
+<main class="wrap" id="list"></main>
+
+<script>
+const ROWS = /*ROWS*/[];
+const GROUPS = /*GROUPS*/[];
+const COLUMNS = /*COLUMNS*/40;
+const CELL = /*CELL*/72;
+const STORE_KEY = "osrs-art-review-v1";
+const KIND_LABEL = { item: "item", monster: "monster", npc: "thieving NPC", pet: "pet", area: "area", obstacle: "agility obstacle", spell: "spell", prayer: "prayer", shop: "shop", rock: "rock", tree: "tree" };
+
+const decisions = new Map();
+const rowById = new Map(ROWS.map((r) => [r.id, r]));
+const elById = new Map();
+const writeChains = new Map();
+let db = null;
+let filter = "all";
+let query = "";
+
+const $ = (id) => document.getElementById(id);
+const pos = (index) => `-${(index % COLUMNS) * CELL}px -${Math.floor(index / COLUMNS) * CELL}px`;
+
+function el(tag, props = {}, children = []) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(props)) {
+    if (key === "text") node.textContent = value;
+    else if (key === "class") node.className = value;
+    else if (key.startsWith("data-") || key.startsWith("aria-") || key === "role" || key === "tabindex" || key === "type" || key === "id" || key === "placeholder") node.setAttribute(key, value);
+    else node[key] = value;
+  }
+  for (const child of [].concat(children)) if (child) node.append(child);
+  return node;
+}
+
+function buildRow(row, index) {
+  const hasPick = row.oi >= 0;
+  const melvorArt = el("div", { class: "art melvor", role: "img", "aria-label": `Melvor art: ${row.n}` });
+  melvorArt.style.backgroundPosition = pos(row.m);
+  const osrsArt = hasPick
+    ? el("div", { class: "art osrs", role: "img", "aria-label": `OSRS art: ${row.o}` })
+    : el("div", { class: "art osrs none", text: "no pick" });
+  if (hasPick) osrsArt.style.backgroundPosition = pos(row.oi);
+  const meta = [KIND_LABEL[row.k] || row.k, row.c].filter(Boolean).join(" / ");
+  const who = el("div", { class: "who" }, [
+    el("span", { class: "name", text: row.n }),
+    el("span", { class: "meta", text: meta }),
+    row.also && row.also.length ? el("span", { class: "also", text: `same icon: ${row.also.join(", ")}` }) : null,
+  ]);
+  const pick = el("div", { class: "pick" }, [
+    el("span", { class: hasPick ? `oname pool-${row.pool}` : "oname none", text: hasPick ? row.o : "Keeps Melvor art" }),
+    el("span", { class: `chip ${row.conf}`, text: hasPick ? row.conf : "no pick" }),
+    row.r ? el("p", { class: "why", text: row.r }) : null,
+  ]);
+  const input = el("input", { type: "text", tabindex: "-1", id: `note-${index}`, placeholder: hasPick ? "Suggest a better OSRS image, or why it's wrong" : "Suggest an OSRS image for this" });
+  const notebox = el("div", { class: "notebox" }, [el("p", { class: "notetext" }), input]);
+  input.hidden = true;
+  const button = (act, key, label) => el("button", { type: "button", tabindex: "-1", "data-act": act }, [el("kbd", { text: key }), label]);
+  const verdict = el("div", { class: "verdict" }, [
+    button("approve", "1", hasPick ? "Approve" : "Keep Melvor"),
+    button("reject", "2", hasPick ? "Reject" : "Find art"),
+    button("note", "3", "Note"),
+  ]);
+  const node = el("article", { class: "row", tabindex: "0", "data-id": row.id, "aria-label": hasPick ? `${row.n}, proposed ${row.o}` : `${row.n}, no pick` }, [
+    melvorArt, who, el("div", { class: "arrow", "aria-hidden": "true" }), osrsArt, pick, notebox, verdict,
+  ]);
+  elById.set(row.id, node);
+  return node;
+}
+
+function render() {
+  const list = $("list");
+  const order = { real: 0, thematic: 1, skip: 2 };
+  let index = 0;
+  GROUPS.forEach((label, g) => {
+    const rows = ROWS.filter((r) => r.g === g).sort((a, b) => order[a.conf] - order[b.conf]);
+    if (!rows.length) return;
+    const picks = rows.filter((r) => r.oi >= 0).length;
+    const section = el("section", { "data-group": String(g) }, [
+      el("h2", {}, [label, el("small", { text: `${picks} picks, ${rows.length - picks} without` })]),
+      el("div", { class: "rows" }, rows.map((r) => buildRow(r, index++))),
+    ]);
+    list.append(section);
+  });
+}
+
+function paint(id) {
+  const node = elById.get(id);
+  if (!node) return;
+  const d = decisions.get(id) || {};
+  if (d.v) node.dataset.v = d.v; else delete node.dataset.v;
+  node.querySelector(".notetext").textContent = d.note ? `Note: ${d.note}` : "";
+}
+
+function updateProgress() {
+  let ok = 0, no = 0;
+  for (const d of decisions.values()) { if (d.v === "approve") ok++; else if (d.v === "reject") no++; }
+  const total = ROWS.length;
+  $("progress").innerHTML = "";
+  $("progress").append(el("b", { text: String(ok + no) }), ` of ${total} reviewed: `, el("b", { text: String(ok) }), " approved, ", el("b", { text: String(no) }), " rejected");
+  $("meter-ok").style.width = `${(ok / total) * 100}%`;
+  $("meter-no").style.width = `${(no / total) * 100}%`;
+}
+
+function matches(row) {
+  const d = decisions.get(row.id) || {};
+  if (query && !`${row.n} ${row.o || ""} ${(row.also || []).join(" ")}`.toLowerCase().includes(query)) return false;
+  if (filter === "pending") return !d.v;
+  if (filter === "reject") return d.v === "reject";
+  if (filter === "real" || filter === "thematic") return row.conf === filter && row.oi >= 0;
+  if (filter === "skip") return row.oi < 0;
+  return true;
+}
+
+function applyFilter() {
+  for (const row of ROWS) elById.get(row.id).hidden = !matches(row);
+  for (const section of document.querySelectorAll("section[data-group]")) {
+    section.hidden = !section.querySelector(".row:not([hidden])");
+  }
+  const anyVisible = document.querySelector(".row:not([hidden])");
+  let empty = document.querySelector(".empty");
+  if (!anyVisible && !empty) $("list").append(el("p", { class: "empty", text: "Nothing matches this filter." }));
+  if (anyVisible && empty) empty.remove();
+}
+
+function loadLocal() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
+    for (const [id, d] of Object.entries(saved)) if (rowById.has(id)) decisions.set(id, d);
+  } catch (e) { /* storage unavailable */ }
+}
+
+function saveLocal() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(Object.fromEntries(decisions))); } catch (e) { /* storage unavailable */ }
+}
+
+function docRef(id) {
+  return db.collection(`review/g${rowById.get(id).g}/items`).doc(id);
+}
+
+function persist(id) {
+  saveLocal();
+  if (!db) return;
+  const d = decisions.get(id);
+  const row = rowById.get(id);
+  const previous = writeChains.get(id) || Promise.resolve();
+  const next = previous.then(() => (d && (d.v || d.note)
+    ? docRef(id).set({ v: d.v || null, note: d.note || "", osrs: row.o || null })
+    : docRef(id).delete()))
+    .catch((e) => setStatus(`Could not save ${row.n}: ${e && e.message ? e.message : e.code}. Decisions stay in this browser.`, true));
+  writeChains.set(id, next);
+}
+
+function setStatus(text, warn = false) {
+  $("status").textContent = text;
+  $("status").classList.toggle("warn", warn);
+}
+
+function decide(node, verdict) {
+  const id = node.dataset.id;
+  const d = { ...(decisions.get(id) || {}) };
+  if (verdict) d.v = verdict; else delete d.v;
+  if (!d.v && !d.note) decisions.delete(id); else decisions.set(id, d);
+  paint(id);
+  updateProgress();
+  persist(id);
+  if (verdict && $("advance").checked) move(node, 1);
+}
+
+function visibleRows() {
+  return [...document.querySelectorAll(".row")].filter((r) => !r.hidden && !r.closest("section").hidden);
+}
+
+function move(node, step) {
+  const rows = visibleRows();
+  const target = rows[rows.indexOf(node) + step];
+  if (target) target.focus();
+}
+
+function openNote(node) {
+  const input = node.querySelector(".notebox input");
+  input.value = (decisions.get(node.dataset.id) || {}).note || "";
+  input.hidden = false;
+  input.focus();
+}
+
+function closeNote(node, save) {
+  const input = node.querySelector(".notebox input");
+  if (input.hidden) return;
+  if (save) {
+    const id = node.dataset.id;
+    const d = { ...(decisions.get(id) || {}) };
+    const note = input.value.trim();
+    if (note) d.note = note; else delete d.note;
+    if (!d.v && !d.note) decisions.delete(id); else decisions.set(id, d);
+    paint(id);
+    persist(id);
+  }
+  input.hidden = true;
+}
+
+function wireEvents() {
+  const list = $("list");
+  list.addEventListener("keydown", (e) => {
+    const node = e.target.closest(".row");
+    if (!node) return;
+    if (e.target.tagName === "INPUT") {
+      if (e.key === "Enter") { e.preventDefault(); closeNote(node, true); node.focus(); }
+      else if (e.key === "Escape") { e.preventDefault(); closeNote(node, false); node.focus(); }
+      return;
+    }
+    if (e.target !== node || e.metaKey || e.ctrlKey || e.altKey) return;
+    const key = e.key;
+    if (key === "1") decide(node, "approve");
+    else if (key === "2") decide(node, "reject");
+    else if (key === "3" || key === "n") { e.preventDefault(); openNote(node); }
+    else if (key === "0" || key === "Backspace" || key === "Delete") { e.preventDefault(); decide(node, null); }
+    else if (key === "ArrowDown" || key === "j") { e.preventDefault(); move(node, 1); }
+    else if (key === "ArrowUp" || key === "k") { e.preventDefault(); move(node, -1); }
+  });
+  list.addEventListener("focusout", (e) => {
+    if (e.target.tagName === "INPUT") closeNote(e.target.closest(".row"), true);
+  });
+  list.addEventListener("click", (e) => {
+    const button = e.target.closest("button[data-act]");
+    if (!button) return;
+    const node = button.closest(".row");
+    const act = button.dataset.act;
+    if (act === "note") openNote(node);
+    else { decide(node, (decisions.get(node.dataset.id) || {}).v === act ? null : act); node.focus(); }
+  });
+  $("filters").addEventListener("click", (e) => {
+    const button = e.target.closest("button[data-filter]");
+    if (!button) return;
+    filter = button.dataset.filter;
+    for (const b of $("filters").querySelectorAll("button")) b.setAttribute("aria-pressed", String(b === button));
+    applyFilter();
+  });
+  $("search").addEventListener("input", (e) => { query = e.target.value.trim().toLowerCase(); applyFilter(); });
+  try { $("advance").checked = localStorage.getItem(`${STORE_KEY}:advance`) === "1"; } catch (e) { /* storage unavailable */ }
+  $("advance").addEventListener("change", (e) => { try { localStorage.setItem(`${STORE_KEY}:advance`, e.target.checked ? "1" : "0"); } catch (err) { /* storage unavailable */ } });
+  $("copy").addEventListener("click", async () => {
+    const text = JSON.stringify(Object.fromEntries(decisions), null, 1);
+    try { await navigator.clipboard.writeText(text); setStatus("Decisions copied."); }
+    catch (e) { setStatus("Copy was blocked here; your decisions are still saved on this page.", true); }
+  });
+  const measure = () => document.documentElement.style.setProperty("--head", `${$("bar").offsetHeight + 12}px`);
+  measure();
+  window.addEventListener("resize", measure);
+}
+
+async function connect() {
+  const claudeApi = window.claude;
+  db = claudeApi && claudeApi.use ? await claudeApi.use("db") : null;
+  if (!db) { setStatus("Saving in this browser only. Use Copy decisions to send them.", true); return; }
+  setStatus("Decisions save to this page.");
+  GROUPS.forEach((_, g) => {
+    db.collection(`review/g${g}/items`).onSnapshot((snap) => {
+      for (const change of snap.docChanges()) {
+        const id = change.doc.id;
+        if (!rowById.has(id)) continue;
+        if (change.type === "removed") decisions.delete(id);
+        else {
+          const body = change.doc.data() || {};
+          const d = {};
+          if (body.v) d.v = body.v;
+          if (body.note) d.note = body.note;
+          decisions.set(id, d);
+        }
+        paint(id);
+      }
+      updateProgress();
+      saveLocal();
+    }, (e) => setStatus(`Live sync stopped (${e.code}). New decisions stay in this browser.`, true));
+  });
+}
+
+render();
+loadLocal();
+for (const id of decisions.keys()) paint(id);
+updateProgress();
+wireEvents();
+connect();
+</script>
