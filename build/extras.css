@@ -1,0 +1,62 @@
+html:root body.osrs-theme .block-title, html:root body.osrs-theme .nav-main-heading, html:root body.osrs-theme h1, html:root body.osrs-theme h2, html:root body.osrs-theme h3, html:root body.osrs-theme .h1, html:root body.osrs-theme .h2, html:root body.osrs-theme .h3 { color: #ff981f !important; text-shadow: 1px 1px 0 #000; }
+html:root body.osrs-theme .nav-main-link.active .nav-main-link-name { color: #ffff00 !important; }
+html:root body.osrs-theme .block { box-shadow: inset 0 0 0 1px rgba(255, 230, 180, 0.07), 0 0 0 1px #14110d; }
+html:root body.osrs-theme .progress { background-color: #1b1712 !important; }
+html:root body.osrs-theme ::-webkit-scrollbar { width: 10px; height: 10px; }
+html:root body.osrs-theme ::-webkit-scrollbar-thumb { background: #5d5447; border: 2px solid #2b2620; }
+html:root body.osrs-theme ::-webkit-scrollbar-track { background: #2b2620; }
+
+html:root body.osrs-theme.osrs-shadows { text-shadow: 1px 1px 0 #000; }
+html:root body.osrs-theme.osrs-shadows .form-control, html:root body.osrs-theme.osrs-shadows .bg-white, html:root body.osrs-theme.osrs-shadows .btn-light { text-shadow: none; }
+
+html:root body.osrs-theme.osrs-bevels .block:not([class*="border"]) { border: 1px solid #0e0c09; }
+html:root body.osrs-theme.osrs-bevels .block { border-radius: 2px; box-shadow: inset 1px 1px 0 rgba(255, 236, 200, 0.16), inset -1px -1px 0 rgba(0, 0, 0, 0.55); }
+html:root body.osrs-theme.osrs-bevels .block-header { box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 236, 200, 0.08); }
+html:root body.osrs-theme.osrs-bevels .btn:not(.btn-link) { border: 1px solid #0e0c09 !important; border-radius: 2px; box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.28), inset -1px -1px 0 rgba(0, 0, 0, 0.45) !important; }
+html:root body.osrs-theme.osrs-bevels .btn:not(.btn-link):active, html:root body.osrs-theme.osrs-bevels .btn:not(.btn-link).active { box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.5), inset -1px -1px 0 rgba(255, 255, 255, 0.18) !important; }
+html:root body.osrs-theme.osrs-bevels .nav-tabs .nav-link, html:root body.osrs-theme.osrs-bevels .form-control { border-radius: 2px; box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.45), inset -1px -1px 0 rgba(255, 236, 200, 0.1); }
+html:root body.osrs-theme.osrs-bevels .progress { border: 1px solid #000; border-radius: 0; }
+html:root body.osrs-theme.osrs-bevels .progress-bar { border-radius: 0; }
+
+html:root body.osrs-theme.osrs-tooltips .tippy-box { background-color: rgba(70, 61, 50, 0.9) !important; color: #fff !important; border: 1px solid #000; border-radius: 0; box-shadow: inset 0 0 0 1px #5d5447; text-shadow: 1px 1px 0 #000; }
+html:root body.osrs-theme.osrs-tooltips .tippy-arrow { display: none; }
+
+html:root body.osrs-theme.osrs-hp-bars :is(#combat-player-hitpoints-bar, #combat-player-hitpoints-bar-1, #thieving-player-hitpoints-bar, #combat-enemy-hitpoints-bar, #combat-enemy-hitpoints-bar-1) { background-color: #00c800 !important; background-image: none !important; }
+html:root body.osrs-theme.osrs-hp-bars .progress:has(> :is(#combat-player-hitpoints-bar, #combat-player-hitpoints-bar-1, #thieving-player-hitpoints-bar, #combat-enemy-hitpoints-bar, #combat-enemy-hitpoints-bar-1)) { background-color: #c80000 !important; border: 1px solid #000; }
+
+html:root body.osrs-theme.osrs-texture .block, html:root body.osrs-theme.osrs-texture #sidebar, html:root body.osrs-theme.osrs-texture #page-header { background-image: var(--osrs-stone) !important; background-size: 128px 128px !important; background-repeat: repeat !important; }
+
+html:root body.osrs-theme.osrs-stacks [data-osrs-stack] { text-shadow: 1px 1px 0 #000; }
+html:root body.osrs-theme.osrs-stacks [data-osrs-stack="yellow"] { color: #ffff00 !important; }
+html:root body.osrs-theme.osrs-stacks [data-osrs-stack="white"] { color: #ffffff !important; }
+html:root body.osrs-theme.osrs-stacks [data-osrs-stack="green"] { color: #00ff80 !important; }
+
+html:root body.osrs-theme.osrs-hitsplats .splash-animation { width: 48px; height: 46px; line-height: 46px; text-align: center; color: #fff !important; text-shadow: 1px 1px 0 #000; font-weight: 700; background: var(--osrs-hitsplat-damage) center / contain no-repeat; image-rendering: pixelated; }
+html:root body.osrs-theme.osrs-hitsplats .splash-animation.text-crit { background-image: var(--osrs-hitsplat-max-hit); }
+html:root body.osrs-theme.osrs-hitsplats .splash-animation.text-primary { background-image: var(--osrs-hitsplat-tinted); }
+html:root body.osrs-theme.osrs-hitsplats .splash-animation.text-poison { background-image: var(--osrs-hitsplat-poison); }
+html:root body.osrs-theme.osrs-hitsplats .splash-animation.text-deadlypoison { background-image: var(--osrs-hitsplat-venom); }
+html:root body.osrs-theme.osrs-hitsplats .splash-animation.text-burn { background-image: var(--osrs-hitsplat-burn); }
+html:root body.osrs-theme.osrs-hitsplats .splash-animation.text-bleed { background-image: var(--osrs-hitsplat-bleed); }
+html:root body.osrs-theme.osrs-hitsplats .splash-animation.text-success { background-image: var(--osrs-hitsplat-heal); }
+html:root body.osrs-theme.osrs-hitsplats .splash-animation.text-voidburst { background-image: var(--osrs-hitsplat-corruption); }
+html:root body.osrs-theme.osrs-hitsplats .splash-animation.osrs-zero { background-image: var(--osrs-hitsplat-zero); }
+html:root body.osrs-theme.osrs-hitsplats .splash-animation.osrs-text { background-image: none; width: auto; }
+
+html:root body.osrs-theme.osrs-login.osrs-character-select [data-osrs-login="self"]:not(img),
+html:root body.osrs-theme.osrs-login.osrs-character-select [data-osrs-login="before"]::before,
+html:root body.osrs-theme.osrs-login.osrs-character-select [data-osrs-login="after"]::after { background: none !important; }
+html:root body.osrs-theme.osrs-login.osrs-character-select img[data-osrs-login="self"] { visibility: hidden !important; }
+html:root body.osrs-theme.osrs-login.osrs-character-select [data-osrs-login="fill"] { background-color: transparent !important; }
+#osrs-login-scene { position: fixed; inset: 0; z-index: -1; pointer-events: none; background: #000 var(--osrs-login) center / cover no-repeat; }
+#osrs-login-scene .osrs-fire { position: absolute; }
+
+html:root body.osrs-theme.osrs-cards save-slot-display, html:root body.osrs-theme.osrs-cards .btn-group:has(> .character-selection-toggle) { display: flex; flex-direction: column; max-width: 560px; margin-left: auto !important; margin-right: auto !important; }
+html:root body.osrs-theme.osrs-cards .btn-group:has(> .character-selection-toggle) { flex-direction: row; }
+html:root body.osrs-theme.osrs-cards save-slot-display > .block { min-height: 220px; background: transparent !important; border: 14px solid transparent !important; border-radius: 0 !important; border-image: var(--osrs-titlebox) 20 fill / 14px stretch !important; box-shadow: none !important; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6)); }
+html:root body.osrs-theme.osrs-cards save-slot-display .block-header { background: transparent !important; box-shadow: none !important; }
+html:root body.osrs-theme.osrs-cards save-slot-display .block-title { color: #ffff00 !important; text-shadow: 1px 1px 0 #000 !important; }
+html:root body.osrs-theme.osrs-cards save-slot-display .btn-group > .btn { background: rgba(16, 17, 20, 0.35) !important; color: #fff !important; border: 1px solid #0b0b0b !important; border-radius: 2px !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08) !important; text-shadow: 1px 1px 0 #000; }
+html:root body.osrs-theme.osrs-cards :is(.character-selection-toggle, #character-selection-toggle-refresh) { background: transparent !important; color: #fff !important; border: 4px solid transparent !important; border-radius: 0 !important; border-image: var(--osrs-titlebutton) 5 fill / 4px stretch !important; box-shadow: none !important; text-shadow: 1px 1px 0 #000; }
+html:root body.osrs-theme.osrs-cards :is(save-slot-display .btn-group > .btn, .character-selection-toggle, #character-selection-toggle-refresh):hover { filter: brightness(1.2); }
+html:root body.osrs-theme.osrs-cards save-slot-display .bg-gamemode { opacity: 0.25; }
