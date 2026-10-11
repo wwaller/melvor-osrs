@@ -1,0 +1,8 @@
+__pycache__/
+build/.cache/
+build/review/
+dist/
+.DS_Store
+mod/audio/
+mod/audio.json
+mod/icon.png
