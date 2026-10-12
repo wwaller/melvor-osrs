@@ -11,6 +11,7 @@ html:root body.osrs-theme.osrs-shadows .form-control, html:root body.osrs-theme.
 
 html:root body.osrs-theme.osrs-bevels .block:not([class*="border"]) { border: 1px solid #0e0c09; }
 html:root body.osrs-theme.osrs-bevels .block { border-radius: 2px; box-shadow: inset 1px 1px 0 rgba(255, 236, 200, 0.16), inset -1px -1px 0 rgba(0, 0, 0, 0.55); }
+html:root body.osrs-theme.osrs-bevels :is(.swal2-popup, .modal-content) { border: 2px solid #0e0c09 !important; border-radius: 2px !important; box-shadow: inset 2px 2px 0 rgba(255, 236, 200, 0.16), inset -2px -2px 0 rgba(0, 0, 0, 0.55), 0 6px 24px rgba(0, 0, 0, 0.7) !important; }
 html:root body.osrs-theme.osrs-bevels .block-header { box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 236, 200, 0.08); }
 html:root body.osrs-theme.osrs-bevels .btn:not(.btn-link) { border: 1px solid #0e0c09 !important; border-radius: 2px; box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.28), inset -1px -1px 0 rgba(0, 0, 0, 0.45) !important; }
 html:root body.osrs-theme.osrs-bevels .btn:not(.btn-link):active, html:root body.osrs-theme.osrs-bevels .btn:not(.btn-link).active { box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.5), inset -1px -1px 0 rgba(255, 255, 255, 0.18) !important; }
@@ -21,27 +22,32 @@ html:root body.osrs-theme.osrs-bevels .progress-bar { border-radius: 0; }
 html:root body.osrs-theme.osrs-tooltips .tippy-box { background-color: rgba(70, 61, 50, 0.9) !important; color: #fff !important; border: 1px solid #000; border-radius: 0; box-shadow: inset 0 0 0 1px #5d5447; text-shadow: 1px 1px 0 #000; }
 html:root body.osrs-theme.osrs-tooltips .tippy-arrow { display: none; }
 
-html:root body.osrs-theme.osrs-hp-bars :is(#combat-player-hitpoints-bar, #combat-player-hitpoints-bar-1, #thieving-player-hitpoints-bar, #combat-enemy-hitpoints-bar, #combat-enemy-hitpoints-bar-1) { background-color: #00c800 !important; background-image: none !important; }
+html:root body.osrs-theme.osrs-hp-bars :is(#combat-player-hitpoints-bar, #combat-player-hitpoints-bar-1, #thieving-player-hitpoints-bar, #combat-enemy-hitpoints-bar, #combat-enemy-hitpoints-bar-1) { background-color: #00c800 !important; }
+html:root body.osrs-theme.osrs-hp-bars :is(#combat-player-hitpoints-bar, #combat-player-hitpoints-bar-1, #thieving-player-hitpoints-bar, #combat-enemy-hitpoints-bar, #combat-enemy-hitpoints-bar-1):not([style*="gradient"]) { background-image: none !important; }
+html:root body.osrs-theme.osrs-hp-bars :is(#combat-player-hitpoints-bar, #combat-player-hitpoints-bar-1, #thieving-player-hitpoints-bar).bg-warning { background-color: #c8c800 !important; }
 html:root body.osrs-theme.osrs-hp-bars .progress:has(> :is(#combat-player-hitpoints-bar, #combat-player-hitpoints-bar-1, #thieving-player-hitpoints-bar, #combat-enemy-hitpoints-bar, #combat-enemy-hitpoints-bar-1)) { background-color: #c80000 !important; border: 1px solid #000; }
+html:root body.osrs-theme.osrs-hp-bars .progress-bar.bg-info { background-color: #e0bb3a !important; background-image: linear-gradient(#f5dc6a, #c49a21) !important; }
 
-html:root body.osrs-theme.osrs-texture .block, html:root body.osrs-theme.osrs-texture #sidebar, html:root body.osrs-theme.osrs-texture #page-header { background-image: var(--osrs-stone) !important; background-size: 128px 128px !important; background-repeat: repeat !important; }
+html:root body.osrs-theme.osrs-texture .block, html:root body.osrs-theme.osrs-texture #sidebar, html:root body.osrs-theme.osrs-texture #page-header, html:root body.osrs-theme.osrs-texture .swal2-popup, html:root body.osrs-theme.osrs-texture .modal-content { background-image: var(--osrs-stone) !important; background-size: 128px 128px !important; background-repeat: repeat !important; }
 
 html:root body.osrs-theme.osrs-stacks [data-osrs-stack] { text-shadow: 1px 1px 0 #000; }
 html:root body.osrs-theme.osrs-stacks [data-osrs-stack="yellow"] { color: #ffff00 !important; }
 html:root body.osrs-theme.osrs-stacks [data-osrs-stack="white"] { color: #ffffff !important; }
 html:root body.osrs-theme.osrs-stacks [data-osrs-stack="green"] { color: #00ff80 !important; }
 
-html:root body.osrs-theme.osrs-hitsplats .splash-animation { width: 48px; height: 46px; line-height: 46px; text-align: center; color: #fff !important; text-shadow: 1px 1px 0 #000; font-weight: 700; background: var(--osrs-hitsplat-damage) center / contain no-repeat; image-rendering: pixelated; }
-html:root body.osrs-theme.osrs-hitsplats .splash-animation.text-crit { background-image: var(--osrs-hitsplat-max-hit); }
-html:root body.osrs-theme.osrs-hitsplats .splash-animation.text-primary { background-image: var(--osrs-hitsplat-tinted); }
-html:root body.osrs-theme.osrs-hitsplats .splash-animation.text-poison { background-image: var(--osrs-hitsplat-poison); }
-html:root body.osrs-theme.osrs-hitsplats .splash-animation.text-deadlypoison { background-image: var(--osrs-hitsplat-venom); }
-html:root body.osrs-theme.osrs-hitsplats .splash-animation.text-burn { background-image: var(--osrs-hitsplat-burn); }
-html:root body.osrs-theme.osrs-hitsplats .splash-animation.text-bleed { background-image: var(--osrs-hitsplat-bleed); }
-html:root body.osrs-theme.osrs-hitsplats .splash-animation.text-success { background-image: var(--osrs-hitsplat-heal); }
-html:root body.osrs-theme.osrs-hitsplats .splash-animation.text-voidburst { background-image: var(--osrs-hitsplat-corruption); }
-html:root body.osrs-theme.osrs-hitsplats .splash-animation.osrs-zero { background-image: var(--osrs-hitsplat-zero); }
-html:root body.osrs-theme.osrs-hitsplats .splash-animation.osrs-text { background-image: none; width: auto; }
+html:root body.osrs-theme.osrs-hitsplats :is(#combat-player-splash-container, #combat-enemy-splash-container) .splash-animation { width: 48px; height: 46px; line-height: 46px; text-align: center; color: #fff !important; text-shadow: 1px 1px 0 #000; font-weight: 700; background: var(--osrs-hitsplat-damage) center / contain no-repeat; image-rendering: pixelated; }
+html:root body.osrs-theme.osrs-hitsplats :is(#combat-player-splash-container, #combat-enemy-splash-container) .splash-animation.text-crit { background-image: var(--osrs-hitsplat-max-hit); }
+html:root body.osrs-theme.osrs-hitsplats :is(#combat-player-splash-container, #combat-enemy-splash-container) .splash-animation.text-primary { background-image: var(--osrs-hitsplat-tinted); }
+html:root body.osrs-theme.osrs-hitsplats :is(#combat-player-splash-container, #combat-enemy-splash-container) .splash-animation.text-poison { background-image: var(--osrs-hitsplat-poison); }
+html:root body.osrs-theme.osrs-hitsplats :is(#combat-player-splash-container, #combat-enemy-splash-container) .splash-animation.text-deadlypoison { background-image: var(--osrs-hitsplat-venom); }
+html:root body.osrs-theme.osrs-hitsplats :is(#combat-player-splash-container, #combat-enemy-splash-container) .splash-animation.text-burn { background-image: var(--osrs-hitsplat-burn); }
+html:root body.osrs-theme.osrs-hitsplats :is(#combat-player-splash-container, #combat-enemy-splash-container) .splash-animation.text-bleed { background-image: var(--osrs-hitsplat-bleed); }
+html:root body.osrs-theme.osrs-hitsplats :is(#combat-player-splash-container, #combat-enemy-splash-container) .splash-animation:is(.text-success, .osrs-heal) { background-image: var(--osrs-hitsplat-heal); }
+html:root body.osrs-theme.osrs-hitsplats :is(#combat-player-splash-container, #combat-enemy-splash-container) .splash-animation.text-voidburst { background-image: var(--osrs-hitsplat-corruption); }
+html:root body.osrs-theme.osrs-hitsplats :is(#combat-player-splash-container, #combat-enemy-splash-container) .splash-animation.osrs-zero { background-image: var(--osrs-hitsplat-zero); }
+html:root body.osrs-theme.osrs-hitsplats :is(#combat-player-splash-container, #combat-enemy-splash-container) .splash-animation.osrs-text { background-image: none; width: auto; }
+@keyframes osrsHitsplat { 0% { transform: translateY(-60%); opacity: 1; } 70% { transform: translateY(-75%); opacity: 1; } 100% { transform: translateY(-90%); opacity: 0; } }
+html:root body.osrs-theme.osrs-hitsplats :is(#combat-player-splash-container, #combat-enemy-splash-container) .splash-animation { animation-name: osrsHitsplat; }
 
 html:root body.osrs-theme.osrs-login.osrs-character-select [data-osrs-login="self"]:not(img),
 html:root body.osrs-theme.osrs-login.osrs-character-select [data-osrs-login="before"]::before,
@@ -56,7 +62,52 @@ html:root body.osrs-theme.osrs-cards .btn-group:has(> .character-selection-toggl
 html:root body.osrs-theme.osrs-cards save-slot-display > .block { min-height: 220px; background: transparent !important; border: 14px solid transparent !important; border-radius: 0 !important; border-image: var(--osrs-titlebox) 20 fill / 14px stretch !important; box-shadow: none !important; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6)); }
 html:root body.osrs-theme.osrs-cards save-slot-display .block-header { background: transparent !important; box-shadow: none !important; }
 html:root body.osrs-theme.osrs-cards save-slot-display .block-title { color: #ffff00 !important; text-shadow: 1px 1px 0 #000 !important; }
-html:root body.osrs-theme.osrs-cards save-slot-display .btn-group > .btn { background: rgba(16, 17, 20, 0.35) !important; color: #fff !important; border: 1px solid #0b0b0b !important; border-radius: 2px !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08) !important; text-shadow: 1px 1px 0 #000; }
+html:root body.osrs-theme.osrs-cards save-slot-display .btn-group > .btn.btn, html:root body.osrs-theme.osrs-cards save-slot-display .btn-group > .btn.btn:is(:hover, :active, .active, :focus) { background: transparent !important; background-image: none !important; color: #fff !important; border: 1px solid #0b0b0b !important; border-radius: 2px !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08) !important; filter: none !important; text-shadow: 1px 1px 0 #000; }
 html:root body.osrs-theme.osrs-cards :is(.character-selection-toggle, #character-selection-toggle-refresh) { background: transparent !important; color: #fff !important; border: 4px solid transparent !important; border-radius: 0 !important; border-image: var(--osrs-titlebutton) 5 fill / 4px stretch !important; box-shadow: none !important; text-shadow: 1px 1px 0 #000; }
-html:root body.osrs-theme.osrs-cards :is(save-slot-display .btn-group > .btn, .character-selection-toggle, #character-selection-toggle-refresh):hover { filter: brightness(1.2); }
+html:root body.osrs-theme.osrs-cards :is(.character-selection-toggle, #character-selection-toggle-refresh):hover { filter: brightness(1.2); }
 html:root body.osrs-theme.osrs-cards save-slot-display .bg-gamemode { opacity: 0.25; }
+
+html:root body.osrs-theme.osrs-font :is(.block-title, .nav-main-heading, .btn:not(:has(h1, h2, h3, h4, h5, .media))) { font-family: "OSRS Bold 12", Inter, sans-serif !important; font-weight: 400 !important; letter-spacing: 0 !important; }
+html:root body.osrs-theme.osrs-font :is(.nav-main-link-name, .tippy-box, .tippy-content) { font-family: "OSRS Plain 12", Inter, sans-serif !important; font-weight: 400 !important; letter-spacing: 0 !important; }
+html:root body.osrs-theme.osrs-font :is([data-osrs-stack], :is(#combat-player-splash-container, #combat-enemy-splash-container) .splash-animation) { font-family: "OSRS Plain 11", Inter, sans-serif !important; font-size: var(--osrs-font-size, 16px) !important; font-weight: 400 !important; }
+html:root body.osrs-theme.osrs-font .swal2-title { font-family: "OSRS Bold 12", Inter, sans-serif !important; font-weight: 400 !important; }
+html:root body.osrs-theme.osrs-font #combat-enemy-name { font-family: "OSRS Bold 12", Inter, sans-serif !important; font-weight: 400 !important; }
+
+html:root body.osrs-theme.osrs-font-all { font-family: "OSRS Plain 12", Inter, sans-serif !important; letter-spacing: 0; }
+html:root body.osrs-theme.osrs-font-all :is(small, .small, .font-size-sm, .font-size-xs, .btn-sm) { font-family: "OSRS Plain 12", Inter, sans-serif !important; }
+html:root body.osrs-theme.osrs-font-all :is(b, strong, th, .font-w600, .font-w700, .font-w-bold, .btn-lg) { font-family: "OSRS Bold 12", Inter, sans-serif !important; font-weight: 400 !important; }
+html:root body.osrs-theme.osrs-font-all :is(h1, .h1, h2, .h2) { font-family: "OSRS Bold 12", Inter, sans-serif !important; font-weight: 400 !important; }
+html:root body.osrs-theme.osrs-font-all :is(h3, .h3, h4, .h4) { font-family: "OSRS Bold 12", Inter, sans-serif !important; font-weight: 400 !important; }
+html:root body.osrs-theme.osrs-font-all :is(h5, .h5, h6, .h6, .btn-lg) { font-family: "OSRS Bold 12", Inter, sans-serif !important; font-weight: 400 !important; }
+html:root body.osrs-theme.osrs-font-all :is(.form-control, input, select, textarea) { font-family: "OSRS Plain 12", Inter, sans-serif !important; }
+
+html:root body.osrs-theme character-display .btn-group > .btn > .col-12 { padding-right: 0 !important; }
+
+html:root body.osrs-theme.darkMode :is(#page-header, #page-header > .content-header) { background-color: #2f2922 !important; }
+
+html:root body.osrs-theme.osrs-buttons .btn:not(.btn-link) { --osrs-button-fill: linear-gradient(#51483b, #3e362c); background: #463e33 !important; background-image: var(--osrs-button-fill) !important; border: 1px solid #0e0c09 !important; border-radius: 3px !important; border-image: none !important; box-shadow: inset 1px 1px 0 rgba(255, 236, 200, 0.18), inset -1px -1px 0 rgba(0, 0, 0, 0.5) !important; color: #fff !important; text-shadow: 1px 1px 0 #000; }
+html:root body.osrs-theme.osrs-buttons .btn:not(.btn-link):hover { --osrs-button-fill: linear-gradient(#6b5b3e, #52452e); }
+html:root body.osrs-theme.osrs-buttons .btn:not(.btn-link):is(:active, .active) { --osrs-button-fill: linear-gradient(#352e26, #463d32); box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.5), inset -1px -1px 0 rgba(255, 236, 200, 0.12) !important; }
+html:root body.osrs-theme.osrs-buttons :is(#melee-attack-style-buttons, #ranged-attack-style-buttons, #magic-attack-style-buttons) .btn.btn-secondary { --osrs-button-fill: linear-gradient(#5a2119, #742d21); box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.55), inset -1px -1px 0 rgba(255, 236, 200, 0.12) !important; }
+html:root body.osrs-theme.osrs-buttons .btn:is(.btn-danger, .btn-outline-danger, .btn-alt-danger) { --osrs-button-fill: linear-gradient(#7d2c22, #5c1e17); }
+html:root body.osrs-theme.osrs-buttons .btn:is(.btn-danger, .btn-outline-danger, .btn-alt-danger):hover { --osrs-button-fill: linear-gradient(#97372b, #73271d); }
+html:root body.osrs-theme.osrs-buttons.osrs-texture .btn:not(.btn-link) { background-image: var(--osrs-stone), var(--osrs-button-fill) !important; background-size: 128px 128px, auto !important; }
+html:root body.osrs-theme.osrs-buttons .btn:is(.btn-success, .btn-outline-success, .btn-alt-success) { color: #9fd86b !important; }
+html:root body.osrs-theme.osrs-buttons .btn:is(.btn-warning, .btn-outline-warning, .btn-alt-warning) { color: #ff981f !important; }
+html:root body.osrs-theme.osrs-buttons .btn:is(.btn-primary, .btn-outline-primary, .btn-alt-primary) { color: #ffcf40 !important; }
+html:root body.osrs-theme.osrs-buttons .btn:is(.btn-info, .btn-outline-info, .btn-alt-info) { color: #8fd0ea !important; }
+html:root body.osrs-theme.osrs-buttons .btn:not(.btn-link):is(:disabled, .disabled) { filter: grayscale(0.5) brightness(0.7); }
+
+html:root body.osrs-theme.osrs-sidebar #sidebar .nav-main-item > .nav-main-link { background-color: #3a332a !important; border-radius: 0 !important; border-bottom: 1px solid #16130f; box-shadow: inset 0 1px 0 rgba(255, 236, 200, 0.06); }
+html:root body.osrs-theme.osrs-sidebar #sidebar .nav-main-item:nth-child(even) > .nav-main-link { background-color: #2e2821 !important; }
+html:root body.osrs-theme.osrs-sidebar #sidebar .nav-main-item:nth-child(odd of .nav-main-item) > .nav-main-link { background-color: #3a332a !important; }
+html:root body.osrs-theme.osrs-sidebar #sidebar .nav-main-item:nth-child(even of .nav-main-item) > .nav-main-link { background-color: #2e2821 !important; }
+html:root body.osrs-theme.osrs-sidebar #sidebar .nav-main-item > .nav-main-link:hover { background-color: #4a4136 !important; }
+html:root body.osrs-theme.osrs-sidebar #sidebar .nav-main-item > .nav-main-link.active { background-color: #4f4535 !important; box-shadow: inset 3px 0 0 #ff981f, inset 0 1px 0 rgba(255, 236, 200, 0.08); }
+html:root body.osrs-theme.osrs-sidebar #sidebar .nav-main-heading { margin: 0 !important; padding: 10px 20px !important; background: linear-gradient(#2b251e, #1d1914) !important; border-top: 1px solid #0b0a08; border-bottom: 1px solid #0b0a08; box-shadow: inset 0 1px 0 rgba(255, 236, 200, 0.14), inset 0 -1px 0 rgba(0, 0, 0, 0.6); }
+
+html:root body.osrs-theme.osrs-buttons #combat-footer-minibar .btn { border-image: none !important; background: #2f2922 !important; border: 1px solid #0e0c09 !important; border-radius: 2px !important; box-shadow: inset 1px 1px 0 rgba(255, 236, 200, 0.14), inset -1px -1px 0 rgba(0, 0, 0, 0.55) !important; }
+html:root body.osrs-theme.osrs-buttons .btn:has(.progress, .media) { border-image: none !important; background: #2f2922 !important; border: 1px solid #0e0c09 !important; border-radius: 2px !important; box-shadow: inset 1px 1px 0 rgba(255, 236, 200, 0.14), inset -1px -1px 0 rgba(0, 0, 0, 0.55) !important; }
+html:root body.osrs-theme.osrs-buttons #combat-footer-minibar .btn:hover, html:root body.osrs-theme.osrs-buttons .btn:has(.progress, .media):hover { background: #3c342b !important; }
+html:root body.osrs-theme :is(.combat-enemy-img-spinner, .combat-enemy-img-spinner-mobile).spinner-border { width: 40px; height: 40px; margin: 110px auto 0; border-width: 3px; color: rgba(255, 152, 31, 0.6) !important; animation-duration: 1.2s; }
+html:root body.osrs-background::before { background-image: var(--osrs-background) !important; }

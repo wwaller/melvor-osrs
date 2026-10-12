@@ -8,6 +8,7 @@ import colorsys
 import io
 import json
 import re
+import shutil
 import urllib.parse
 import urllib.request
 import zipfile
@@ -33,12 +34,13 @@ COLOR_TOKEN = re.compile(rf"#[0-9a-fA-F]{{3,8}}\b|rgba?\([^)]*\)|\b(?:{COLOR_NAM
 NEUTRAL_HUE = 34
 HUES = [
     ((15, 70), 32, 0.95),
-    ((70, 170), 115, 0.7),
+    ((70, 170), 105, 0.4),
     ((170, 235), 200, 0.42),
     ((235, 320), 40, 0.58),
 ]
 RED = (2, 0.72)
 ACCENT_DARKEN = 0.88
+GREEN_DARKEN = 0.78
 HITSPLATS = {
     "damage": "File:Damage hitsplat.png", "max-hit": "File:Damage hitsplat (max hit).png", "tinted": "File:Damage hitsplat (tinted).png",
     "zero": "File:Zero damage hitsplat.png", "poison": "File:Poison hitsplat.png", "venom": "File:Venom hitsplat.png",
@@ -47,6 +49,27 @@ HITSPLATS = {
 }
 LOGIN_BACKGROUND = "File:Login background mobile (original).png"
 LOGIN_SPRITES = {"titlebox": 499, "titlebutton": 2135}
+GAME_BACKGROUNDS = {
+    "lumbridge": ("File:Lumbridge.png", "Lumbridge", "day"),
+    "varrock": ("File:Varrock.png", "Varrock", "day"),
+    "falador-park": ("File:Falador Park.png", "Falador Park", "day"),
+    "seers-village": ("File:Seers Village.png", "Seers' Village", "day"),
+    "catherby": ("File:Catherby.png", "Catherby", "day"),
+    "karamja": ("File:Karamja.png", "Karamja", "day"),
+    "al-kharid": ("File:Al Kharid.png", "Al Kharid", "day"),
+    "wilderness": ("File:Wilderness.png", "The Wilderness", "dusk"),
+    "canifis": ("File:Canifis.png", "Canifis", "night"),
+    "zanaris": ("File:Zanaris.png", "Zanaris", "day"),
+    "fossil-island": ("File:Mushroom Forest.png", "Fossil Island", "day"),
+    "grand-exchange": ("File:Grand Exchange.png", "Grand Exchange", "day"),
+}
+SKIES = {"day": ((104, 140, 178), (188, 204, 214)), "dusk": ((58, 48, 70), (142, 112, 108)), "night": ((14, 22, 30), (52, 72, 66))}
+VOID_LIGHTNESS = 6
+VOID_MIN_SIZE = 5
+GAME_BACKGROUND_WIDTH = 1440
+GAME_BACKGROUND_THUMB_WIDTH = 384
+FONTS_URL = "https://github.com/RuneStar/fonts/releases/download/1.103-0/RuneScape-Fonts.zip"
+FONTS = ["RuneScape-Plain-11", "RuneScape-Plain-12", "RuneScape-Bold-12"]
 STONE_SIZE = 128
 BACKGROUND = (36, 31, 26, 255)
 YELLOW = (255, 255, 0, 255)
@@ -93,7 +116,7 @@ def osrs_color(red, green, blue):
     else:
         target_hue, target_saturation = next((h, s) for (low, high), h, s in HUES if low <= degrees < high)
         if 70 <= degrees < 170:
-            lightness *= ACCENT_DARKEN
+            lightness *= GREEN_DARKEN
     r, g, b = colorsys.hls_to_rgb(target_hue / 360, lightness, target_saturation)
     return round(r * 255), round(g * 255), round(b * 255)
 
@@ -218,10 +241,16 @@ def scaled(image, scale):
     return image.resize((image.width * scale, image.height * scale), Image.NEAREST)
 
 
-def draw_logo(icon):
+def draw_logo(icon, titlebox):
     logo = Image.new("RGBA", (1280, 720), BACKGROUND)
+    card = scaled(titlebox, 3)
+    card_x, card_y = (logo.width - card.width) // 2, (logo.height - card.height) // 2
+    shadow = Image.new("RGBA", logo.size)
+    shadow.paste((0, 0, 0, 153), (card_x, card_y + 6), card)
+    logo.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(12)))
+    logo.alpha_composite(card, (card_x, card_y))
     big = scaled(icon, 9)
-    logo.alpha_composite(big, (190 - big.width // 2, (720 - big.height) // 2))
+    logo.alpha_composite(big, (316 - big.width // 2, (720 - big.height) // 2))
     font = ImageFont.load_default_imagefont()
 
     def text(line, x, y, scale, fill):
@@ -232,11 +261,37 @@ def draw_logo(icon):
         pen.text((-left, -top), line, font=font, fill=fill)
         logo.alpha_composite(scaled(tag, scale), (x, y))
 
-    text("OSRS THEME", 400, 270, 9, YELLOW)
-    text("Old School RuneScape colours", 404, 380, 3, ORANGE)
-    text("for Melvor Idle", 404, 420, 3, ORANGE)
+    text("OSRS THEME", 526, 270, 9, YELLOW)
+    text("Old School RuneScape colours", 530, 380, 3, ORANGE)
+    text("for Melvor Idle", 530, 420, 3, ORANGE)
     return logo
 
+
+def fill_void(art, sky):
+    """OSRS draws nothing past the view distance, so screenshots have black sky and gaps; paint a sky into every black area too big to be an outline."""
+    black = art.convert("L").point(lambda value: 255 if value < VOID_LIGHTNESS else 0)
+    mask = black.filter(ImageFilter.MinFilter(VOID_MIN_SIZE)).filter(ImageFilter.MaxFilter(VOID_MIN_SIZE)).filter(ImageFilter.GaussianBlur(0.8))
+    top, horizon = SKIES[sky]
+    gradient = Image.new("RGB", (1, art.height))
+    for y in range(art.height):
+        mix = min(1, y / (art.height * 0.6))
+        gradient.putpixel((0, y), tuple(round(a + (b - a) * mix) for a, b in zip(top, horizon)))
+    return Image.composite(gradient.resize(art.size), art, mask)
+
+
+def write_game_backgrounds(images):
+    """In-game OSRS places for Melvor's background setting, with a thumbnail for its dropdown."""
+    folder = images / "backgrounds"
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir()
+    for key, (title, _label, sky) in GAME_BACKGROUNDS.items():
+        art = fill_void(wiki_image(title).convert("RGB"), sky)
+        if art.width > GAME_BACKGROUND_WIDTH:
+            art = art.resize((GAME_BACKGROUND_WIDTH, round(art.height * GAME_BACKGROUND_WIDTH / art.width)), Image.LANCZOS)
+        art.save(folder / f"{key}.jpg", quality=82, optimize=True)
+        thumb = art.resize((GAME_BACKGROUND_THUMB_WIDTH, round(art.height * GAME_BACKGROUND_THUMB_WIDTH / art.width)), Image.LANCZOS)
+        thumb.save(folder / f"{key}-thumb.jpg", quality=82, optimize=True)
+    (images / "backgrounds.json").write_text(json.dumps([{"key": key, "label": label} for key, (_title, label, _sky) in GAME_BACKGROUNDS.items()]))
 
 def main():
     MOD_DIR.mkdir(exist_ok=True)
@@ -249,12 +304,18 @@ def main():
     for name, title in HITSPLATS.items():
         wiki_image(title).save(images / f"hitsplat-{name}.png")
     wiki_image(LOGIN_BACKGROUND).convert("RGB").save(images / "login.jpg", quality=82, optimize=True)
+    write_game_backgrounds(images)
     stone_texture().save(images / "stone.png", optimize=True)
+    fonts = MOD_DIR / "fonts"
+    fonts.mkdir(exist_ok=True)
+    with zipfile.ZipFile(io.BytesIO(fetch(FONTS_URL))) as bundle:
+        for name in FONTS:
+            (fonts / f"{name}.ttf").write_bytes(bundle.read(f"ttf/{name}.ttf"))
     cache = Cache(CACHE)
     for name, sprite_id in LOGIN_SPRITES.items():
         cache.sprites(sprite_id)[0].save(images / f"{name}.png", optimize=True)
     DIST_DIR.mkdir(exist_ok=True)
-    draw_logo(icon).convert("RGB").save(DIST_DIR / "logo.png", optimize=True)
+    draw_logo(icon, Image.open(images / "titlebox.png").convert("RGBA")).convert("RGB").save(DIST_DIR / "logo.png", optimize=True)
     archive = DIST_DIR / "melvor-osrs-theme.zip"
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as bundle:
         for path in sorted(MOD_DIR.rglob("*")):

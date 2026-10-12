@@ -1,15 +1,42 @@
 const THEME_CLASS = 'osrs-theme';
+const FONT_SCALES = { '--osrs-font-size': 1 };
+const UI_FONT_SIZE_ADJUST = '125%';
+const POPUPS = '.swal2-container, .modal';
+const COMBAT_SPLASH_CONTAINERS = new Set(['combat-player-splash-container', 'combat-enemy-splash-container']);
+const BACKGROUND_SETTING = 'backgroundImage';
+const SMOOTH_FONT_RATIO = 2;
+const FONT_BASE = 16;
+const CRISP_TOLERANCE = 0.12;
+
+/** The OSRS fonts are pixel-exact at multiples of 16 device pixels: use one when it is close to the wanted size, else the wanted size. */
+function fontSize(scale, ratio) {
+  const target = FONT_BASE * scale;
+  const exact = Math.round(target * ratio) / ratio;
+  if (ratio >= SMOOTH_FONT_RATIO) return exact;
+  const step = FONT_BASE / ratio;
+  const crisp = Math.max(1, Math.round(target / step)) * step;
+  return Math.abs(crisp - target) / target <= CRISP_TOLERANCE ? crisp : exact;
+}
 const FEATURES = [
   { name: 'shadows', label: 'Black text shadow', hint: 'OSRS draws all interface text with a 1px black shadow.' },
   { name: 'bevels', label: 'Bevelled stone borders', hint: 'Panels, buttons and tabs get a light top-left edge and a dark bottom-right edge.' },
   { name: 'tooltips', label: 'OSRS-style tooltips', hint: 'Translucent brown hover boxes with a thin border, like RuneLite.' },
-  { name: 'hp-bars', label: 'OSRS health bars', hint: 'Green over red for your hitpoints and the enemy\'s.' },
+  { name: 'hp-bars', label: 'OSRS health and timer bars', hint: 'Green over red for your hitpoints and the enemy\'s, and OSRS yellow for timers like the attack interval.' },
   { name: 'texture', label: 'Stone texture', hint: 'A faint speckled stone texture behind panels and the sidebar.' },
   { name: 'stacks', label: 'OSRS bank stack colours', hint: 'Yellow under 100K, white with a K up to 10M, green with an M after that.' },
   { name: 'hitsplats', label: 'OSRS hitsplats', hint: 'Damage numbers on red hitsplats, blue for a miss, green for poison, and so on.' },
   { name: 'login', label: 'OSRS login background', hint: 'The classic OSRS login art behind character select, with the braziers burning.' },
   { name: 'cards', label: 'Stone character select cards', hint: 'Save slots look like the stone OSRS login box.' },
+  { name: 'sidebar', label: 'OSRS sidebar', hint: 'Skill rows alternate dark and darker with stone edges, and section headers become bevelled title bars.' },
+  { name: 'buttons', label: 'OSRS stone buttons', hint: 'Bevelled stone buttons that match the panels, red for dangerous actions, with coloured text instead of coloured buttons.' },
+  { name: 'font', label: 'OSRS font', hint: 'Titles, headings, the sidebar, buttons, tooltips, bank counts and hitsplats use the real OSRS fonts. Descriptions and stat tables stay in Melvor\'s font so they stay easy to read.' },
+  { name: 'font-all', label: 'OSRS font for all text', hint: 'Also uses the OSRS fonts for descriptions, stats and small print, at Melvor\'s own text sizes. Turn off if it is hard to read.' },
 ];
+const FONTS = {
+  'OSRS Plain 11': { path: 'fonts/RuneScape-Plain-11.ttf' },
+  'OSRS Plain 12': { path: 'fonts/RuneScape-Plain-12.ttf', sizeAdjust: UI_FONT_SIZE_ADJUST },
+  'OSRS Bold 12': { path: 'fonts/RuneScape-Bold-12.ttf', sizeAdjust: UI_FONT_SIZE_ADJUST },
+};
 const ASSETS = {
   '--osrs-stone': 'img/stone.png',
   '--osrs-login': 'img/login.jpg',
@@ -30,6 +57,17 @@ const ASSETS = {
 export async function setup(ctx) {
   ctx.loadStylesheet('theme.css');
   for (const [property, path] of Object.entries(ASSETS)) document.documentElement.style.setProperty(property, `url("${ctx.getResourceUrl(path)}")`);
+  for (const [family, { path, sizeAdjust }] of Object.entries(FONTS)) {
+    new FontFace(family, `url("${ctx.getResourceUrl(path)}")`, sizeAdjust ? { sizeAdjust } : {}).load().then((face) => document.fonts.add(face)).catch(() => {});
+  }
+  const sizeFont = () => {
+    const ratio = window.devicePixelRatio || 1;
+    for (const [property, scale] of Object.entries(FONT_SCALES)) {
+      document.documentElement.style.setProperty(property, `${fontSize(scale, ratio)}px`);
+    }
+  };
+  sizeFont();
+  window.addEventListener('resize', sizeFont);
   const section = ctx.settings.section('General');
   const { createLoginScene } = await ctx.loadModule('fire.mjs');
   const { createRecolorer } = await ctx.loadModule('palette.mjs');
@@ -72,7 +110,45 @@ export async function setup(ctx) {
     else loginScene.hide();
     if (minibar && on) recolorer.recolor(minibar);
     else recolorer.clear();
+    alignCombatBars();
     refreshBank();
+  }
+
+  function alignCombatBars() {
+    for (const side of ['player', 'enemy']) {
+      const health = document.getElementById(`combat-${side}-hitpoints-bar`)?.parentElement;
+      const label = document.getElementById(`combat-${side}-attack-speed`);
+      const timer = health && label && timerBarBefore(label, health);
+      if (!timer) continue;
+      timer.style.height = '';
+      timer.style.marginTop = '';
+      if (!document.body.classList.contains('osrs-hp-bars')) continue;
+      const healthBox = health.getBoundingClientRect();
+      const timerBox = timer.getBoundingClientRect();
+      const sideBySide = healthBox.right <= timerBox.left || timerBox.right <= healthBox.left;
+      if (!healthBox.height || !timerBox.height || !sideBySide || Math.abs(healthBox.top - timerBox.top) > healthBox.height * 3) continue;
+      timer.style.height = `${healthBox.height}px`;
+      timer.style.marginTop = `${healthBox.top - timerBox.top}px`;
+    }
+  }
+
+  function timerBarBefore(label, health) {
+    for (let node = label.parentElement; node; node = node.parentElement) {
+      const bars = [...node.querySelectorAll('.progress')].filter((bar) => bar !== health
+        && !bar.contains(health) && !health.contains(bar) && !bar.querySelector('[id*="barrier"]')
+        && bar.compareDocumentPosition(label) & Node.DOCUMENT_POSITION_FOLLOWING);
+      if (bars.length) return bars[bars.length - 1];
+    }
+    return null;
+  }
+
+  function watchCombatBars() {
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => window.requestAnimationFrame(alignCombatBars));
+    for (const side of ['player', 'enemy']) {
+      const health = document.getElementById(`combat-${side}-hitpoints-bar`)?.parentElement;
+      if (health) observer.observe(health);
+    }
   }
 
   function watchMinibar() {
@@ -116,13 +192,14 @@ export async function setup(ctx) {
 
   const hitsplatsOn = () => document.body.classList.contains('osrs-hitsplats');
 
+  const isCombatSplash = (manager) => COMBAT_SPLASH_CONTAINERS.has(manager.container?.id);
   ctx.patch(SplashManager, 'add').replace(function (add, splash) {
-    if (hitsplatsOn() && typeof game !== 'undefined' && !game._isInOnlineLoop) return undefined;
+    if (isCombatSplash(this) && hitsplatsOn() && typeof game !== 'undefined' && !game._isInOnlineLoop) return undefined;
     return add(splash);
   });
 
   ctx.patch(SplashManager, 'render').replace(function (render) {
-    if (hitsplatsOn() && this.container.offsetParent === null) {
+    if (isCombatSplash(this) && hitsplatsOn() && this.container.offsetParent === null) {
       this.queue = [];
       return undefined;
     }
@@ -132,14 +209,18 @@ export async function setup(ctx) {
   ctx.patch(SplashManager, 'renderSplash').replace(function (renderSplash, splash) {
     const result = renderSplash(splash);
     const element = this.container.lastElementChild;
-    if (!element || !document.body.classList.contains('osrs-hitsplats')) return result;
+    if (!element || !isCombatSplash(this) || !document.body.classList.contains('osrs-hitsplats')) return result;
     const isMiss = splash.text !== undefined && splash.text === getLangString('COMBAT_MISC_MISS');
     if (splash.text !== undefined && !isMiss) {
       element.classList.add('osrs-text');
     } else {
       element.textContent = formatNumber(Math.abs(splash.amount));
       if (splash.amount === 0) element.classList.add('osrs-zero');
+      else if (splash.amount > 0) element.classList.add('osrs-heal');
     }
+    const half = element.offsetWidth / 2;
+    const at = Number.isFinite(splash.xOffset) ? splash.xOffset : 100;
+    element.style.left = `clamp(0px, calc(${at}% - ${half}px), calc(100% - ${half * 2}px))`;
     return result;
   });
 
@@ -162,7 +243,7 @@ export async function setup(ctx) {
     marked.forEach((element) => element.removeAttribute('data-osrs-login'));
     const screen = window.innerWidth * window.innerHeight;
     for (const element of [document.body, ...document.body.querySelectorAll('*')]) {
-      if (element.id === 'osrs-login-scene') continue;
+      if (element.id === 'osrs-login-scene' || element.closest?.(POPUPS)) continue;
       const rect = element.getBoundingClientRect();
       if (element !== document.body && rect.width * rect.height < screen / 2) continue;
       const style = (layer) => window.getComputedStyle(element, layer === 'self' ? null : `::${layer}`);
@@ -183,18 +264,53 @@ export async function setup(ctx) {
 
   document.body.classList.add('osrs-character-select');
   apply();
+  const backgrounds = (await ctx.loadData('img/backgrounds.json')).map(({ key, label }) => ({
+    value: `osrs:${key}`,
+    key,
+    name: `<img src="${ctx.getResourceUrl(`img/backgrounds/${key}-thumb.jpg`)}" style="width:256px" title="${label}"/>`,
+  }));
+  const storedBackground = () => backgrounds.find((option) => option.key === ctx.characterStorage.getItem('background'));
+  const showBackground = (option) => {
+    document.body.classList.toggle('osrs-background', option !== undefined);
+    if (option) document.body.style.setProperty('--osrs-background', `url("${ctx.getResourceUrl(`img/backgrounds/${option.key}.jpg`)}")`);
+  };
+  const showChoice = (option) => {
+    document.querySelectorAll(`settings-dropdown[data-setting-id="${BACKGROUND_SETTING}"]`).forEach((dropdown) => dropdown.updateValue(option));
+  };
+  // Kept out of Melvor's save: a background value it does not know stops the character loading once this mod is gone.
+  ctx.patch(Settings, 'changeChoiceSetting').replace(function (changeChoiceSetting, setting, value) {
+    if (setting !== BACKGROUND_SETTING) return changeChoiceSetting(setting, value);
+    const option = backgrounds.find((each) => each.value === value);
+    if (!option) {
+      ctx.characterStorage.removeItem('background');
+      showBackground(undefined);
+      return changeChoiceSetting(setting, value);
+    }
+    ctx.characterStorage.setItem('background', option.key);
+    showBackground(option);
+    showChoice(option);
+    saveData();
+    return undefined;
+  });
+
   ctx.onCharacterSelectionLoaded(() => {
+    const options = typeof game !== 'undefined' ? game.settings.choiceData[BACKGROUND_SETTING].options : [];
+    if (!options.includes(backgrounds[0])) options.push(...backgrounds);
     [0, 500, 2000].forEach((delay) => setTimeout(markLoginLayers, delay));
     window.addEventListener('resize', onLoginResize);
   });
   ctx.onCharacterLoaded(() => {
+    showBackground(storedBackground());
     document.body.classList.remove('osrs-character-select');
     window.removeEventListener('resize', onLoginResize);
     loginScene.hide();
   });
   ctx.onInterfaceReady(() => {
+    const background = storedBackground();
+    if (background) showChoice(background);
     addToGameSettings();
     watchMinibar();
+    watchCombatBars();
     apply();
   });
 }

@@ -45,7 +45,9 @@ MARKUP = """
     </div>
     <div class="block block-rounded"><div class="block-header block-header-default"><h3 class="block-title">Combat</h3></div>
       <div class="block-content"><div class="progress mb-2" style="height:14px"><div id="combat-player-hitpoints-bar" class="progress-bar bg-danger" style="width:72%">72 / 99</div></div>
-      <div class="mb-3" style="position:relative;height:50px">{splashes}</div>
+      <div class="block block-rounded-double bg-combat-inner-dark text-center mb-3"><div id="combat-enemy-img" style="height:260px;"><div class="combat-enemy-img-spinner-mobile spinner-border text-danger" role="status"></div></div></div>
+      <div class="row gutters-tiny mb-3" id="melee-attack-style-buttons"><div class="col-4"><button class="btn btn-outline-secondary my-1 w-100">Stab</button></div><div class="col-4"><button class="btn btn-secondary my-1 w-100">Slash</button></div><div class="col-4"><button class="btn btn-outline-secondary my-1 w-100">Block</button></div></div>
+      <div class="mb-3" id="combat-enemy-splash-container" style="position:relative;height:50px">{splashes}</div>
       <div class="mb-3">{stacks}</div>
       <div class="tippy-box mb-3" style="display:inline-block;padding:4px 8px"><div class="tippy-content">Magic logs<br><span class="text-warning">Sells for 1,000 GP</span></div></div>
       <div class="progress mb-3" style="height:14px"><div class="progress-bar bg-warning" style="width:45%"></div></div>
@@ -62,7 +64,11 @@ def page(themed):
     links = "".join(f'<link rel="stylesheet" href="{(CACHE / urllib.parse.quote("https://steam.melvoridle.com/" + s, safe="")).as_uri()}">' for s in SHEETS)
     links += f'<link rel="stylesheet" href="{(ROOT / "mod" / "theme.css").as_uri()}">'
     skills = "".join(SKILL_ROW.format(name=n, level=l, active=" active" if a else "") for n, l, a in SKILLS)
-    features = " osrs-theme osrs-shadows osrs-bevels osrs-tooltips osrs-hp-bars osrs-texture osrs-stacks osrs-hitsplats" if themed else ""
+    features = " osrs-theme osrs-shadows osrs-bevels osrs-tooltips osrs-hp-bars osrs-texture osrs-stacks osrs-hitsplats osrs-font osrs-font-all osrs-buttons osrs-sidebar" if themed else ""
+    fonts = ROOT / "mod" / "fonts"
+    faces = {name: (fonts / ("RuneScape-" + name.replace(" ", "-") + ".ttf")).as_uri() for name in ("Plain 11", "Plain 12", "Bold 12")}
+    adjust = {"Plain 11": "", "Plain 12": ";size-adjust:125%", "Bold 12": ";size-adjust:125%"}
+    links += "<style>" + "".join(f'@font-face{{font-family:"OSRS {name}";src:url("{uri}"){adjust[name]}}}' for name, uri in faces.items()) + "</style>"
     images = ROOT / "mod" / "img"
     variables = ";".join(f"--osrs-{name}:url('{(images / f'{file}').as_uri()}')" for name, file in
                          [("stone", "stone.png")] + [(f"hitsplat-{h}", f"hitsplat-{h}.png") for h in ("damage", "max-hit", "zero", "poison", "heal")])
@@ -71,7 +77,7 @@ def page(themed):
     stacks = "".join(f'<span class="btn btn-light mr-1" style="position:relative;width:60px;height:48px"><small data-osrs-stack="{colour}" style="position:absolute;left:4px;top:2px">{text}</small></span>'
                      for text, colour in [("65535", "yellow"), ("2500K", "white"), ("12M", "green")] if themed) if themed else ""
     body = MARKUP.format(skills=skills, splashes=splashes, stacks=stacks)
-    return f'<!doctype html><html style="{variables}"><head><meta charset="utf-8">{links}</head><body class="darkMode{features}">{body}</body></html>'
+    return f'<!doctype html><html style="{variables};--osrs-font-size:16px;--osrs-font-size-large:24px;--osrs-font-size-huge:32px"><head><meta charset="utf-8">{links}</head><body class="darkMode{features}">{body}</body></html>'
 
 
 LOGIN_MARKUP = """
@@ -106,7 +112,7 @@ def shoot(html, out, size="1200,1100"):
     path.write_text(html)
     out.unlink(missing_ok=True)
     with tempfile.TemporaryDirectory() as profile:
-        chrome = subprocess.Popen([CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--no-first-run",
+        chrome = subprocess.Popen([CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--no-first-run", "--force-device-scale-factor=2",
                                    "--use-mock-keychain", "--password-store=basic", "--allow-file-access-from-files", f"--user-data-dir={profile}",
                                    "--virtual-time-budget=3000", f"--window-size={size}", f"--screenshot={out}", path.as_uri()],
                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
