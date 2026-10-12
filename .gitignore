@@ -1,0 +1,8 @@
+__pycache__/
+build/.cache/
+dist/
+dev/preview/
+.DS_Store
+mod/data/
+mod/icon.png
+build/report.md
