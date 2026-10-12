@@ -256,6 +256,14 @@ def encode(source, out_path, bitrate, mono):
     return True
 
 
+def square(image):
+    """Melvor draws mod icons in a square box: centre the art on a transparent square so it is not stretched."""
+    side = max(image.size)
+    canvas = Image.new("RGBA", (side, side))
+    canvas.paste(image, ((side - image.width) // 2, (side - image.height) // 2))
+    return canvas
+
+
 def main():
     wiki = Wiki(CACHE)
     sfx = sfx_plan()
@@ -284,7 +292,7 @@ def main():
         audio["sfx"][single] = resource(sfx[single], "sfx", SFX_BITRATE, True)
     (MOD_DIR / "audio.json").write_text(json.dumps(audio, indent=1) + "\n")
     icon = Image.open(io.BytesIO(wiki.download(wiki.image_info(["File:Music.png"])["File:Music.png"]["url"]))).convert("RGBA")
-    icon.resize((icon.width * 2, icon.height * 2), Image.NEAREST).save(MOD_DIR / "icon.png")
+    square(icon.resize((icon.width * 2, icon.height * 2), Image.NEAREST)).save(MOD_DIR / "icon.png")
 
     archive = ROOT / "dist" / "melvor-osrs-sounds.zip"
     archive.parent.mkdir(exist_ok=True)

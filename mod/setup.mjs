@@ -2,6 +2,9 @@ const CHECK_MS = 1000;
 const FADE_MS = 1500;
 const MAX_SFX = 8;
 const FADE_OUT_MS = 60;
+const DEBUG_LOG_SIZE = 20;
+const CLOCK_CHECK_MS = 1000;
+const CLOCK_RETRIES = 3;
 const JINGLE_DUCK = 0.15;
 const CUT_MS = 80;
 const SAMPLE_RATE = 22050;
@@ -30,11 +33,12 @@ export async function setup(ctx) {
     { type: 'switch', name: 'enabled', label: 'Play OSRS music', hint: 'Each skill, combat area, dungeon and menu has its own tracks, streamed from the OSRS Wiki.', default: true, onChange: later(syncMusic) },
     { type: 'switch', name: 'shuffle', label: 'Shuffle', hint: 'Pick a random track for the current context each time one ends. Off plays them in order.', default: true },
     { type: 'number', name: 'volume', label: 'Music volume', hint: '0 to 100', default: 30, min: 0, max: 100, onChange: later(applyVolume) },
-    { type: 'switch', name: 'background', label: 'Keep playing when the game is hidden (desktop)', hint: 'Off pauses sound while the window is minimized. On phones, sound always stops when you leave the app.', default: true, onChange: later(onVisibility) },
+    { type: 'switch', name: 'background', label: 'Keep playing in the background (desktop)', hint: 'Off pauses sound while the game window is minimized or another window is in front. On phones, sound always stops when you leave the app.', default: true, onChange: later(onVisibility) },
+    { type: 'button', name: 'debug', display: 'Copy sound debug info', color: 'secondary', onClick: () => showDebugInfo() },
   ]);
   effects.add([
-    { type: 'switch', name: 'enabled', label: 'Play OSRS sound effects', hint: 'Nothing plays during offline progress.', default: true },
-    { type: 'number', name: 'volume', label: 'Sound effect volume', hint: '0 to 100', default: 40, min: 0, max: 100, onChange: later(applyVolume) },
+    { type: 'switch', name: 'effects-enabled', label: 'Play OSRS sound effects', hint: 'Nothing plays during offline progress.', default: true },
+    { type: 'number', name: 'effects-volume', label: 'Sound effect volume', hint: '0 to 100', default: 40, min: 0, max: 100, onChange: later(applyVolume) },
     { type: 'switch', name: 'levelups', label: 'Level-up jingles', hint: 'Music dips while the jingle plays.', default: true },
     { type: 'switch', name: 'combat', label: 'Weapon sounds', hint: 'One sound per attack, matched to your weapon type.', default: true },
     { type: 'switch', name: 'spells', label: 'Spell sounds', hint: 'Combat spells and Alt. Magic.', default: true },
@@ -47,11 +51,22 @@ export async function setup(ctx) {
     { type: 'switch', name: 'catch-up', label: 'Replay what happened during offline progress', hint: 'When you come back, plays one jingle (your death, otherwise your latest level-up), then the pet chime if you found one.', default: true },
   ]);
 
-  const percent = (section) => Math.max(0, Math.min(100, Number(section.get('volume')) || 0)) / 100;
+  const percent = (section, name) => Math.max(0, Math.min(100, Number(section.get(name)) || 0)) / 100;
   let engine;
   let masterGain;
   let musicGain;
   let effectsGain;
+  const debugLog = [];
+  let enginesBuilt = 0;
+  const note = (event) => {
+    debugLog.push(`${new Date().toLocaleTimeString()} ${event}`);
+    if (debugLog.length > DEBUG_LOG_SIZE) debugLog.shift();
+  };
+  const resumeEngine = (reason) => {
+    const target = engine;
+    target.resume().then(() => note(`${reason}: resumed, now ${target.state}`)).catch((error) => note(`${reason}: resume failed: ${error}`));
+  };
+
   buildEngine();
   const tracks = new Map();
   let nowPlaying = null;
@@ -65,6 +80,9 @@ export async function setup(ctx) {
 
   function buildEngine() {
     engine = createEngine();
+    const built = engine;
+    const number = ++enginesBuilt;
+    built.onstatechange = () => note(`engine ${number} state ${built.state}`);
     masterGain = engine.createGain();
     musicGain = engine.createGain();
     effectsGain = engine.createGain();
@@ -81,7 +99,17 @@ export async function setup(ctx) {
   function fadeOutAndSuspend() {
     rampTo(masterGain.gain, 0, FADE_OUT_MS / 1000);
     setTimeout(() => {
-      if (document.hidden) engine.suspend();
+      if (inBackground()) engine.suspend();
+    }, FADE_OUT_MS + 20);
+  }
+
+  /** iOS can freeze the page the moment it is hidden, so a fade might never finish: mute at once, and leave stopping the audio to a timer as before. */
+  function muteThenSuspend() {
+    const now = engine.currentTime;
+    masterGain.gain.cancelScheduledValues(now);
+    masterGain.gain.setValueAtTime(0, now);
+    setTimeout(() => {
+      if (inBackground()) engine.suspend();
     }, FADE_OUT_MS + 20);
   }
 
@@ -93,15 +121,18 @@ export async function setup(ctx) {
   }
 
   function applyVolume() {
-    rampTo(musicGain.gain, music.get('enabled') ? percent(music) * duck : 0, 0.25);
-    rampTo(effectsGain.gain, percent(effects), 0.05);
+    rampTo(musicGain.gain, music.get('enabled') ? percent(music, 'volume') * duck : 0, 0.25);
+    rampTo(effectsGain.gain, percent(effects, 'effects-volume'), 0.05);
   }
 
   function contextKey() {
     if (!characterLoaded || typeof game === 'undefined') return 'charselect';
+    if (game.combat.isActive && game.combat.selectedArea) return game.combat.selectedArea.id;
     const action = game.activeAction;
-    if (action === game.combat && game.combat.selectedArea) return game.combat.selectedArea.id;
     if (action === game.golbinRaid) return 'melvorD:GolbinRaid';
+    // Multitasking-style mods make activeAction a wrapper around the actions they run.
+    const running = action && !audio.music[action.id] && game.activeActions?.allObjects.find((each) => each !== action && each.isActive);
+    if (running) return running.id;
     if (action && action.id) return action.id;
     return 'idle';
   }
@@ -175,7 +206,9 @@ export async function setup(ctx) {
   }
 
   const isMobile = typeof nativeManager !== 'undefined' && (nativeManager.isIOS || nativeManager.isAndroid);
-  const silencedWhileHidden = () => document.hidden && (isMobile || !music.get('background'));
+  let windowFocused = true;
+  const inBackground = () => document.hidden || !windowFocused;
+  const silencedInBackground = () => inBackground() && !music.get('background');
 
   function syncMusic() {
     if (!music.get('enabled')) {
@@ -209,34 +242,106 @@ export async function setup(ctx) {
     buildEngine();
     applyVolume();
     fadeIn();
-    if (track && music.get('enabled')) startTrack(track.source.buffer, position);
-    engine.resume();
+    try {
+      if (track && music.get('enabled')) startTrack(track.source.buffer, position);
+    } catch (error) {
+      note(`restarting the song failed: ${error}`);
+    }
+    note(`rebuilt audio (song ${track ? 'restarted' : 'none playing'})`);
+    resumeEngine('rebuild');
+  }
+
+  /**
+   * After a quick lock and unlock, iOS can hand back an audio context that says "running" while its clock never moves,
+   * so nothing plays and no fade completes. Rebuild until the clock moves; if it never does, the next tap rebuilds it.
+   */
+  let clockStuck = false;
+  function watchClock(retriesLeft) {
+    const watched = engine;
+    const start = watched.currentTime;
+    setTimeout(() => {
+      if (watched !== engine || document.hidden || watched.state !== 'running') return;
+      clockStuck = watched.currentTime === start;
+      if (!clockStuck) return;
+      note(`audio clock stuck at ${start.toFixed(1)}s`);
+      if (retriesLeft > 0) {
+        rebuildEngine();
+        watchClock(retriesLeft - 1);
+      }
+    }, CLOCK_CHECK_MS);
   }
 
   let wasHidden = false;
   function onVisibility() {
-    if (document.hidden) {
+    note(`page ${document.hidden ? 'hidden' : 'visible'}, audio ${engine.state}`);
+    if (isMobile && document.hidden) {
       wasHidden = true;
-      if (silencedWhileHidden()) fadeOutAndSuspend();
+      muteThenSuspend();
       return;
     }
-    if (isMobile && wasHidden) {
+    if (!isMobile && inBackground()) {
+      if (silencedInBackground()) fadeOutAndSuspend();
+      return;
+    }
+    if (isMobile && (wasHidden || engine.state !== 'running')) {
       rebuildEngine();
+      watchClock(CLOCK_RETRIES);
     } else {
-      engine.resume();
+      resumeEngine('page visible');
       fadeIn();
     }
     wasHidden = false;
   }
   ['pointerdown', 'touchend', 'keydown'].forEach((type) => document.addEventListener(type, () => {
-    if (engine.state !== 'running' && !document.hidden) engine.resume();
+    if (inBackground()) return;
+    if (clockStuck) {
+      note(`${type} tap: rebuilding stuck audio`);
+      clockStuck = false;
+      rebuildEngine();
+      watchClock(0);
+      return;
+    }
+    if (engine.state === 'running') return;
+    resumeEngine(`${type} tap`);
+    fadeIn();
   }, true));
   document.addEventListener('visibilitychange', onVisibility);
   window.addEventListener('pagehide', () => {
+    note('page hide');
     wasHidden = true;
-    fadeOutAndSuspend();
+    if (isMobile) muteThenSuspend();
+    else fadeOutAndSuspend();
   });
+  if (!isMobile) {
+    window.addEventListener('blur', () => {
+      windowFocused = false;
+      onVisibility();
+    });
+    window.addEventListener('focus', () => {
+      windowFocused = true;
+      onVisibility();
+    });
+  }
   window.addEventListener('pageshow', onVisibility);
+
+  function showDebugInfo() {
+    const value = (param) => param.value.toFixed(2);
+    const lines = [
+      `phone: ${isMobile} (iOS ${typeof nativeManager !== 'undefined' && nativeManager.isIOS}, Android ${typeof nativeManager !== 'undefined' && nativeManager.isAndroid})`,
+      `page hidden: ${document.hidden}, window focused: ${windowFocused}`,
+      `audio: ${engine.state}, ${engine.sampleRate} Hz, clock ${engine.currentTime.toFixed(1)}s, rebuilt ${enginesBuilt - 1} times`,
+      `volume: master ${value(masterGain.gain)}, music ${value(musicGain.gain)}, effects ${value(effectsGain.gain)}, duck ${duck}`,
+      `music on: ${music.get('enabled')}, song playing: ${Boolean(nowPlaying)}, context ${context}`,
+      'recent events:',
+      ...debugLog.map((event) => `  ${event}`),
+    ];
+    const box = document.createElement('textarea');
+    box.className = 'form-control font-size-sm';
+    box.rows = 14;
+    box.value = lines.join('\n');
+    SwalLocale.fire({ title: 'Sound debug info', html: box, didOpen: () => box.select() });
+    if (navigator.clipboard) navigator.clipboard.writeText(box.value).catch(() => {});
+  }
   applyVolume();
   fadeIn();
   setInterval(syncMusic, CHECK_MS);
@@ -262,7 +367,7 @@ export async function setup(ctx) {
   }
 
   function playEffect(path, category, channel = category, onEnded = null) {
-    if (!path || !ready || !effects.get('enabled') || !effects.get(category)) return false;
+    if (!path || !ready || !effects.get('effects-enabled') || !effects.get(category)) return false;
     if (typeof game === 'undefined' || !game._isInOnlineLoop) return false;
     loadBuffer(path).then((buffer) => {
       if (!buffer) return;
