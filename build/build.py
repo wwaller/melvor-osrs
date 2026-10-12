@@ -20,6 +20,10 @@ SPRITE_DIR = "sprites"
 FILE_TITLE = re.compile(r"File:[^|\]]+?\.(?:png|gif)", re.I)
 STACK_TITLE = re.compile(r"^File:.+ (\d+)\.png$", re.I)
 TIER_NAME = re.compile(r"^(.*?)[ _](I|II|III|IV|V|VI)$")
+SUPERIOR_NAME = re.compile(r"^Superior (.+)$")
+SUPERIOR_BASES = {"Max Skillcape": "Maximum Skillcape", "Hitpoints Skillcape": "HP Skillcape"}
+UNTRIMMED_CAPES = {"File:Max cape.png", "File:Infernal max cape.png"}
+TRIMMED_CAPE_FILES = {"File:Woodcutting cape.png": "File:Woodcut. cape(t).png"}
 UNSET = object()
 
 OSRS_PRAYERS = [
@@ -152,6 +156,21 @@ def match_entities(entities, pools, overrides):
     return matches, misses
 
 
+def superior_capes(matches, misses):
+    """Melvor's superior skillcapes are its skillcapes with a gold trim: the trimmed OSRS cape, or the cape itself when OSRS has no trimmed one."""
+    by_name = {entity.name: (entity, osrs_name, title) for entity, osrs_name, title, _ in matches}
+    for entity, reason in list(misses):
+        name = SUPERIOR_NAME.match(entity.name)
+        base = name and by_name.get(SUPERIOR_BASES.get(name.group(1), name.group(1)))
+        if not base:
+            continue
+        spec = dict(spec_of(base[2]))
+        if "base" in spec and spec["base"].endswith(" cape.png") and spec["base"] not in UNTRIMMED_CAPES:
+            spec["base"] = TRIMMED_CAPE_FILES.get(spec["base"], spec["base"][:-len(".png")] + "(t).png")
+        matches.append((entity, base[1], {**spec, "trim": "gold"}, "superior"))
+        misses.remove((entity, reason))
+
+
 def star_perfect(matches):
     """Melvor's (Perfect) foods share art with the plain food; a star tells them apart."""
     for index, (entity, osrs_name, title, how) in enumerate(matches):
@@ -180,13 +199,19 @@ def spec_of(title):
 
 
 def spec_titles(spec):
-    titles = spec.get("row") or [spec.get(k) for k in ("base", "badge", "inset", "tablet")]
-    return [t for t in titles + [spec.get("decal")] if t and t.startswith("File:")]
+    titles = spec.get("row") or spec.get("group") or [spec.get(k) for k in ("base", "badge", "inset", "tablet", "cape")]
+    return [t for t in titles + [spec.get("decal"), spec.get("emblem")] if t and t.startswith("File:")]
 
 
 def spec_slug(spec):
-    titles = spec.get("row") or [spec.get(k) for k in ("base", "badge", "inset", "tablet")]
+    titles = spec.get("row") or spec.get("group") or [spec.get(k) for k in ("base", "badge", "inset", "tablet")]
     parts = (["tablet"] if spec.get("tablet") else []) + [slug(t) for t in titles if t]
+    if spec.get("cape"):
+        parts.append("cape_" + re.sub(r"[^A-Za-z0-9]+", "_", spec["emblem"].rsplit("/", 1)[-1].rsplit(".", 1)[0]).strip("_"))
+    if spec.get("recolor"):
+        parts.append(spec["recolor"]["color"].lstrip("#"))
+    if spec.get("trim"):
+        parts.append(f"trim_{spec['trim']}")
     if spec.get("label"):
         parts.append(spec["label"])
     if spec.get("star"):
@@ -208,17 +233,22 @@ def decal_bytes(value, fetch):
 
 def process(entity, spec, info, wiki):
     fetch = lambda title: wiki.download(info[title]["url"])
+    grounded = entity.kind == "monster"
     if spec.get("row"):
-        return "render", images.row([fetch(t) for t in spec["row"]])
+        return "render", images.row([fetch(t) for t in spec["row"]], grounded=grounded)
     if spec.get("tablet"):
         return "render", images.tablet(BLANK_TABLET.read_bytes(), fetch(spec["tablet"]))
+    if spec.get("group"):
+        return "sprite", images.group([fetch(t) for t in spec["group"]])
+    if spec.get("cape"):
+        return "sprite", images.skillcape(fetch(spec["cape"]), decal_bytes(spec["emblem"], fetch), spec["color"], spec.get("trim"))
     base = info[spec["base"]]
     if max(base["width"] or 0, base["height"] or 0) <= images.MIN_ICON_SIZE:
         canvas = images.ITEM_CANVAS if entity.kind in SPRITE_CANVAS_KINDS else 0
         decal = decal_bytes(spec["decal"], fetch) if spec.get("decal") else None
-        return "sprite", images.pixel_sprite(fetch(spec["base"]), canvas, spec.get("label"), spec.get("star", False), decal)
+        return "sprite", images.pixel_sprite(fetch(spec["base"]), canvas, spec.get("label"), spec.get("star", False), decal, spec.get("recolor"), spec.get("trim"))
     badge = fetch(spec["badge"]) if spec.get("badge") else None
-    return "render", images.render(fetch(spec["base"]), spec.get("label"), badge)
+    return "render", images.render(fetch(spec["base"]), spec.get("label"), badge, grounded)
 
 
 def apply_decals(matches, decals):
@@ -233,7 +263,7 @@ VARIANT_KEYS = {"numerals": "label", "stars": "star", "decals": "decal"}
 
 def variants_of(spec):
     """Optional extras on this image, each with its own switch; composites have no plain fallback."""
-    if spec.get("row") or spec.get("tablet") or spec.get("badge"):
+    if spec.get("row") or spec.get("tablet") or spec.get("badge") or spec.get("group") or spec.get("cape"):
         return ["composites"]
     return sorted(name for name, key in VARIANT_KEYS.items() if spec.get(key))
 
@@ -251,10 +281,11 @@ def write_sprites(matches, wiki, thematic_ids):
 
     def sprite_for(entity, spec):
         canvas_kind = "item" if entity.kind in SPRITE_CANVAS_KINDS else "icon"
-        key = (canvas_kind, json.dumps(spec, sort_keys=True))
+        grounded = entity.kind == "monster"
+        key = (canvas_kind, grounded, json.dumps(spec, sort_keys=True))
         if key not in written:
             style, png = process(entity, spec, info, wiki)
-            name = spec_slug(spec)
+            name = spec_slug(spec) + ("_grounded" if grounded and style == "render" else "")
             relative = f"{SPRITE_DIR}/{style}/{canvas_kind}_{name}.png" if style == "sprite" else f"{SPRITE_DIR}/render/{name}.png"
             (MOD_DIR / relative).parent.mkdir(parents=True, exist_ok=True)
             (MOD_DIR / relative).write_bytes(png)
@@ -318,6 +349,7 @@ def main():
 
     thematic_ids = set(json.loads((BUILD_DIR / "thematic.json").read_text()))
     matches, misses = match_entities(entities, pools, load_overrides())
+    superior_capes(matches, misses)
     apply_decals(matches, json.loads((BUILD_DIR / "decals.json").read_text()))
     mapping, missing_files = write_sprites(matches, wiki, thematic_ids)
     settings = settings_list(entry["t"] for entry in mapping.values())

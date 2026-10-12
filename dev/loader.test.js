@@ -69,13 +69,14 @@ async function runGame(stored = {}) {
         },
       },
       Image: class { decode() { this.naturalWidth = 72; this.naturalHeight = 72; return Promise.resolve(); } },
-      MutationObserver: class {},
+      MutationObserver: class { observe() {} },
     };
     frame.document = {
       documentElement: { appendChild: (script) => vm.runInContext(script.textContent, frame) },
       createElement: () => ({ remove() {} }),
       addEventListener: (name, fn) => (listeners[name] = fn),
       querySelectorAll: () => [],
+      body: { querySelectorAll: () => [] },
     };
     vm.createContext(frame);
     vm.runInContext(evals[0], frame);

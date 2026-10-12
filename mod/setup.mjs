@@ -1,4 +1,6 @@
 const ITEM_CHOICES_KEY = 'items';
+const MEDIA_PATH = /assets\/media\/[^?#"']+/;
+const ITEM_MEDIA = 'assets/media/bank/';
 
 export async function setup(ctx) {
   const { settings, entries } = await ctx.loadData('mapping.json');
@@ -40,9 +42,37 @@ export async function setup(ctx) {
     const selected = typeof game !== 'undefined' && game.bank ? game.bank.selectedBankItem : undefined;
     if (selected && typeof bankSideBarMenu !== 'undefined') bankSideBarMenu.setItem(selected, game);
   };
+  /** Icons Melvor puts straight into <img> tags (skill icons, the enemy panel's stats, the Game Guide) never pass through getMediaURL. */
+  const swapImage = (image) => {
+    if (!enabled) return;
+    const src = image.getAttribute('src');
+    if (!src || src.startsWith('blob:')) return;
+    const media = src.match(MEDIA_PATH)?.[0];
+    const sprite = media && !media.startsWith(ITEM_MEDIA) && active.get(media);
+    if (!sprite) return;
+    image.dataset.osrsSpritesOriginal = src;
+    image.src = spriteUrl(sprite);
+  };
+  const swapWithin = (root) => {
+    if (root.tagName === 'IMG') swapImage(root);
+    root.querySelectorAll?.('img[src]').forEach(swapImage);
+  };
+  const restoreImages = () => document.querySelectorAll('img[data-osrs-sprites-original]').forEach((image) => {
+    image.src = image.dataset.osrsSpritesOriginal;
+    delete image.dataset.osrsSpritesOriginal;
+  });
+  new MutationObserver((records) => {
+    for (const record of records) {
+      if (record.type === 'attributes') swapImage(record.target);
+      else record.addedNodes.forEach((node) => node.nodeType === Node.ELEMENT_NODE && swapWithin(node));
+    }
+  }).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['src'] });
+
   const onChange = () => setTimeout(() => {
     rebuild();
     refreshVisible();
+    restoreImages();
+    swapWithin(document.body);
   });
 
   for (const section of new Set(settings.map((s) => s.section))) {
@@ -69,6 +99,7 @@ export async function setup(ctx) {
     },
   ]);
   rebuild();
+  swapWithin(document.body);
 
   ctx.patch(NamespacedObject, 'getMediaURL').replace(function (getMediaURL, media) {
     if (enabled && !this.isModded && typeof media === 'string') {
