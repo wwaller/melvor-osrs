@@ -61,9 +61,17 @@ def draw_logo(lantern):
     return logo
 
 
+def square(image):
+    """Melvor draws mod icons in a square box: centre the art on a transparent square so it is not stretched."""
+    side = max(image.size)
+    canvas = Image.new("RGBA", (side, side))
+    canvas.paste(image, ((side - image.width) // 2, (side - image.height) // 2))
+    return canvas
+
+
 def main():
     lantern = wiki_image(ICON)
-    scaled(lantern, 2).save(MOD_DIR / "icon.png")
+    square(scaled(lantern, 2)).save(MOD_DIR / "icon.png")
     DIST_DIR.mkdir(exist_ok=True)
     draw_logo(lantern).convert("RGB").save(DIST_DIR / "logo.png", optimize=True)
     archive = DIST_DIR / "melvor-keep-screen-on.zip"
