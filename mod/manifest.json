@@ -1,0 +1,5 @@
+{
+  "namespace": "quickEquipAll",
+  "icon": "icon.png",
+  "setup": "setup.mjs"
+}
