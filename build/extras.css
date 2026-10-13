@@ -27,6 +27,7 @@ html:root body.osrs-theme.osrs-hp-bars :is(#combat-player-hitpoints-bar, #combat
 html:root body.osrs-theme.osrs-hp-bars :is(#combat-player-hitpoints-bar, #combat-player-hitpoints-bar-1, #thieving-player-hitpoints-bar).bg-warning { background-color: #c8c800 !important; }
 html:root body.osrs-theme.osrs-hp-bars .progress:has(> :is(#combat-player-hitpoints-bar, #combat-player-hitpoints-bar-1, #thieving-player-hitpoints-bar, #combat-enemy-hitpoints-bar, #combat-enemy-hitpoints-bar-1)) { background-color: #c80000 !important; border: 1px solid #000; }
 html:root body.osrs-theme.osrs-hp-bars .progress-bar.bg-info { background-color: #e0bb3a !important; background-image: linear-gradient(#f5dc6a, #c49a21) !important; }
+html:root body.osrs-theme #sidebar .nav-main-item > div[style*="height:3px"] > .bg-info { background-color: #e0bb3a !important; background-image: linear-gradient(#f5dc6a, #c49a21) !important; }
 
 html:root body.osrs-theme.osrs-texture .block, html:root body.osrs-theme.osrs-texture #sidebar, html:root body.osrs-theme.osrs-texture #page-header, html:root body.osrs-theme.osrs-texture .swal2-popup, html:root body.osrs-theme.osrs-texture .modal-content { background-image: var(--osrs-stone) !important; background-size: 128px 128px !important; background-repeat: repeat !important; }
 
@@ -84,6 +85,7 @@ html:root body.osrs-theme.osrs-font-all :is(.form-control, input, select, textar
 html:root body.osrs-theme character-display .btn-group > .btn > .col-12 { padding-right: 0 !important; }
 
 html:root body.osrs-theme.darkMode :is(#page-header, #page-header > .content-header) { background-color: #2f2922 !important; }
+html:root body.osrs-theme .m-header-icon { background-color: transparent !important; }
 
 html:root body.osrs-theme.osrs-buttons .btn:not(.btn-link) { --osrs-button-fill: linear-gradient(#51483b, #3e362c); background: #463e33 !important; background-image: var(--osrs-button-fill) !important; border: 1px solid #0e0c09 !important; border-radius: 3px !important; border-image: none !important; box-shadow: inset 1px 1px 0 rgba(255, 236, 200, 0.18), inset -1px -1px 0 rgba(0, 0, 0, 0.5) !important; color: #fff !important; text-shadow: 1px 1px 0 #000; }
 html:root body.osrs-theme.osrs-buttons .btn:not(.btn-link):hover { --osrs-button-fill: linear-gradient(#6b5b3e, #52452e); }
