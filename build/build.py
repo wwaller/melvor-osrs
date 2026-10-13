@@ -14,6 +14,7 @@ from PIL import Image
 
 import osrs_defs
 import osrs_model
+import skillcape
 from melvor import load_equipment
 from osrs_cache import Cache
 
@@ -23,6 +24,8 @@ MOD_DIR = ROOT / "mod"
 DATA_DIR = MOD_DIR / "data"
 DIST_DIR = ROOT / "dist"
 SPRITES_MAPPING = ROOT.parent / "melvor-osrs-sprites" / "mod" / "mapping.json"
+SPRITES_OVERRIDES = ROOT.parent / "melvor-osrs-sprites" / "build" / "overrides.json"
+SPRITES_ASSETS = ROOT.parent / "melvor-osrs-sprites" / "build" / "assets"
 SPRITE_PATH = re.compile(r"^sprites/(?:sprite/(?:item|icon)_|render/)(.+)\.png$")
 REPORT = ROOT / "build" / "report.md"
 MODELS = 7
@@ -51,6 +54,11 @@ HAND_ITEM_OFFSET = 512
 WORN_AS = {"kharidian_headpiece": "desert_disguise", "burning_amulet": "burning_amulet_5", "digsite_pendant": "digsite_pendant_5"}
 WORN_PARTS = {4611: {"models": 2, "wear_pos": [0, 8, -1]}}
 WORN_RECOLORS = {29777: [(16320, 5056), (15314, 7122), (16687, 47)]}
+CUSTOM_CAPES = {
+    "melvorF:Summoning_Skillcape": ("melvorTotH:Superior_Summoning_Skillcape", "#48a8a0"),
+    "melvorF:Astrology_Skillcape": ("melvorTotH:Superior_Astrology_Skillcape", "#2c4c9c"),
+    "melvorAoD:Archaeology_Skillcape": ("melvorAoD:Superior_Archaeology_Skillcape", "#a8865c"),
+}
 WORN_STAND_INS = {
     "melvorD:Clue_Chasers_Insignia": "Emerald amulet",
     "melvorD:Bobs_Rake": "Scythe",
@@ -193,6 +201,26 @@ def item_file(cache, definition, model_cache):
     return {"item": item, "models": {model_id: model_cache[model_id] for model_id in model_ids}}
 
 
+def custom_skillcapes(cache):
+    """Melvor id -> item file for the skillcapes OSRS lacks, each built from the Agility cape in its OSRS Sprites colour and emblem, with a shoulder accent."""
+    overrides = json.loads(SPRITES_OVERRIDES.read_text())["item"]
+    base = osrs_defs.item(cache.files(osrs_defs.CONFIGS, osrs_defs.ITEM_GROUP)[skillcape.BASE_CAPE])
+    meshes = {gender: osrs_model.decode(cache.group(MODELS, base[gender][0])) for gender in ("male", "female")}
+    files = {}
+    for cape_id, (superior_id, accent) in CUSTOM_CAPES.items():
+        spec = overrides[cape_id]
+        emblem = Image.open(SPRITES_ASSETS / spec["emblem"].removeprefix("asset:"))
+        shoulders = skillcape.shades(accent)
+        for melvor_id, superior in ((cape_id, False), (superior_id, True)):
+            name = slug(melvor_id.split(":", 1)[1])
+            models = {f"{name}_{gender}": compact_model(skillcape.build(mesh, spec["color"], shoulders, emblem, superior)) for gender, mesh in meshes.items()}
+            item = {"wear_pos": base["wear_pos"], "male": [f"{name}_male", -1, -1], "female": [f"{name}_female", -1, -1],
+                    "male_offset": 0, "female_offset": 0, "recolor": [], "retexture": []}
+            write_json(DATA_DIR / "items" / f"{name}.json", {"item": item, "models": models})
+            files[melvor_id] = name
+    return files
+
+
 def base_file(cache, model_cache):
     kits = cache.files(osrs_defs.CONFIGS, osrs_defs.IDENTKIT_GROUP)
     sequences = cache.files(osrs_defs.CONFIGS, osrs_defs.SEQUENCE_GROUP)
@@ -213,7 +241,7 @@ def write_json(path, data):
     path.write_text(json.dumps(data, separators=(",", ":")))
 
 
-def write_report(equipment, matches, by_id):
+def write_report(equipment, matches, by_id, custom):
     drawn = [e for e in equipment if e.slot in MELVOR_SLOTS]
     lines = ["# Build report", "", f"{len(matches)} of {len(drawn)} drawable Melvor equipment items matched to OSRS items.", "",
              "| Package | Matched | Drawable |", "|---|---|---|"]
@@ -222,8 +250,10 @@ def write_report(equipment, matches, by_id):
         lines.append(f"| {package} | {sum(e.id in matches for e in in_package)} | {len(in_package)} |")
     lines += ["", "## Matched", ""]
     lines += [f"- {e.id} ({e.name}) -> {matches[e.id]} {by_id[matches[e.id]]['name']}" for e in drawn if e.id in matches]
+    lines += ["", "## Built", ""]
+    lines += [f"- {e.id} ({e.name}) -> {custom[e.id]}, from the Agility cape" for e in drawn if e.id in custom]
     lines += ["", "## Unmatched", ""]
-    lines += [f"- {e.id} ({e.name}, {e.slot})" for e in drawn if e.id not in matches]
+    lines += [f"- {e.id} ({e.name}, {e.slot})" for e in drawn if e.id not in matches and e.id not in custom]
     REPORT.write_text("\n".join(lines) + "\n")
 
 
@@ -253,8 +283,10 @@ def main():
         write_json(DATA_DIR / "items" / f"{osrs_id}.json", item_file(cache, osrs_defs.item(all_items[osrs_id]), model_cache))
     for osrs_id in sorted(set(matches.values())):
         write_json(DATA_DIR / "items" / f"{osrs_id}.json", item_file(cache, worn_parts(osrs_id, by_id[osrs_id]), model_cache))
-    write_json(DATA_DIR / "index.json", dict(sorted((e.media, matches[e.id]) for e in equipment if e.id in matches)))
-    write_report(equipment, matches, by_id)
+    custom = custom_skillcapes(cache)
+    index = {e.media: matches[e.id] for e in equipment if e.id in matches} | {e.media: custom[e.id] for e in equipment if e.id in custom}
+    write_json(DATA_DIR / "index.json", dict(sorted(index.items())))
+    write_report(equipment, matches, by_id, custom)
     icon = wiki_image(ICON)
     square(icon.resize((icon.width * 2, icon.height * 2), Image.NEAREST)).save(MOD_DIR / "icon.png")
     DIST_DIR.mkdir(exist_ok=True)
@@ -264,7 +296,7 @@ def main():
             if path.is_file() and not any(part.startswith(".") for part in path.relative_to(MOD_DIR).parts):
                 bundle.write(path, path.relative_to(MOD_DIR).as_posix())
     data_size = sum(p.stat().st_size for p in DATA_DIR.rglob("*.json"))
-    print(f"{len(matches)} items matched, {len(model_cache)} models, data {data_size / 1e6:.2f} MB, zip {archive.stat().st_size / 1e6:.2f} MB")
+    print(f"{len(matches)} items matched, {len(custom)} built, {len(model_cache)} models, data {data_size / 1e6:.2f} MB, zip {archive.stat().st_size / 1e6:.2f} MB")
 
 
 if __name__ == "__main__":

@@ -55,7 +55,7 @@ def shoot(html, out, width, height):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("items", nargs="*", type=int, default=[1163, 1127, 1079, 1201, 1333])
+    parser.add_argument("items", nargs="*", type=lambda value: int(value) if value.isdigit() else value, default=[1163, 1127, 1079, 1201, 1333])
     parser.add_argument("--yaw", type=int, default=128)
     parser.add_argument("--pitch", type=int, default=96)
     parser.add_argument("--female", action="store_true")
