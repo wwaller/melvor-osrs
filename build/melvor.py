@@ -36,6 +36,10 @@ SKILL_ICONS = {
     "assets/media/skills/combat/combat.png": "Combat",
 }
 
+HEADER_SKILLS = ["woodcutting", "fishing", "firemaking", "cooking", "mining", "smithing", "thieving", "farming", "fletching",
+                 "crafting", "runecrafting", "herblore", "agility", "combat", "magic"]
+PAGE_HEADERS = {f"assets/media/main/{skill}_header.png": SKILL_ICONS[f"assets/media/skills/{skill}/{skill}.png"] for skill in HEADER_SKILLS}
+
 TOP_LEVEL_KINDS = {
     "items": "item",
     "monsters": "monster",

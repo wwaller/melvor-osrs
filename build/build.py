@@ -8,13 +8,14 @@ from pathlib import Path
 
 import images
 from categories import settings_list, tags_for
-from melvor import SKILL_ICONS, Entity, load_entities, melvor_bytes
+from melvor import PAGE_HEADERS, SKILL_ICONS, Entity, load_entities, melvor_bytes
 from naming import item_candidates, lookup_key, monster_candidates
 from wiki import Wiki
 
 ROOT = Path(__file__).resolve().parent.parent
 BUILD_DIR = ROOT / "build"
-BLANK_TABLET = BUILD_DIR / "assets" / "melvor_tablet_blank.png"
+ASSET_DIR = BUILD_DIR / "assets"
+BLANK_TABLET = ASSET_DIR / "melvor_tablet_blank.png"
 MOD_DIR = ROOT / "mod"
 SPRITE_DIR = "sprites"
 FILE_TITLE = re.compile(r"File:[^|\]]+?\.(?:png|gif)", re.I)
@@ -130,7 +131,10 @@ def resolve(value, pool_names, pools):
 
 def match_entities(entities, pools, overrides):
     matches, misses = [], []
-    for media, value in {**SKILL_ICONS, **overrides.get("media", {})}.items():
+    for media, value in {**SKILL_ICONS, **PAGE_HEADERS, **overrides.get("media", {})}.items():
+        if isinstance(value, dict):
+            matches.append((Entity("icon", media, media, media, "static"), json.dumps(value, sort_keys=True), value, "static"))
+            continue
         title = value if value.startswith("File:") else f"File:{value} icon.png"
         matches.append((Entity("icon", media, value, media, "static"), value, title, "static"))
     for entity in entities:
@@ -206,6 +210,8 @@ def spec_titles(spec):
 def spec_slug(spec):
     titles = spec.get("row") or spec.get("group") or [spec.get(k) for k in ("base", "badge", "inset", "tablet")]
     parts = (["tablet"] if spec.get("tablet") else []) + [slug(t) for t in titles if t]
+    if spec.get("asset"):
+        parts.append(re.sub(r"[^A-Za-z0-9]+", "_", spec["asset"].rsplit(".", 1)[0]).strip("_"))
     if spec.get("cape"):
         parts.append("cape_" + re.sub(r"[^A-Za-z0-9]+", "_", spec["emblem"].rsplit("/", 1)[-1].rsplit(".", 1)[0]).strip("_"))
     if spec.get("recolor"):
@@ -228,6 +234,8 @@ def slug(title):
 def decal_bytes(value, fetch):
     if value.startswith("melvor:"):
         return melvor_bytes(value[len("melvor:"):], BUILD_DIR / ".cache")
+    if value.startswith("asset:"):
+        return (ASSET_DIR / value[len("asset:"):]).read_bytes()
     return fetch(value)
 
 
@@ -240,6 +248,8 @@ def process(entity, spec, info, wiki):
         return "render", images.tablet(BLANK_TABLET.read_bytes(), fetch(spec["tablet"]))
     if spec.get("group"):
         return "sprite", images.group([fetch(t) for t in spec["group"]])
+    if spec.get("asset"):
+        return "sprite", images.pixel_sprite((ASSET_DIR / spec["asset"]).read_bytes())
     if spec.get("cape"):
         return "sprite", images.skillcape(fetch(spec["cape"]), decal_bytes(spec["emblem"], fetch), spec["color"], spec.get("trim"))
     base = info[spec["base"]]
@@ -248,7 +258,7 @@ def process(entity, spec, info, wiki):
         decal = decal_bytes(spec["decal"], fetch) if spec.get("decal") else None
         return "sprite", images.pixel_sprite(fetch(spec["base"]), canvas, spec.get("label"), spec.get("star", False), decal, spec.get("recolor"), spec.get("trim"))
     badge = fetch(spec["badge"]) if spec.get("badge") else None
-    return "render", images.render(fetch(spec["base"]), spec.get("label"), badge, grounded)
+    return "render", images.render(fetch(spec["base"]), spec.get("label"), badge, grounded, spec.get("recolor"))
 
 
 def apply_decals(matches, decals):

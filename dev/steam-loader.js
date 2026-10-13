@@ -28,6 +28,7 @@ const data = ${JSON.stringify({ mapping, sprites })};
   function frameMain(setup, data) {
     const blobUrls = new Map();
     const ctx = {
+      onInterfaceReady() {},
       loadData: async (file) => (file === 'mapping.json' ? data.mapping : undefined),
       getResourceUrl(file) {
         if (!blobUrls.has(file)) {

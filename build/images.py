@@ -12,12 +12,15 @@ LABEL_FILL = (255, 255, 0, 255)
 LABEL_SHADOW = (0, 0, 0, 255)
 STAR_FILL = (255, 208, 0, 255)
 GROUP_CANVAS = 44
-GROUP_SPOTS = {2: [(0, 0), (1, 1)], 3: [(0, 0), (1, 0), (0.5, 1)]}
+GROUP_SPOTS = {
+    2: [(0, 0), (1, 1)],
+    3: [(0, 0), (1, 0), (0.5, 1)],
+    4: [(0, 0), (1, 1), (0, 1), (1, 0)],
+    6: [(0, 0.2), (1, 0.8), (0, 0.8), (1, 0.2), (0.5, 0), (0.5, 1)],
+}
 OUTLINE_LIGHTNESS = 0.1
 GREY_SATURATION = 0.22
 GOLD = (0.13, 0.85)
-EMBLEM_LIGHT, EMBLEM_LIGHT_SHADE = (232, 226, 206, 255), (160, 152, 132, 255)
-EMBLEM_DARK, EMBLEM_DARK_SHADE = (34, 44, 60, 255), (78, 92, 112, 255)
 STAR_SHAPE = [
     "...#...",
     "...#...",
@@ -141,7 +144,7 @@ def _crisp(image, canvas):
 
 
 def group(datas):
-    """Two or three OSRS item sprites overlapped on one canvas, for Melvor art that pictures several tools."""
+    """Two to six OSRS item sprites overlapped on one canvas, for Melvor art that pictures several tools or a bundle."""
     parts = [_trim(_open(data)) for data in datas]
     side = max([GROUP_CANVAS] + [max(part.size) for part in parts])
     canvas = Image.new("RGBA", (side, side))
@@ -150,23 +153,20 @@ def group(datas):
     return _png(_crisp(canvas, side)[0])
 
 
-def _glyph(icon, size, light):
-    """A Melvor skill icon redrawn as an OSRS cape emblem: tiny, hard-edged, and two-tone so it reads against the cape."""
+def _emblem(icon, size):
+    """A skill icon shrunk to an OSRS cape emblem, in its own colours with hard edges."""
     icon = _trim(icon)
     icon.thumbnail((size, size), Image.LANCZOS)
     pixels = icon.load()
-    shades = sorted(sum(pixels[x, y][:3]) for y in range(icon.height) for x in range(icon.width) if pixels[x, y][3] > 110)
-    middle = shades[len(shades) // 2] if shades else 0
-    bright, dim = (EMBLEM_LIGHT, EMBLEM_LIGHT_SHADE) if light else (EMBLEM_DARK, EMBLEM_DARK_SHADE)
     for y in range(icon.height):
         for x in range(icon.width):
             r, g, b, a = pixels[x, y]
-            pixels[x, y] = (bright if r + g + b >= middle else dim) if a > 110 else (0, 0, 0, 0)
+            pixels[x, y] = (r, g, b, 255) if a > 110 else (0, 0, 0, 0)
     return icon
 
 
 def skillcape(template_data, emblem_data, color, trim=None):
-    """A skillcape for a skill OSRS lacks: an OSRS cape recoloured to the Melvor cape's colour, its emblem redrawn small from the Melvor skill icon."""
+    """A skillcape for a skill OSRS lacks: an OSRS cape recoloured to the Melvor cape's colour, its emblem redrawn small from the skill icon."""
     cape = _trim(_open(template_data))
     pixels = cape.load()
     top = cape.height // 4
@@ -181,7 +181,7 @@ def skillcape(template_data, emblem_data, color, trim=None):
         fill = pixels[max(0, left - 1), (upper + lower) // 2]
         for x, y in emblem_spots:
             pixels[x, y] = fill
-        emblem = _glyph(_open(emblem_data), max(right - left, lower - upper), _hls(color)[1] < 0.5)
+        emblem = _emblem(_open(emblem_data), max(right - left, lower - upper))
         cape.alpha_composite(emblem, ((left + right - emblem.width) // 2, (upper + lower - emblem.height) // 2))
     if trim:
         gold_trim(cape)
@@ -207,8 +207,10 @@ def pixel_sprite(data, canvas=0, label=None, star=False, decal=None, recolor=Non
     return _png(square)
 
 
-def _finish_render(image, label=None, badge=None, grounded=False):
+def _finish_render(image, label=None, badge=None, grounded=False, recolor=None):
     image.thumbnail((RENDER_SIZE, RENDER_SIZE), Image.LANCZOS)
+    if recolor:
+        tint(image, recolor["color"], recolor.get("greys", False))
     square = _pad_square(image, max(image.width, image.height), grounded)
     if badge:
         icon = _trim(_open(badge))
@@ -220,9 +222,9 @@ def _finish_render(image, label=None, badge=None, grounded=False):
     return _png(square)
 
 
-def render(data, label=None, badge=None, grounded=False):
+def render(data, label=None, badge=None, grounded=False, recolor=None):
     """Grounded renders sit on the bottom edge, so a creature stands where Melvor's own monster art does."""
-    return _finish_render(_trim(_open(data)), label, badge, grounded)
+    return _finish_render(_trim(_open(data)), label, badge, grounded, recolor)
 
 
 def row(datas, overlap=0.25, grounded=False):

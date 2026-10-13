@@ -1,6 +1,7 @@
 const ITEM_CHOICES_KEY = 'items';
 const MEDIA_PATH = /assets\/media\/[^?#"']+/;
 const ITEM_MEDIA = 'assets/media/bank/';
+const SETTINGS_ICON = 'assets/media/main/settings_header.png';
 
 export async function setup(ctx) {
   const { settings, entries } = await ctx.loadData('mapping.json');
@@ -42,13 +43,25 @@ export async function setup(ctx) {
     const selected = typeof game !== 'undefined' && game.bank ? game.bank.selectedBankItem : undefined;
     if (selected && typeof bankSideBarMenu !== 'undefined') bankSideBarMenu.setItem(selected, game);
   };
-  /** Icons Melvor puts straight into <img> tags (skill icons, the enemy panel's stats, the Game Guide) never pass through getMediaURL. */
+  let itemsByMedia;
+  const itemWithMedia = (media) => {
+    if (!itemsByMedia && typeof game !== 'undefined' && game.items && game.items.size > 0) {
+      itemsByMedia = new Map();
+      for (const item of game.items.allObjects) {
+        const path = pathOf(String(item._media || ''));
+        if (!itemsByMedia.has(path)) itemsByMedia.set(path, item);
+      }
+    }
+    return itemsByMedia && itemsByMedia.get(media);
+  };
+  /** Icons Melvor puts straight into <img> tags (skill icons, the enemy panel's stats, the combat menu's tabs) never pass through getMediaURL; item pictures among them follow that item's own choice. */
   const swapImage = (image) => {
     if (!enabled) return;
     const src = image.getAttribute('src');
     if (!src || src.startsWith('blob:')) return;
     const media = src.match(MEDIA_PATH)?.[0];
-    const sprite = media && !media.startsWith(ITEM_MEDIA) && active.get(media);
+    const item = media && media.startsWith(ITEM_MEDIA) && itemWithMedia(media);
+    const sprite = media && (media.startsWith(ITEM_MEDIA) ? item && spriteFor(item, media) : active.get(media));
     if (!sprite) return;
     image.dataset.osrsSpritesOriginal = src;
     image.src = spriteUrl(sprite);
@@ -103,10 +116,19 @@ export async function setup(ctx) {
 
   ctx.patch(NamespacedObject, 'getMediaURL').replace(function (getMediaURL, media) {
     if (enabled && !this.isModded && typeof media === 'string') {
-      const sprite = spriteFor(this, media);
+      /** A page's sidebar icon can be other art than its header (the Shop's is the GP coin); give both the header's OSRS art. */
+      const headerMedia = this.sidebarItem && media === this.sidebarItem.icon ? this._media : undefined;
+      const sprite = (headerMedia && spriteFor(this, headerMedia)) || spriteFor(this, media);
       if (sprite) return spriteUrl(sprite);
     }
     return getMediaURL(media);
+  });
+
+  /** Mod Settings shows a gear glyph rather than an image; give it the Settings page's OSRS wrench. */
+  ctx.onInterfaceReady(() => {
+    const sprite = enabled && active.get(SETTINGS_ICON);
+    const modding = sprite && sidebar.category('Modding');
+    if (modding && modding.items().some((item) => item.id === 'Mod Settings')) modding.item('Mod Settings', { icon: spriteUrl(sprite) });
   });
 
   ctx.patch(BankItemSettingsMenuElement, 'setItem').after(function (_result, bankItem) {

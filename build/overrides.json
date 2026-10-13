@@ -100,27 +100,19 @@
     },
     "melvorF:Summoning_Skillcape": {
       "cape": "File:Agility cape.png",
-      "emblem": "melvor:assets/media/skills/summoning/summoning.png",
+      "emblem": "asset:summoning_icon_2008.png",
       "color": "#404850"
     },
     "melvorF:Astrology_Skillcape": {
       "cape": "File:Agility cape.png",
-      "emblem": "melvor:assets/media/skills/astrology/astrology.png",
+      "emblem": "asset:astrology_icon.png",
       "color": "#78b8e8"
     },
-    "melvorF:Township_Skillcape": {
-      "cape": "File:Agility cape.png",
-      "emblem": "melvor:assets/media/skills/township/township.png",
-      "color": "#88a0a8"
-    },
-    "melvorAoD:Cartography_Skillcape": {
-      "cape": "File:Agility cape.png",
-      "emblem": "melvor:assets/media/skills/cartography/cartography.png",
-      "color": "#086078"
-    },
+    "melvorF:Township_Skillcape": "File:Construct. cape.png",
+    "melvorAoD:Cartography_Skillcape": "File:Sailing cape.png",
     "melvorAoD:Archaeology_Skillcape": {
       "cape": "File:Agility cape.png",
-      "emblem": "melvor:assets/media/skills/archaeology/archaeology.png",
+      "emblem": "asset:archaeology_icon_rs3.png",
       "color": "#404040"
     },
     "melvorAoD:Aranite_Trowel": {
@@ -219,7 +211,48 @@
     "melvorAoD:Archaeologist_Leggings": "Desert camo legs",
     "melvorAoD:Archaeologist_Boots": "Leather boots",
     "melvorAoD:Archaeologist_Gloves": "Leather gloves",
-    "melvorAoD:Archaeologists_Whip": "Abyssal whip"
+    "melvorAoD:Archaeologists_Whip": "Abyssal whip",
+    "melvorTotH:Labyrinth_Clue_1": {
+      "base": "File:Map part (Lozar).png",
+      "label": "1"
+    },
+    "melvorTotH:Labyrinth_Clue_2": {
+      "base": "File:Map part (Lozar).png",
+      "label": "2"
+    },
+    "melvorTotH:Labyrinth_Clue_3": {
+      "base": "File:Map part (Lozar).png",
+      "label": "3"
+    },
+    "melvorTotH:Labyrinth_Clue_4": {
+      "base": "File:Map part (Lozar).png",
+      "label": "4"
+    },
+    "melvorTotH:Labyrinth_Clue_5": {
+      "base": "File:Map part (Lozar).png",
+      "label": "5"
+    },
+    "melvorAoD:Magic_Anvil": {
+      "base": "File:Anvil.png",
+      "recolor": {
+        "color": "#3858e8",
+        "greys": true
+      }
+    },
+    "melvorTotH:Slayer_Helmet_Legendary": "File:Hydra slayer helmet.png",
+    "melvorTotH:Slayer_Helmet_Mythical": "File:Tzkal slayer helmet.png",
+    "melvorTotH:Slayer_Platebody_Legendary": "File:Torva platebody.png",
+    "melvorTotH:Slayer_Platebody_Mythical": "File:Sanguine torva platebody.png",
+    "melvorTotH:Slayer_Cowl_Legendary": "File:Armadyl helmet.png",
+    "melvorTotH:Slayer_Leather_Body_Legendary": "File:Armadyl chestplate.png",
+    "melvorTotH:Slayer_Cowl_Mythical": "File:Masori mask (f).png",
+    "melvorTotH:Slayer_Leather_Body_Mythical": "File:Masori body (f).png",
+    "melvorTotH:Slayer_Wizard_Hat_Legendary": "File:Virtus mask.png",
+    "melvorTotH:Slayer_Wizard_Robes_Legendary": "File:Virtus robe top.png",
+    "melvorTotH:Slayer_Wizard_Hat_Mythical": "File:Ancestral hat.png",
+    "melvorTotH:Slayer_Wizard_Robes_Mythical": "File:Ancestral robe top.png",
+    "melvorF:Almighty_Lute": "File:Enchanted lyre.png",
+    "melvorF:Fishing_Hook": "File:Crabclaw hook.png"
   },
   "monster": {
     "melvorD:BlackKnight": "File:Black Knight (male).png",
@@ -660,9 +693,146 @@
     "melvorItA:ExtraBankTab5": {
       "base": "File:Bank chest.png",
       "badge": "File:Bank key.png"
+    },
+    "melvorAoD:ShipUpgrade1": "File:Pirate ship (Feldip Gulf).png",
+    "melvorAoD:ExtraArchaeologyMapSlot1": "File:Crandor map.png",
+    "melvorAoD:ExtraArchaeologyMapSlot2": "File:Crandor map.png",
+    "melvorAoD:ExtraArchaeologyMapSlot3": "File:Crandor map.png",
+    "melvorTotH:Labyrinth_Solution": {
+      "base": "File:Treasure map.png",
+      "recolor": {
+        "color": "#d8b030"
+      }
+    },
+    "melvorTotH:SummonersAltar": "File:Gilded altar built.png",
+    "melvorTotH:Linden_Boat": "File:Raft icon.png",
+    "melvorTotH:Golden_Compass": {
+      "base": "File:Compass.png",
+      "recolor": {
+        "color": "#c8a030",
+        "greys": true
+      }
+    },
+    "melvorTotH:Golden_Shard": {
+      "base": "File:Ancient shard.png",
+      "recolor": {
+        "color": "#d8b030"
+      }
+    },
+    "melvorAoD:Superior_Cauldron": "File:Cauldron of Thunder.png",
+    "melvorAoD:Superior_Cooking_Pot": {
+      "base": "File:Cooking pot (unobtainable item).png",
+      "recolor": {
+        "color": "#383850",
+        "greys": true
+      }
+    },
+    "melvorAoD:Summoners_Pack_I": {
+      "group": [
+        "File:Red crystal (Mourning's End Part II).png",
+        "File:Green crystal (Mourning's End Part II).png"
+      ]
+    },
+    "melvorAoD:Summoners_Pack_II": {
+      "group": [
+        "File:Red crystal (Mourning's End Part II).png",
+        "File:Green crystal (Mourning's End Part II).png",
+        "File:Blue crystal (Mourning's End Part II).png",
+        "File:Hallowed crystal shard.png"
+      ]
+    },
+    "melvorAoD:Summoners_Pack_III": {
+      "group": [
+        "File:Red crystal (Mourning's End Part II).png",
+        "File:Green crystal (Mourning's End Part II).png",
+        "File:Blue crystal (Mourning's End Part II).png",
+        "File:Hallowed crystal shard.png",
+        "File:Yellow crystal (Mourning's End Part II).png",
+        "File:Black crystal.png"
+      ]
+    },
+    "melvorAoD:MagicAnvil": {
+      "base": "File:Anvil.png",
+      "recolor": {
+        "color": "#3858e8",
+        "greys": true
+      }
     }
   },
   "media": {
-    "assets/media/main/coins.png": "File:Coins 10000.png"
+    "assets/media/main/coins.png": "File:Coins 10000.png",
+    "assets/media/main/shop_header.png": "File:General store icon.png",
+    "assets/media/main/bank_header.png": "File:Bank icon.png",
+    "assets/media/main/completionLog_header.png": "File:Collection log.png",
+    "assets/media/main/completion_log.png": "File:Collection log.png",
+    "assets/media/main/lore_header.png": "File:Quest point icon.png",
+    "assets/media/main/lore.png": "File:Manual.png",
+    "assets/media/main/statistics_header.png": "File:Stats icon.png",
+    "assets/media/main/settings_header.png": "File:Settings.png",
+    "assets/media/main/announcement.png": "File:Newspaper.png",
+    "assets/media/main/slayer_coins.png": "File:Enchanted gem.png",
+    "assets/media/skills/summoning/summoning.png": {
+      "asset": "summoning_icon_2008.png"
+    },
+    "assets/media/skills/astrology/astrology.png": {
+      "asset": "astrology_icon.png"
+    },
+    "assets/media/skills/township/township.png": "File:Construction icon.png",
+    "assets/media/skills/cartography/cartography.png": "File:Sailing icon.png",
+    "assets/media/skills/archaeology/archaeology.png": {
+      "asset": "archaeology_icon_rs3.png"
+    },
+    "assets/media/skills/harvesting/harvesting.png": {
+      "base": "File:Magic secateurs.png",
+      "recolor": {
+        "color": "#c02828"
+      }
+    },
+    "assets/media/skills/corruption/corruption.png": "File:Blood shard.png",
+    "assets/media/main/summoning_header.png": {
+      "asset": "summoning_icon_2008.png"
+    },
+    "assets/media/main/astrology_header.png": {
+      "asset": "astrology_icon.png"
+    },
+    "assets/media/main/township_header.png": "File:Construction icon.png",
+    "assets/media/main/xp.png": "File:XP drops icon.png",
+    "assets/media/main/timer.png": "File:Hourglass (Recruitment Drive).png",
+    "assets/media/main/double.png": {
+      "asset": "drawn/double.png"
+    },
+    "assets/media/main/preservation.png": {
+      "asset": "drawn/preservation.png"
+    },
+    "assets/media/skills/cooking/perfect.png": {
+      "asset": "drawn/perfect.png"
+    },
+    "assets/media/main/tick.png": "File:Checkmark green.png",
+    "assets/media/main/additionalResource.png": {
+      "asset": "drawn/extra_resource.png"
+    },
+    "assets/media/main/costReduction.png": {
+      "asset": "drawn/cost_reduction.png"
+    },
+    "assets/media/main/mastery_header.png": {
+      "asset": "drawn/mastery_lamp.png"
+    },
+    "assets/media/main/mastery_pool.png": {
+      "asset": "drawn/mastery_pool.png"
+    },
+    "assets/media/main/milestones_header.png": "File:Achievement Diaries icon.png",
+    "assets/media/main/discord.svg": {
+      "asset": "drawn/discord.png"
+    },
+    "assets/media/main/reddit.svg": {
+      "asset": "drawn/reddit.png"
+    },
+    "assets/media/main/bluesky.svg": {
+      "asset": "drawn/bluesky.png"
+    },
+    "assets/media/main/x.svg": {
+      "asset": "drawn/x.png"
+    },
+    "assets/media/skills/combat/spellbook.png": "File:Magic icon.png"
   }
 }

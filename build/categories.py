@@ -2,7 +2,7 @@
 import re
 from collections import Counter
 
-COINS = "assets/media/main/coins.png"
+CURRENCIES = {"assets/media/main/coins.png", "assets/media/main/slayer_coins.png"}
 GENERAL = [
     ("enabled", "Use OSRS art", "Master switch for every replacement."),
     ("thematic", "Thematic stand-ins", "Art for things with no exact OSRS counterpart. Turn off to keep only real matches."),
@@ -70,7 +70,7 @@ def tags_for(entity, thematic_ids):
         name, label = PACKS[entity.package]
         tags.append(("Content packs", name, label))
     if entity.kind == "icon":
-        tags.append(("Skilling", "currency", "GP icon") if entity.media_path == COINS else ("Skilling", "skill-icons", "Skill icons"))
+        tags.append(("Skilling", "currency", "Currency icons") if entity.media_path in CURRENCIES else ("Skilling", "skill-icons", "Skill and menu icons"))
     elif entity.kind == "item":
         category, kind = ITEM_CATEGORIES.get(clean(entity.category)), ITEM_TYPES.get(clean(entity.type))
         if category:
