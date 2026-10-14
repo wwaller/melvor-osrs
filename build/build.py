@@ -9,7 +9,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from melvor import BASE_PACKAGES, load_package
+from melvor import BASE_PACKAGES, EXPANSION_PACKAGES, load_package
 from osrs_cache import Cache
 from synth import render, write_wav
 from wiki import Wiki
@@ -35,6 +35,9 @@ SKILL_ACTIONS = {
     "melvorD:Agility": "synth:jump",
     "melvorD:Summoning": "synth:summon_npc",
     "melvorD:Astrology": "synth:star_sprite_twinkle",
+    "melvorAoD:Archaeology": "synth:digsite_dig_trowel",
+    "melvorAoD:Cartography": "synth:quetzal_map_open_01",
+    "melvorItA:Harvesting": "synth:farming_pick",
 }
 RECIPE_CATEGORY_ACTIONS = {
     "melvorD:Bars": "synth:furnace",
@@ -69,7 +72,7 @@ LEVEL_UP_SKILLS = {
     "melvorD:Cooking": "Cooking", "melvorD:Mining": "Mining", "melvorD:Smithing": "Smithing", "melvorD:Thieving": "Thieving",
     "melvorD:Farming": "Farming", "melvorD:Fletching": "Fletching", "melvorD:Crafting": "Crafting",
     "melvorD:Runecrafting": "Runecraft", "melvorD:Herblore": "Herblore", "melvorD:Agility": "Agility",
-    "melvorD:Township": "Construction",
+    "melvorD:Township": "Construction", "melvorAoD:Cartography": "Sailing",
 }
 LEVEL_UP_BANDED = {"Strength", "Hitpoints"}
 LEVEL_UP_FALLBACK = "File:Level up fireworks.ogg"
@@ -89,6 +92,43 @@ WEAPONS = {
     "unarmed": "File:Unarmed attack (punch).wav",
     "staff": "File:Staff attack (stab).wav",
 }
+SPELL_SOUNDS = {
+    "melvorTotH:PoisonPods": "File:Smoke Burst.ogg",
+    "melvorTotH:GiantFireball": "File:Fire Surge.ogg",
+    "melvorTotH:ThunderStrike": "File:Saradomin Strike.ogg",
+    "melvorTotH:MeteorShower": "File:Flames of Zamorak.ogg",
+    "melvorTotH:Tsunami": "File:Water Surge.ogg",
+    "melvorTotH:NaturesBloom": "File:Claws of Guthix.ogg",
+    "melvorTotH:InfernalPower": "File:Superior Demonbane.ogg",
+    "melvorTotH:Soulash": "File:Shadow Blitz.ogg",
+    "melvorTotH:DragonStormCall": "File:Wind Surge.ogg",
+    "melvorTotH:SlicingMaelstrom": "File:Wind Surge.ogg",
+    "melvorTotH:Madness": "File:Confuse.ogg",
+    "melvorTotH:Torment": "File:Curse.ogg",
+    "melvorTotH:Despair": "File:Enfeeble.ogg",
+    "melvorAoD:CrushingWaves": "File:Water Wave.ogg",
+    "melvorAoD:Whirlpool": "File:Water Surge.ogg",
+    "melvorAoD:Fatigue": "File:Enfeeble.ogg",
+    "melvorAoD:Petrified": "File:Bind.ogg",
+    "melvorAoD:Crystallization": "File:Crystal chime ringing.wav",
+    "melvorAoD:Crystal_Sanction": "File:Altar crystal chime 1.ogg",
+    "melvorItA:TendrilSlam": "File:Entangle.ogg",
+    "melvorItA:Madness": "File:Confuse.ogg",
+    "melvorItA:ConsumingGrasp": "File:Bind.ogg",
+    "melvorItA:Pandemonium": "File:Iban Blast.ogg",
+    "melvorItA:VoidfireVolley": "File:Shadow Barrage.ogg",
+    "melvorItA:BlackHole": "File:Mark of Darkness.ogg",
+    "melvorItA:NullSphere": "File:Tele Block cast.wav",
+    "melvorItA:InfiniteVoid": "File:Death Charge.ogg",
+}
+ABYSSAL_SPELL_TIERS = {
+    "Abyssal": ["Inferior Demonbane", "Superior Demonbane", "Dark Demonbane", "Descent of Darkness"],
+    "Brume": ["Smoke Rush", "Smoke Burst", "Smoke Blitz", "Smoke Barrage"],
+    "Gloom": ["Shadow Rush", "Shadow Burst", "Shadow Blitz", "Shadow Barrage"],
+    "Wither": ["Blood Rush", "Blood Burst", "Blood Blitz", "Blood Barrage"],
+    "Nether": ["Fire Blast", "Fire Wave", "Fire Surge", "Flames of Zamorak"],
+}
+SPELL_TIERS = ("Blast", "Wave", "Surge", "Eruption")
 NUMERAL = re.compile(r"\s+(I|II|III|IV|V)$")
 SFX_GROUPS = ("spells", "monsters", "skills", "categories", "prayers", "levelUps", "levelUpsHigh", "weapons")
 SINGLE_SOUNDS = ("levelUpFallback", "pet", *EVENT_SOUNDS)
@@ -153,14 +193,17 @@ def sfx_plan():
     names = synth_names(Wiki(CACHE))
     spells, monsters, prayers, spell_stems, unmatched_spells = {}, {}, {}, {}, []
     spell_picks, monster_picks = sprite_picks("spell"), sprite_picks("monster")
-    for package in BASE_PACKAGES:
+    for package in BASE_PACKAGES + EXPANSION_PACKAGES:
         document = load_package(package, CACHE)
         ns = document["namespace"]
         data = document["data"]
         for key in ("attackSpells", "curseSpells", "auroraSpells"):
             for spell in data.get(key, []):
                 melvor_id = f"{ns}:{spell['id']}"
-                sound = find_sound(available, [spell["name"], spell_picks.get(melvor_id, "")], [""])
+                element, _, tier = spell["name"].partition(" ")
+                family = ABYSSAL_SPELL_TIERS.get(element) if ns == "melvorItA" and tier in SPELL_TIERS else None
+                themed = find_sound(available, [family[SPELL_TIERS.index(tier)]], [""]) if family else SPELL_SOUNDS.get(melvor_id)
+                sound = themed or find_sound(available, [spell["name"], spell_picks.get(melvor_id, "")], [""])
                 stem = NUMERAL.sub("", spell["name"])
                 if sound:
                     spells[melvor_id] = sound
@@ -202,18 +245,34 @@ def sfx_plan():
     }
 
 
+MIN_TRACK_SECONDS = 60
+
+
 def track_title(name):
     return "File:" + TRACK_SUFFIX.sub("", name) + ".ogg"
 
 
+def track_lengths():
+    lengths = {}
+    for line in (BUILD_DIR / "osrs_tracks.tsv").read_text().splitlines():
+        name, _, length = (line.split("\t") + ["", ""])[:3]
+        minutes, _, seconds = length.partition(":")
+        if minutes.isdigit() and seconds.isdigit():
+            lengths.setdefault(name, int(minutes) * 60 + int(seconds))
+    return lengths
+
+
 def music_plan():
+    """Context id -> wiki files to play; tracks under a minute are jingles (level-ups, chart stings), not music, and are left out."""
     approved = BUILD_DIR / "music.json"
     source = approved if approved.exists() else BUILD_DIR / "music_proposals.json"
     plan = {}
     if not source.exists():
         return plan
+    lengths = track_lengths()
     for row in json.loads(source.read_text()):
-        plan[row["id"]] = [track_title(t) for t in [row["primary"]] + row.get("alternates", []) if t]
+        tracks = [t for t in [row["primary"]] + row.get("alternates", []) if t and lengths.get(t, MIN_TRACK_SECONDS) >= MIN_TRACK_SECONDS]
+        plan[row["id"]] = [track_title(t) for t in tracks]
     return plan
 
 
