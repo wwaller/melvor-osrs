@@ -17,6 +17,7 @@ const BODY_RECOLOR2_TO = [
   [], [], [],
 ];
 export const DEFAULT_COLORS = [0, 6, 9, 0, 1];
+export const BODY_COLOR_COUNTS = BODY_RECOLOR_TO.map((colors) => colors.length);
 const PLAYER_LIGHT = [64, 850, -30, -50, -30];
 const HAND_ITEM_OFFSET = 512;
 const WEAPON_SLOT = 3;
@@ -117,10 +118,10 @@ function wornModel(data, item, female) {
   return model;
 }
 
-/** The OSRS player model wearing the given items, merged slot by slot the way the game client does. An animation's hand items replace the weapon and shield. */
-export function playerModel(data, itemIds, { female = false, colors = DEFAULT_COLORS, hands = { left: -1, right: -1 } } = {}) {
+/** The OSRS player model wearing the given items, merged slot by slot the way the game client does. Kits replace the default kit for their body part, and an animation's hand items replace the weapon and shield. */
+export function playerModel(data, itemIds, { female = false, kits = [], colors = DEFAULT_COLORS, hands = { left: -1, right: -1 } } = {}) {
   const slots = new Array(12).fill(null);
-  for (const kitId of data.defaults[female ? 'female' : 'male']) {
+  for (const kitId of [...data.defaults[female ? 'female' : 'male'], ...kits]) {
     const kit = data.kits[kitId];
     if (kit) slots[KIT_SLOTS[kit.part % 7]] = { kit };
   }
@@ -439,8 +440,8 @@ export function createRenderer(canvas) {
     /**
      * yaw and pitch are in OSRS angle units (2048 per turn). With a reference model, the view fits that model's
      * upright bounding cylinder instead of the drawn model, so the framing holds still through an animation and while turning.
-     * Returns the canvas rows of the model's lowest point and of the ground under its centre, the pixels per model unit,
-     * and how much the camera's pitch flattens a circle on the ground.
+     * Returns the canvas rows of the model's lowest point, of the ground under its centre and of the top of the framing,
+     * the pixels per model unit, and how much the camera's pitch flattens a circle on the ground.
      */
     draw(model, { yaw = 0, pitch = 96, padding = 0.06, reference = null } = {}) {
       const vertexCount = model.vx.length;
@@ -501,7 +502,7 @@ export function createRenderer(canvas) {
         gl.vertexAttribPointer(attributes[i], components, gl.FLOAT, false, 16, [0, 8, 12][i]);
       });
       gl.drawArrays(gl.TRIANGLES, 0, order.length * 3);
-      return { ground: lowest * fit + offsetY, origin: offsetY, scale: fit, tilt: pitchSin / 65536 };
+      return { ground: lowest * fit + offsetY, origin: offsetY, scale: fit, tilt: pitchSin / 65536, top: minY * fit + offsetY };
     },
   };
 }

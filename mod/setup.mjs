@@ -7,6 +7,14 @@ const STAGE_HEIGHT = 260;
 const SHADOW_WIDTH = 90;
 const DRAG_TURN = 4;
 const COLLAPSED_KEY = 'collapsed';
+const SIDEBAR_CATEGORY = 'osrsCharacter:Character';
+const SIDEBAR_NAME = 'Character';
+const SIDEBAR_HEIGHT = 210;
+const SIDEBAR_COLLAPSED_KEY = 'sidebarCollapsed';
+const TOP_CATEGORY = '';
+const HAIR_PART = 0;
+const SKIN_PART = 4;
+const HIDEABLE_SLOTS = { hideHelm: 'melvorD:Helmet', hideCape: 'melvorD:Cape' };
 const CLIENT_TICK_MS = 20;
 const HIDDEN_CHECK_MS = 1000;
 const HAND_ITEM_OFFSET = 512;
@@ -47,7 +55,7 @@ const ATTACK_POSES = { cast: 711, bow: 426, crossbow: 4230, thrown: 929, punch: 
 const MELEE_WEAPON_POSES = [[/2h|godsword/i, 407], [/dagger/i, 376], [/axe/i, 395], [/mace|hammer|maul|flail/i, 401], [/spear|halberd/i, 386]];
 
 export async function setup(ctx) {
-  const { createRenderer, litPlayer, poseFrame, STAND_POSE } = await ctx.loadModule('character.mjs');
+  const { createRenderer, litPlayer, poseFrame, DEFAULT_COLORS, BODY_COLOR_COUNTS, STAND_POSE } = await ctx.loadModule('character.mjs');
   ctx.loadStylesheet('style.css');
   const [index, base] = await Promise.all([ctx.loadData('data/index.json'), ctx.loadData('data/base.json')]);
   const itemFiles = new Map();
@@ -57,7 +65,7 @@ export async function setup(ctx) {
   };
 
   let panel = null;
-  let canvas = null;
+  let sidebarCategory = null;
   let stageCanvas = null;
   const views = [];
   let data = null;
@@ -87,6 +95,79 @@ export async function setup(ctx) {
       onChange: () => setTimeout(changeOutfit),
     },
     {
+      type: 'dropdown',
+      name: 'hairStyle',
+      label: 'Hair style',
+      hint: 'Which OSRS hairstyle your character has.',
+      default: 0,
+      options: numbered(Math.max(base.hair.male.length, base.hair.female.length)),
+      onChange: () => setTimeout(changeOutfit),
+    },
+    {
+      type: 'dropdown',
+      name: 'hair',
+      label: 'Hair colour',
+      hint: 'Which OSRS hair colour your character has.',
+      default: DEFAULT_COLORS[HAIR_PART],
+      options: numbered(BODY_COLOR_COUNTS[HAIR_PART]),
+      onChange: () => setTimeout(changeOutfit),
+    },
+    {
+      type: 'dropdown',
+      name: 'skin',
+      label: 'Skin colour',
+      hint: 'Which OSRS skin colour your character has.',
+      default: DEFAULT_COLORS[SKIN_PART],
+      options: numbered(BODY_COLOR_COUNTS[SKIN_PART]),
+      onChange: () => setTimeout(changeOutfit),
+    },
+    {
+      type: 'switch',
+      name: 'hideHelm',
+      label: 'Hide helm',
+      hint: 'Draws your character without whatever is in the helmet slot.',
+      default: false,
+      onChange: () => setTimeout(changeOutfit),
+    },
+    {
+      type: 'switch',
+      name: 'hideCape',
+      label: 'Hide cape',
+      hint: 'Draws your character without whatever is in the cape slot.',
+      default: false,
+      onChange: () => setTimeout(changeOutfit),
+    },
+    {
+      type: 'switch',
+      name: 'equipment',
+      label: 'Show under your equipment',
+      hint: 'Draws the Character Preview below your worn gear on the Combat page.',
+      default: true,
+      onChange: () => setTimeout(() => {
+        applyPlaces();
+        rebuild();
+      }),
+    },
+    {
+      type: 'switch',
+      name: 'sidebar',
+      label: 'Show in the sidebar',
+      hint: 'Adds a Character section under Shop and Bank, which its eye collapses.',
+      default: true,
+      onChange: () => setTimeout(() => {
+        applyPlaces();
+        rebuild();
+      }),
+    },
+    {
+      type: 'switch',
+      name: 'nameplate',
+      label: 'Show your name in the sidebar',
+      hint: 'Floats your character name above the sidebar preview, like an OSRS nameplate.',
+      default: true,
+      onChange: () => setTimeout(applyPlaces),
+    },
+    {
       type: 'switch',
       name: 'combat',
       label: 'Show in the combat view',
@@ -98,7 +179,8 @@ export async function setup(ctx) {
       }),
     },
   ]);
-  const stageOn = () => ctx.settings.section(SECTION).get('combat') !== false && game.combat?.isActive === true;
+  const shownIn = (place) => ctx.settings.section(SECTION).get(place) !== false;
+  const stageOn = () => shownIn('combat') && game.combat?.isActive === true;
 
   const spritesLoaded = (() => {
     try {
@@ -116,7 +198,9 @@ export async function setup(ctx) {
     }
   };
   const osrsIdOf = (item) => index[String(item._media || '').split('?', 1)[0]];
+  const hiddenSlots = () => Object.entries(HIDEABLE_SLOTS).filter(([setting]) => ctx.settings.section(SECTION).get(setting) === true).map(([, slotId]) => slotId);
   const wornOsrsIds = () => game.combat.player.equipment.equippedArray
+    .filter((slot) => !hiddenSlots().includes(slot.slot?.id))
     .filter((slot) => !slot.isEmpty && slot.occupiedBy === undefined && osrsIdOf(slot.item) !== undefined && showsOsrsArt(slot.item))
     .map((slot) => osrsIdOf(slot.item));
 
@@ -174,7 +258,7 @@ export async function setup(ctx) {
     .map((value) => value - HAND_ITEM_OFFSET);
 
   const isOpen = () => panel && !panel.classList.contains('osrs-character-collapsed');
-  const isShown = (view) => view.enabled() && view.canvas.clientWidth > 0 && !document.hidden;
+  const isShown = (view) => view.enabled() && view.onScreen && view.canvas.clientWidth > 0 && !document.hidden;
   const anyShown = () => views.some(isShown);
   const paint = () => {
     paintRequest = 0;
@@ -183,13 +267,14 @@ export async function setup(ctx) {
     for (const view of views.filter(isShown)) {
       view.canvas.width = Math.round(view.canvas.clientWidth * ratio);
       view.canvas.height = Math.round(view.height * ratio);
-      const { ground, origin, scale, tilt } = view.renderer.draw(posed, { yaw: view.yaw(), reference });
+      const { ground, origin, scale, tilt, top } = view.renderer.draw(posed, { yaw: view.yaw(), reference });
       const pixels = (value) => `${Math.round(value / ratio)}px`;
       setStyleVariables(view.canvas.parentElement, {
         '--osrs-character-ground': pixels(view.canvas.height - ground),
         '--osrs-character-shadow-y': pixels(view.canvas.height - origin),
         '--osrs-character-shadow-width': pixels(SHADOW_WIDTH * scale),
         '--osrs-character-shadow-height': pixels(SHADOW_WIDTH * scale * tilt),
+        '--osrs-character-head': pixels(top),
       });
     }
   };
@@ -247,10 +332,16 @@ export async function setup(ctx) {
       restCache.clear();
       restOutfit = outfit;
     }
-    const female = ctx.settings.section(SECTION).get('body') === 'female';
+    const settings = ctx.settings.section(SECTION);
+    const female = settings.get('body') === 'female';
+    const styles = base.hair[female ? 'female' : 'male'];
+    const hairKit = styles[Math.min(Number(settings.get('hairStyle') ?? 0), styles.length - 1)];
+    const colors = DEFAULT_COLORS.slice();
+    colors[HAIR_PART] = Number(settings.get('hair') ?? colors[HAIR_PART]);
+    colors[SKIN_PART] = Number(settings.get('skin') ?? colors[SKIN_PART]);
     const litFor = (poseId) => {
       const hands = `${base.poses[poseId].left},${base.poses[poseId].right}`;
-      if (!restCache.has(hands)) restCache.set(hands, litPlayer(data, osrsIds, { female, pose: poseId }));
+      if (!restCache.has(hands)) restCache.set(hands, litPlayer(data, osrsIds, { female, kits: [hairKit], colors, pose: poseId }));
       return restCache.get(hands);
     };
     rest = litFor(pose);
@@ -265,9 +356,53 @@ export async function setup(ctx) {
     element.innerHTML = `<div class="block-header block-header-default bg-dark-bank-block-header px-3 py-1 mb-1 pointer-enabled">
         <h5 class="font-size-sm font-w600 mb-0 w-100 text-center"><i class="fa text-muted mr-2 font-w300 fa-eye"></i>${SECTION}</h5>
       </div>
-      <div class="px-2 pb-2"><canvas style="display:block;width:100%;height:${CANVAS_HEIGHT}px;touch-action:pan-y;cursor:grab"></canvas></div>`;
+      <div class="px-2 pb-2 position-relative"><canvas style="display:block;width:100%;height:${CANVAS_HEIGHT}px;touch-action:pan-y;cursor:grab"></canvas></div>`;
+    addSettingsGear(element.lastElementChild);
     return element;
   };
+
+  const openSettings = () => sidebar.category('Modding').item('Mod Settings').subitems().find((subitem) => subitem.id === ctx.name)?.click();
+  const addSettingsGear = (holder) => {
+    const gear = Object.assign(document.createElement('i'), { className: 'fa fa-cog osrs-character-settings', title: `${SECTION} settings` });
+    gear.setAttribute('role', 'button');
+    gear.addEventListener('click', openSettings);
+    holder.append(gear);
+  };
+
+  /** A Character category right below Shop and Bank; its one item holds the canvas instead of a link. */
+  const createSidebar = () => {
+    const order = sidebar.categories().map((category) => category.id);
+    const next = order.includes(TOP_CATEGORY) ? order[order.indexOf(TOP_CATEGORY) + 1] : undefined;
+    let holder = null;
+    sidebarCategory = sidebar.category(SIDEBAR_CATEGORY, {
+      name: SIDEBAR_NAME,
+      toggleable: true,
+      ...(next !== undefined ? { before: next } : {}),
+      onRender: ({ toggleEl }) => toggleEl?.addEventListener('click', () => {
+        ctx.accountStorage.setItem(SIDEBAR_COLLAPSED_KEY, !sidebarOpen());
+        rebuild();
+      }),
+    });
+    sidebarCategory.item('preview', {
+      rootClass: 'osrs-character-sidebar',
+      onRender: ({ rootEl }) => {
+        holder = document.createElement('div');
+        holder.className = 'px-2 pb-2 osrs-character-sidebar-stage';
+        holder.innerHTML = `<canvas style="display:block;width:100%;height:${SIDEBAR_HEIGHT}px;touch-action:pan-y;cursor:grab"></canvas><span class="osrs-character-nameplate"></span>`;
+        holder.lastElementChild.textContent = game.characterName ?? '';
+        addSettingsGear(holder);
+        rootEl.append(holder);
+      },
+    });
+    if (ctx.accountStorage.getItem(SIDEBAR_COLLAPSED_KEY) === true) sidebarCategory.toggle(false);
+    return holder?.querySelector('canvas') ?? null;
+  };
+  const sidebarOpen = () => !sidebarCategory?.toggleEl?.classList.contains('fa-eye-slash');
+  function applyPlaces() {
+    panel?.classList.toggle('d-none', !shownIn('equipment'));
+    sidebarCategory?.rootEl?.classList.toggle('d-none', !shownIn('sidebar'));
+    sidebarCategory?.rootEl?.querySelector('.osrs-character-nameplate')?.classList.toggle('d-none', !shownIn('nameplate'));
+  }
 
   const createStage = () => {
     const enemyImage = document.getElementById('combat-enemy-img');
@@ -299,11 +434,12 @@ export async function setup(ctx) {
     panel.querySelector('.fa').classList.replace(collapsed ? 'fa-eye' : 'fa-eye-slash', collapsed ? 'fa-eye-slash' : 'fa-eye');
   };
 
-  const enableDragToTurn = () => {
+  const enableDragToTurn = (canvas) => {
     let lastX = null;
     canvas.addEventListener('pointerdown', (event) => {
       lastX = event.clientX;
       canvas.setPointerCapture(event.pointerId);
+      blockSidebarSwipe(true);
     });
     canvas.addEventListener('pointermove', (event) => {
       if (lastX === null) return;
@@ -313,6 +449,7 @@ export async function setup(ctx) {
     });
     const release = () => {
       lastX = null;
+      setTimeout(() => blockSidebarSwipe(false));
     };
     canvas.addEventListener('pointerup', release);
     canvas.addEventListener('pointercancel', release);
@@ -332,39 +469,64 @@ export async function setup(ctx) {
     return result;
   });
 
-  ctx.onInterfaceReady(() => {
-    const equipment = document.getElementById('combat-menu-0')?.querySelector(':scope > .block');
-    if (!equipment) return;
-    panel = createPanel();
-    equipment.after(panel);
-    setCollapsed(ctx.accountStorage.getItem(COLLAPSED_KEY) === true);
-    panel.firstElementChild.addEventListener('click', () => {
-      const collapsed = !panel.classList.contains('osrs-character-collapsed');
-      setCollapsed(collapsed);
-      ctx.accountStorage.setItem(COLLAPSED_KEY, collapsed);
-      rebuild();
-    });
-    canvas = panel.querySelector('canvas');
+  const addPreview = (canvas, height, enabled) => {
     const renderer = createRenderer(canvas);
     if (!renderer) {
       canvas.replaceWith(Object.assign(document.createElement('p'), { className: 'font-size-sm text-combat-smoke m-2', textContent: 'The Character Preview needs WebGL, which this device does not support.' }));
       return;
     }
-    views.push({ canvas, renderer, height: CANVAS_HEIGHT, yaw: () => yaw, enabled: isOpen });
-    enableDragToTurn();
+    views.push({ canvas, renderer, height, yaw: () => yaw, enabled, onScreen: true });
+    enableDragToTurn(canvas);
+  };
+
+  ctx.onInterfaceReady(() => {
+    const equipment = document.getElementById('combat-menu-0')?.querySelector(':scope > .block');
+    if (equipment) {
+      panel = createPanel();
+      equipment.after(panel);
+      setCollapsed(ctx.accountStorage.getItem(COLLAPSED_KEY) === true);
+      panel.firstElementChild.addEventListener('click', () => {
+        const collapsed = !panel.classList.contains('osrs-character-collapsed');
+        setCollapsed(collapsed);
+        ctx.accountStorage.setItem(COLLAPSED_KEY, collapsed);
+        rebuild();
+      });
+      addPreview(panel.querySelector('canvas'), CANVAS_HEIGHT, () => shownIn('equipment') && isOpen());
+    }
+    const sidebarCanvas = createSidebar();
+    if (sidebarCanvas) addPreview(sidebarCanvas, SIDEBAR_HEIGHT, () => shownIn('sidebar') && sidebarOpen());
+    applyPlaces();
+    if (!views.length) return;
     stageCanvas = createStage();
     const stageRenderer = stageCanvas && createRenderer(stageCanvas);
     if (stageRenderer) {
-      views.push({ canvas: stageCanvas, renderer: stageRenderer, height: STAGE_HEIGHT, yaw: () => STAGE_YAW, enabled: stageOn });
+      views.push({ canvas: stageCanvas, renderer: stageRenderer, height: STAGE_HEIGHT, yaw: () => STAGE_YAW, enabled: stageOn, onScreen: true });
       applyStage();
     } else {
       stageCanvas?.remove();
       stageCanvas = null;
     }
-    for (const view of views) new ResizeObserver(queuePaint).observe(view.canvas);
+    const onScreen = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const view = views.find((candidate) => candidate.canvas === entry.target);
+        if (view) view.onScreen = entry.isIntersecting;
+      }
+      if (rest) step();
+    });
+    for (const view of views) {
+      new ResizeObserver(queuePaint).observe(view.canvas);
+      onScreen.observe(view.canvas);
+    }
     game.combat.player.on('equipmentChanged', changeOutfit);
     rebuild();
   });
+}
+
+const numbered = (count) => Array.from({ length: count }, (_, index) => ({ value: index, display: String(index + 1) }));
+
+/** Melvor opens and closes the mobile sidebar on a sideways swipe; turning the character is one too. */
+function blockSidebarSwipe(blocked) {
+  if (typeof disableSwipeEvents !== 'undefined') disableSwipeEvents = blocked;
 }
 
 function setStyleVariables(element, variables) {

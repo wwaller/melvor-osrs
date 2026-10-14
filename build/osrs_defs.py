@@ -91,7 +91,7 @@ def item(data):
 
 def kit(data):
     reader = Reader(data)
-    definition = {"part": -1, "models": [], "recolor": [], "retexture": []}
+    definition = {"part": -1, "models": [], "recolor": [], "retexture": [], "selectable": True}
     while (opcode := reader.u8()) != 0:
         if opcode == 1:
             definition["part"] = reader.u8()
@@ -100,7 +100,7 @@ def kit(data):
         elif opcode == 5:
             definition["models"] = [reader.i32() for _ in range(reader.u8())]
         elif opcode == 3:
-            pass
+            definition["selectable"] = False
         elif opcode in (40, 41):
             definition["recolor" if opcode == 40 else "retexture"] = [(reader.i16() & 0xFFFF, reader.i16() & 0xFFFF) for _ in range(reader.u8())]
         elif 60 <= opcode < 70:

@@ -34,6 +34,7 @@ USER_AGENT = "melvor-osrs-character/0.1 (personal Melvor Idle mod build)"
 ICON = "File:Worn Equipment.png"
 MALE_KITS = [3, 14, 18, 26, 33, 36, 42]
 FEMALE_KITS = [126, 296, 56, 64, 68, 70, 80]
+HAIR_PARTS = {"male": 0, "female": 7}
 STAND_POSE = 808
 POSES = [
     STAND_POSE,
@@ -226,9 +227,15 @@ def base_file(cache, model_cache):
     sequences = cache.files(osrs_defs.CONFIGS, osrs_defs.SEQUENCE_GROUP)
     skeletons = {}
     poses = {sequence_id: pose(cache, osrs_defs.sequence(sequences[sequence_id]), skeletons) for sequence_id in POSES}
-    data = {"kits": {}, "models": {}, "poses": poses, "skeletons": skeletons, "defaults": {"male": MALE_KITS, "female": FEMALE_KITS}}
-    for kit_id in MALE_KITS + FEMALE_KITS:
-        data["kits"][kit_id] = osrs_defs.kit(kits[kit_id])
+    decoded = {kit_id: osrs_defs.kit(kit_data) for kit_id, kit_data in kits.items()}
+    defaults = {"male": MALE_KITS, "female": FEMALE_KITS}
+    hair = {}
+    for body, part in HAIR_PARTS.items():
+        default = next(kit_id for kit_id in defaults[body] if decoded[kit_id]["part"] == part)
+        hair[body] = [default] + [kit_id for kit_id in sorted(decoded) if decoded[kit_id]["part"] == part and decoded[kit_id]["selectable"] and kit_id != default]
+    data = {"kits": {}, "models": {}, "poses": poses, "skeletons": skeletons, "defaults": defaults, "hair": hair}
+    for kit_id in sorted(set(MALE_KITS + FEMALE_KITS + hair["male"] + hair["female"])):
+        data["kits"][kit_id] = decoded[kit_id]
         for model_id in data["kits"][kit_id]["models"]:
             if model_id not in model_cache:
                 model_cache[model_id] = compact_model(osrs_model.decode(cache.group(MODELS, model_id)))
