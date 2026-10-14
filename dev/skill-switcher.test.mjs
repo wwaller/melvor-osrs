@@ -23,7 +23,9 @@ function element(tag) {
       child.parent = node;
       node.children.splice(node.children.indexOf(before), 0, child);
     },
+    before(other) { node.parent.insertBefore(other, node); },
     get lastElementChild() { return node.children[node.children.length - 1]; },
+    find: (name) => node.children.find((child) => child.classList.contains(name)),
   };
   return node;
 }
@@ -83,7 +85,7 @@ test('the flyout lists Combat once, then the passive and non-combat skills in si
   assert.deepStrictEqual(entries.map((e) => e.dimmed), [false, false, false, false, true], 'other-realm skills stay dimmed; hidden ones are left out');
 });
 
-async function boot(values = {}) {
+async function boot(values = {}, { interfaceReady = true, desktop = false, sidebarOpen = false } = {}) {
   const { sidebarAPI, gameAPI, pages, actions } = world();
   const body = element('body');
   const minibarContainer = element('div');
@@ -92,43 +94,49 @@ async function boot(values = {}) {
   const patches = {};
   let ready;
   let tip;
+  const layouts = [];
+  globalThis.One = { layout: (action) => layouts.push(action) };
+  globalThis.window = { matchMedia: (query) => ({ matches: query === '(min-width: 992px)' && desktop }) };
+  const pageContainer = element('div');
+  if (sidebarOpen) pageContainer.classList.add('sidebar-o-xs');
   globalThis.sidebar = sidebarAPI;
   globalThis.game = { ...gameAPI, openPage: pages['melvorD:Woodcutting'] };
-  globalThis.document = { body, createElement: element, getElementById: (id) => (id === 'skill-footer-minibar-container' ? minibarContainer : null) };
+  globalThis.document = { body, createElement: element, getElementById: (id) => ({ 'skill-footer-minibar-container': minibarContainer, 'page-container': sidebarOpen ? pageContainer : null })[id] ?? null };
   globalThis.changePage = (...args) => pageChanges.push(args);
   globalThis.tippy = (target, options) => (tip = { target, options, hidden: false, hide() { this.hidden = true; }, setContent(content) { this.content = content; } });
   globalThis.Minibar = class Minibar { setSkill() {} };
   globalThis.Game = class Game { renderActiveSkills() {} };
   const ctx = {
     loadStylesheet: (path) => (ctx.stylesheet = path),
-    settings: { section: () => ({ add: (config) => (ctx.setting = config), get: (name) => values[name] ?? ctx.setting?.default }) },
+    configs: {},
+    settings: { section: () => ({ add: (config) => [config].flat().forEach((each) => (ctx.configs[each.name] = each)), get: (name) => values[name] ?? ctx.configs[name]?.default }) },
     patch: (target, method) => ({ after: (fn) => (patches[`${target.name}.${method}`] = fn), replace: (fn) => (patches[`${target.name}.${method}`] = fn) }),
     onInterfaceReady: (fn) => (ready = fn),
   };
   const { setup } = await import(`../mod/setup.mjs?${Math.random()}`);
   setup(ctx);
-  ready();
-  return { ctx, patches, body, minibarContainer, pageChanges, pages, actions, tip: () => tip };
+  if (interfaceReady) ready();
+  return { ctx, ready, patches, body, minibarContainer, pageChanges, pages, actions, layouts, tip: () => tip };
 }
 
 test('on skill pages the button sits just above the minibar arrow; elsewhere it floats in the same corner', async () => {
   const { ctx, patches, body, minibarContainer } = await boot();
   assert.strictEqual(ctx.stylesheet, 'style.css');
   const floating = body.children[0];
-  const button = minibarContainer.children[1];
-  assert.ok(button.classList.contains('skill-switcher-button'));
+  const button = minibarContainer.find('skill-switcher-button');
+  assert.ok(button);
   assert.strictEqual(minibarContainer.lastElementChild.tagName, 'BUTTON', 'the arrow stays last');
   assert.ok(floating.classList.contains('d-none'));
 
   minibarContainer.classList.add('d-none');
   patches['Minibar.setSkill']();
-  assert.strictEqual(floating.children[0], button);
+  assert.strictEqual(floating.find('skill-switcher-button'), button);
   assert.ok(!floating.classList.contains('d-none'));
 });
 
 test('the button shows the active skill, and the flyout puts active skills in a row under the grid and switches pages without opening the sidebar', async () => {
   const { patches, minibarContainer, pageChanges, pages, actions, tip } = await boot();
-  const button = minibarContainer.children[1];
+  const button = minibarContainer.find('skill-switcher-button');
   assert.strictEqual(button.children[0].children[0].src, 'Woodcutting.png');
 
   tip().options.onShow(tip());
@@ -162,4 +170,91 @@ test('with the option on, Bank and Shop join the bottom row to the left of the a
   assert.ok(!bottom.children[1].classList.contains('skill-switcher-active'));
   bottom.children[1].onclick();
   assert.deepStrictEqual(pageChanges, [[pages['melvorD:Bank'], -1, undefined, false, false]]);
+});
+
+const melvorAccepts = (result) => typeof result !== 'string' && (result === undefined || Boolean(result));
+
+test('the menu button is off by default and waits just above the switcher', async () => {
+  const { ctx, minibarContainer } = await boot();
+  assert.strictEqual(ctx.configs['menu-button'].default, false);
+  const [, menu, button, arrow] = minibarContainer.children;
+  assert.ok(menu.classList.contains('skill-switcher-menu') && button.classList.contains('skill-switcher-button'), 'menu, then switcher');
+  assert.strictEqual(arrow, minibarContainer.lastElementChild, 'the arrow stays last');
+  assert.ok(menu.classList.contains('d-none'));
+  assert.strictEqual(menu.children[0].className, 'fas fa-bars text-white');
+});
+
+test('the menu switch turns the button on and off, and Melvor keeps each change', async () => {
+  const { ctx, minibarContainer } = await boot();
+  const menu = minibarContainer.children[1];
+  const { onChange } = ctx.configs['menu-button'];
+  assert.ok(melvorAccepts(onChange(true, false)), 'Melvor would flip the switch back on a false or string return');
+  assert.ok(!menu.classList.contains('d-none'));
+  assert.ok(melvorAccepts(onChange(false, true)));
+  assert.ok(menu.classList.contains('d-none'));
+  assert.ok(melvorAccepts(onChange(true, false)));
+  assert.ok(!menu.classList.contains('d-none'));
+});
+
+test('a switch saved as on shows the button at startup, since Melvor restores it without calling onChange', async () => {
+  const { minibarContainer } = await boot({ 'menu-button': true });
+  assert.ok(!minibarContainer.children[1].classList.contains('d-none'));
+});
+
+test('flipping the switch before the interface is up is accepted and still applies once it is', async () => {
+  const values = {};
+  const { ctx, ready, minibarContainer } = await boot(values, { interfaceReady: false });
+  assert.ok(melvorAccepts(ctx.configs['menu-button'].onChange(true, false)));
+  values['menu-button'] = true;
+  ready();
+  assert.ok(!minibarContainer.children[1].classList.contains('d-none'));
+});
+
+test('pressing the menu button toggles the sidebar the way the top-left button does', async () => {
+  const { minibarContainer, layouts } = await boot({ 'menu-button': true });
+  minibarContainer.children[1].onclick();
+  assert.deepStrictEqual(layouts, ['sidebar_toggle']);
+  minibarContainer.children[1].onclick();
+  assert.deepStrictEqual(layouts, ['sidebar_toggle', 'sidebar_toggle']);
+});
+
+test('off the skill pages the menu button floats with the switcher, still above it, and comes back with it', async () => {
+  const { patches, body, minibarContainer } = await boot({ 'menu-button': true });
+  const floating = body.children[0];
+  minibarContainer.classList.add('d-none');
+  patches['Minibar.setSkill']();
+  assert.deepStrictEqual(floating.children.map((child) => child.className.split(' ').pop()), ['skill-switcher-menu', 'skill-switcher-button']);
+  assert.strictEqual(minibarContainer.children.length, 2);
+  minibarContainer.classList.toggle('d-none', false);
+  patches['Minibar.setSkill']();
+  assert.ok(minibarContainer.children[1].classList.contains('skill-switcher-menu') && minibarContainer.children[2].classList.contains('skill-switcher-button') && minibarContainer.children.length === 4);
+  assert.strictEqual(floating.children.length, 0);
+});
+
+test('the over-the-sidebar switch is off by default, and Melvor keeps each change', async () => {
+  const { ctx, body } = await boot();
+  const config = ctx.configs['above-sidebar'];
+  assert.strictEqual(config.default, false);
+  assert.ok(!body.classList.contains('skill-switcher-above-sidebar'));
+  assert.ok(melvorAccepts(config.onChange(true, false)));
+  assert.ok(body.classList.contains('skill-switcher-above-sidebar'));
+  assert.ok(melvorAccepts(config.onChange(false, true)));
+  assert.ok(!body.classList.contains('skill-switcher-above-sidebar'));
+  assert.ok(melvorAccepts(config.onChange(true, false)));
+  assert.ok(body.classList.contains('skill-switcher-above-sidebar'));
+});
+
+test('a saved over-the-sidebar switch applies at startup, since Melvor restores it without calling onChange', async () => {
+  const { body } = await boot({ 'above-sidebar': true });
+  assert.ok(body.classList.contains('skill-switcher-above-sidebar'));
+});
+
+test('picking a skill with the phone sidebar open closes the sidebar; otherwise the sidebar is left alone', async () => {
+  for (const [options, expected] of [[{ sidebarOpen: true }, ['sidebar_close']], [{}, []], [{ sidebarOpen: true, desktop: true }, []]]) {
+    const { tip, layouts, pageChanges } = await boot({}, options);
+    tip().options.onShow(tip());
+    tip().content.children[0].children[0].onclick();
+    assert.strictEqual(pageChanges.length, 1);
+    assert.deepStrictEqual(layouts, expected, JSON.stringify(options));
+  }
 });

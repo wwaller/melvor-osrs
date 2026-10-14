@@ -2,6 +2,7 @@ const CATEGORIES = ['Combat', 'Passive', 'Non-Combat'];
 const COMBAT_PAGE = 'melvorD:Combat';
 const GRID_ICON = 'fas fa-th-large';
 const SHORTCUT_PAGES = ['melvorD:Bank', 'melvorD:Shop'];
+const ABOVE_SIDEBAR_CLASS = 'skill-switcher-above-sidebar';
 
 /** Every skill page in the sidebar's order, with Combat as one entry; skips what the sidebar hides and keeps what it dims. */
 export function skillEntries(sidebarAPI, gameAPI) {
@@ -35,7 +36,31 @@ const isActive = (entry) => entry.page.action?.isActive === true;
 export function setup(ctx) {
   ctx.loadStylesheet('style.css');
   const settings = ctx.settings.section('General');
-  settings.add({ type: 'switch', name: 'bank-and-shop', label: 'Bank and Shop in the bottom row', hint: 'Adds the Bank and Shop next to your active skills.', default: false });
+  let menuButton;
+  const aboveSidebar = (on) => {
+    document.body.classList.toggle(ABOVE_SIDEBAR_CLASS, Boolean(on));
+  };
+  settings.add([
+    { type: 'switch', name: 'bank-and-shop', label: 'Bank and Shop in the bottom row', hint: 'Adds the Bank and Shop next to your active skills.', default: false },
+    {
+      type: 'switch',
+      name: 'menu-button',
+      label: 'Menu button above the switcher',
+      hint: 'Adds a button above the skill switcher that opens the sidebar, so you do not have to reach the top left.',
+      default: false,
+      onChange: (on) => {
+        menuButton?.classList.toggle('d-none', !on);
+      },
+    },
+    {
+      type: 'switch',
+      name: 'above-sidebar',
+      label: 'Keep these buttons over the sidebar on mobile',
+      hint: 'On small screens the sidebar covers the whole page. This keeps the switcher (and the menu button) showing on top of it, to switch skills or close it from the corner.',
+      default: false,
+      onChange: aboveSidebar,
+    },
+  ]);
   let button;
   let icon;
   let floating;
@@ -61,6 +86,7 @@ export function setup(ctx) {
     tileButton.onclick = () => {
       flyout.hide();
       changePage(entry.page, -1, entry.skill, false, false);
+      if (!window.matchMedia('(min-width: 992px)').matches && document.getElementById('page-container')?.classList.contains('sidebar-o-xs')) One.layout('sidebar_close');
     };
     return tileButton;
   };
@@ -92,6 +118,7 @@ export function setup(ctx) {
     const minibarShown = container !== null && !container.classList.contains('d-none');
     if (minibarShown) container.insertBefore(button, container.lastElementChild);
     else floating.append(button);
+    button.before(menuButton);
     floating.classList.toggle('d-none', minibarShown);
     showButtonIcon();
   };
@@ -112,9 +139,17 @@ export function setup(ctx) {
     button.setAttribute('aria-label', 'Switch skill');
     icon = document.createElement('span');
     button.append(icon);
+    menuButton = document.createElement('button');
+    menuButton.type = 'button';
+    menuButton.className = 'btn btn-sm btn-light skill-switcher-menu';
+    menuButton.setAttribute('aria-label', 'Toggle the sidebar');
+    menuButton.append(Object.assign(document.createElement('i'), { className: 'fas fa-bars text-white' }));
+    menuButton.onclick = () => One.layout('sidebar_toggle');
+    menuButton.classList.toggle('d-none', !settings.get('menu-button'));
     floating = document.createElement('div');
     floating.className = 'sidemenu bg-white rounded skill-switcher-float d-none';
-    document.body.append(floating);
+    (document.getElementById('page-container') ?? document.body).append(floating);
+    aboveSidebar(settings.get('above-sidebar'));
     flyout = tippy(button, {
       content: '',
       trigger: 'click',

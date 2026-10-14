@@ -1,5 +1,5 @@
-.skill-switcher-button { width: 42px; height: 34px; padding: 0; }
-.skill-switcher-button .fas { font-size: 16px; }
+.skill-switcher-button, .skill-switcher-menu { width: 42px; height: 34px; padding: 0; }
+.skill-switcher-button .fas, .skill-switcher-menu .fas { font-size: 16px; }
 .skill-switcher { padding: 4px; max-height: 70vh; overflow-y: auto; }
 .skill-switcher-grid { display: flex; flex-direction: row-reverse; flex-wrap: wrap-reverse; gap: 4px; width: 140px; }
 .skill-switcher-active-row { padding-top: 6px; margin-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.15); }
@@ -8,3 +8,6 @@
 .skill-switcher-active { border-color: #30c060; }
 .skill-switcher-current { border-color: rgba(255, 255, 255, 0.85); }
 .skill-switcher-dimmed img { opacity: 0.45; }
+@media (max-width: 991.98px) {
+  .skill-switcher-above-sidebar #page-container.sidebar-o-xs #skill-footer-minibar-container, .skill-switcher-above-sidebar #page-container.sidebar-o-xs .skill-switcher-float { z-index: 1035; }
+}
