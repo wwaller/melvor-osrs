@@ -113,3 +113,16 @@ html:root body.osrs-theme.osrs-buttons .btn:has(.progress, .media) { border-imag
 html:root body.osrs-theme.osrs-buttons #combat-footer-minibar .btn:hover, html:root body.osrs-theme.osrs-buttons .btn:has(.progress, .media):hover { background: #3c342b !important; }
 html:root body.osrs-theme :is(.combat-enemy-img-spinner, .combat-enemy-img-spinner-mobile).spinner-border { width: 40px; height: 40px; margin: 110px auto 0; border-width: 3px; color: rgba(255, 152, 31, 0.6) !important; animation-duration: 1.2s; }
 html:root body.osrs-background::before { background-image: var(--osrs-background) !important; }
+.osrs-recap-icon { width: 1.5em; height: 1.5em; margin-right: 0.35em; vertical-align: middle; object-fit: contain; }
+.swal2-title .osrs-inline-icon.swal2-icon { display: inline-flex; font-size: 0.26em; margin: 0 1.3em 0 0; vertical-align: middle; animation: none; }
+.swal2-title .osrs-inline-icon .swal2-icon-content { animation: none; }
+html:root body.osrs-theme #page-header-equipment-dropdown-image { filter: drop-shadow(0 0 1px rgba(255, 255, 0, 0.55)); }
+html:root body.osrs-theme cooking-menu .row.gutters-tiny > .col-xl-6.text-left { flex: 1 1 0; max-width: 100%; min-width: 0; }
+html:root body.osrs-theme cooking-menu .row.gutters-tiny > .col-xl-6.text-right { flex: 0 0 auto; width: auto; max-width: none; display: flex; align-items: center; }
+html:root body.osrs-theme cooking-menu .row.gutters-tiny > .col-xl-6.text-right > .btn > lang-string { display: none; }
+html:root body.osrs-theme cooking-menu .row.gutters-tiny > .col-xl-6.text-right > .btn::before { content: ""; display: block; width: 32px; height: 32px; background: var(--osrs-recipe-book) center / contain no-repeat; image-rendering: pixelated; }
+html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked level-cap-purchase-button + level-cap-purchase-button { display: none !important; }
+html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked skill-header skill-tree-button { display: none !important; }
+html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked skill-header > .block > .progress + .progress { display: none !important; }
+html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked skill-header .skill-header-container > .justify-horizontal-center:nth-child(3) { display: none !important; }
+html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked skill-header .skill-header-container > .justify-horizontal-center:nth-child(4) { display: none !important; }

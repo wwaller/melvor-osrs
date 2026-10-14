@@ -29,12 +29,14 @@ async function boot(values = {}) {
   darkMode.setAttribute('data-size', 'large');
   const settings = { enabled: true, ...values };
   const configs = {};
+  const sectionOf = {};
   const patches = {};
   const hooks = {};
   globalThis.BankItemIconElement = class BankItemIconElement { updateQuantity() {} };
   globalThis.SplashManager = class SplashManager { renderSplash() {} };
   globalThis.Settings = class Settings { changeChoiceSetting() {} };
   globalThis.saveData = () => {};
+  globalThis.RealmManager = class RealmManager { onRealmRequirementMet() {} };
   const stored = new Map();
   globalThis.document = {
     body: { tagName: 'BODY', children: [], style: { setProperty: (name, value) => (properties[`body ${name}`] = value) }, prepend(child) { this.children.unshift(child); child.isConnected = true; child.remove = () => { this.children = this.children.filter((c) => c !== child); child.isConnected = false; }; }, querySelectorAll: () => globalThis.pageElements || [], getBoundingClientRect: () => ({ width: 1000, height: 800 }), setAttribute(name, value) { this[name] = value; }, classList: { toggle: (name, on) => (on ? classes.add(name) : classes.delete(name)), add: (name) => classes.add(name), remove: (name) => classes.delete(name), contains: (name) => classes.has(name) } },
@@ -44,7 +46,9 @@ async function boot(values = {}) {
     querySelectorAll: () => [],
     querySelector: (selector) => (selector === '[data-setting-id="darkMode"]' ? darkMode : null),
     createElement: element,
+    addEventListener: (type, fn) => (documentListeners[type] = fn),
   };
+  const documentListeners = {};
   delete globalThis.game;
   globalThis.window = { innerWidth: 1000, innerHeight: 800, frames: 0, requestAnimationFrame() { this.frames++; return 1; }, cancelAnimationFrame() {}, addEventListener() {}, removeEventListener() {}, getComputedStyle: () => ({ backgroundImage: 'none', getPropertyValue: () => '' }) };
   globalThis.MutationObserver = class { observe() {} };
@@ -57,14 +61,14 @@ async function boot(values = {}) {
     characterStorage: { getItem: (key) => stored.get(key), setItem: (key, value) => stored.set(key, value), removeItem: (key) => stored.delete(key) },
     loadModule: (path) => import(`../mod/${path}`),
     patch: (target, method) => ({ after: (fn) => (patches[`${target.name}.${method}`] = fn), replace: (fn) => (patches[`${target.name}.${method}`] = fn) }),
-    settings: { section: () => ({ add: (list) => list.forEach((c) => (configs[c.name] = c)), get: (key) => settings[key] ?? configs[key]?.default, set: (key, value) => (settings[key] = value) }) },
+    settings: { section: (sectionName) => ({ add: (list) => list.forEach((c) => { configs[c.name] = c; sectionOf[c.name] = sectionName; }), get: (key) => settings[key] ?? configs[key]?.default, set: (key, value) => (settings[key] = value) }) },
     onCharacterLoaded: (fn) => (hooks.character = fn),
     onCharacterSelectionLoaded: (fn) => (hooks.select = fn),
     onInterfaceReady: (fn) => (hooks.ready = fn),
   };
   const module = await import(`../mod/setup.mjs?${Math.random()}`);
   await module.setup(ctx);
-  return { ctx, module, classes, properties, darkMode, settings, configs, patches, hooks, fonts, stored };
+  return { ctx, module, classes, properties, darkMode, settings, configs, patches, hooks, fonts, stored, documentListeners, sectionOf };
 }
 
 test('loads the theme, points the CSS at the bundled images, and turns every feature on by default', async () => {
@@ -263,4 +267,114 @@ test('OSRS backgrounds join Melvor\'s background setting, are kept per character
   change('darkMode', 1);
   assert.deepStrictEqual(melvor.at(-1), ['darkMode', 1], 'other settings pass straight through');
   delete globalThis.game;
+});
+
+test('clicking the offline recap closes it like OK, but not on its controls or on other popups', async () => {
+  const { module, documentListeners, configs } = await boot();
+  assert.strictEqual(configs['click-recap'].default, true);
+  assert.strictEqual(typeof documentListeners.click, 'function');
+  const node = (tagName, parentElement, extra = {}) => ({ tagName, parentElement, onclick: null, matches: (selector) => selector.split(', ').includes(tagName), ...extra });
+  const container = node('div', null, { contains(target) { for (let at = target; at; at = at.parentElement) if (at === this) return true; return false; } });
+  const popup = node('div', container, { querySelector: (selector) => (selector === 'offline-progress' ? {} : null) });
+  const heading = node('h4', popup, { onclick: () => {} });
+  const eye = node('i', heading);
+  const line = node('h5', popup);
+  const ok = node('button', popup);
+  let confirms = 0;
+  const swal = { isVisible: () => true, getPopup: () => popup, getContainer: () => container, clickConfirm: () => confirms++ };
+  assert.strictEqual(module.closeRecapOnClick(line, swal), true, 'a line of the recap');
+  assert.strictEqual(module.closeRecapOnClick(container, swal), true, 'the backdrop around it');
+  assert.strictEqual(module.closeRecapOnClick(eye, swal), false, 'a Better Offline Recap section header folds instead');
+  assert.strictEqual(module.closeRecapOnClick(ok, swal), false, 'OK closes it by itself');
+  const otherPopup = { ...popup, querySelector: () => null };
+  assert.strictEqual(module.closeRecapOnClick(line, { ...swal, getPopup: () => otherPopup }), false, 'other popups are left alone');
+  assert.strictEqual(module.closeRecapOnClick(line, { ...swal, isVisible: () => false }), false);
+  assert.strictEqual(confirms, 2);
+});
+
+test('the offline recap says under its OK button that a click anywhere closes it, once', async () => {
+  const { module } = await boot();
+  const added = [];
+  const popup = { querySelector: (selector) => (selector === 'offline-progress' ? {} : added.find(() => selector === '.osrs-recap-note') ?? null) };
+  const actions = { after: (node) => added.push(node) };
+  const swal = { getPopup: () => popup, getActions: () => actions };
+  const doc = { createElement: (tag) => ({ tag }) };
+  assert.strictEqual(module.addRecapNote(swal, doc), true);
+  assert.strictEqual(module.addRecapNote(swal, doc), false, 'not twice');
+  assert.match(added[0].className, /text-danger/);
+  assert.match(added[0].textContent, /click anywhere in this window/);
+  const other = { ...swal, getPopup: () => ({ querySelector: () => null }) };
+  assert.strictEqual(module.addRecapNote(other, doc), false, 'other popups get no note');
+});
+
+test('the offline recap shows its skill icon beside Welcome Back instead of above it', async () => {
+  const { module, configs } = await boot();
+  assert.strictEqual(configs['compact-headers'].default, true);
+  const hidden = new Set();
+  const image = { getAttribute: (name) => (name === 'src' ? 'woodcutting.png' : null), classList: { add: (name) => hidden.add(name) }, cloneNode: () => ({ removeAttribute() {} }) };
+  const prepended = [];
+  const title = { prepend: (node) => prepended.push(node), querySelector: () => prepended[0] ?? null };
+  const swal = { getPopup: () => ({ querySelector: (selector) => (selector === 'offline-progress' ? {} : null) }), getImage: () => image, getTitle: () => title };
+  assert.strictEqual(module.compactRecapHeader(swal), true);
+  assert.strictEqual(prepended[0].className, 'osrs-recap-icon');
+  assert.ok(hidden.has('d-none'), 'the big picture is hidden');
+  assert.strictEqual(module.compactRecapHeader(swal), false, 'only once');
+  assert.strictEqual(module.compactRecapHeader({ ...swal, getPopup: () => ({ querySelector: () => null }) }), false, 'other popups keep their picture');
+});
+
+test('a warning ! on character select moves beside the title instead of above it', async () => {
+  const { module } = await boot();
+  const classes = new Set(['swal2-icon', 'swal2-warning']);
+  const icon = { classList: { contains: (name) => classes.has(name), add: (name) => classes.add(name) }, cloneNode: () => ({ classList: { add() {} }, removeAttribute() {} }) };
+  const prepended = [];
+  const title = { textContent: 'Load Local Save', prepend: (node) => prepended.push(node), querySelector: () => prepended[0] ?? null };
+  const swal = { getIcon: () => icon, getTitle: () => title };
+  assert.strictEqual(module.compactWarningIcon(swal), true);
+  assert.ok(classes.has('d-none'), 'the big ! is hidden');
+  assert.strictEqual(module.compactWarningIcon(swal), false, 'only once');
+  const success = { ...swal, getIcon: () => ({ classList: { contains: (name) => name === 'swal2-success' } }) };
+  assert.strictEqual(module.compactWarningIcon(success), false, 'other icons stay');
+});
+
+test('the Abyssal level cap and Skill Tree buttons stay hidden until the Abyssal Realm unlocks', async () => {
+  const { classes, configs, patches, hooks } = await boot();
+  assert.strictEqual(configs['hide-abyssal-ui'].default, true);
+  const realm = { isUnlocked: false };
+  globalThis.game = { realms: { getObjectByID: (id) => (id === 'melvorItA:Abyssal' ? realm : undefined) } };
+  hooks.ready();
+  assert.ok(classes.has('osrs-hide-abyssal-ui'), 'the setting is on');
+  assert.ok(classes.has('osrs-abyssal-locked'), 'locked before Into the Abyss');
+  realm.isUnlocked = true;
+  patches['RealmManager.onRealmRequirementMet']();
+  assert.ok(!classes.has('osrs-abyssal-locked'), 'shown as soon as the realm unlocks');
+  delete globalThis.game;
+});
+
+test('General keeps the main switches and everything smaller lives under Advanced', async () => {
+  const { sectionOf } = await boot();
+  const inSection = (name) => Object.keys(sectionOf).filter((key) => sectionOf[key] === name).sort();
+  assert.deepStrictEqual(inSection('General'), ['enabled', 'font', 'font-all', 'hitsplats', 'login', 'stacks', 'tooltips']);
+  assert.deepStrictEqual(inSection('Advanced'), ['bevels', 'buttons', 'cards', 'click-recap', 'compact-headers', 'debug', 'hide-abyssal-ui', 'hp-bars', 'shadows', 'sidebar', 'texture']);
+});
+
+test('Summoning reopens whichever of Marks or Tablets you had open last', async () => {
+  const opened = [];
+  globalThis.switchSummoningCategory = (category) => opened.push(category.id);
+  const realm = {};
+  const marks = { id: 'melvorD:Marks', type: 'Mark', realm };
+  const tablets = { id: 'melvorD:Tablets', type: 'Tablet', realm };
+  const synergies = { id: 'melvorD:Synergies', type: 'Synergy', realm };
+  const { hooks, stored } = await boot();
+  globalThis.switchSummoningCategory(marks);
+  assert.strictEqual(stored.get('summoningTab'), undefined, 'the game opening Marks while loading is not a choice');
+  stored.set('summoningTab', 'melvorD:Tablets');
+  globalThis.game = { summoning: { currentRealm: realm, categories: { getObjectByID: (id) => [marks, tablets].find((c) => c.id === id) } } };
+  hooks.ready();
+  assert.deepStrictEqual(opened, ['melvorD:Marks', 'melvorD:Tablets'], 'Tablets reopens once the interface is ready');
+  globalThis.switchSummoningCategory(marks);
+  assert.strictEqual(stored.get('summoningTab'), 'melvorD:Marks');
+  globalThis.switchSummoningCategory(synergies);
+  assert.strictEqual(stored.get('summoningTab'), 'melvorD:Marks', 'the synergies popup is not a tab');
+  delete globalThis.game;
+  delete globalThis.switchSummoningCategory;
 });

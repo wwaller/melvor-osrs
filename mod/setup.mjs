@@ -7,6 +7,12 @@ const BACKGROUND_SETTING = 'backgroundImage';
 const SMOOTH_FONT_RATIO = 2;
 const FONT_BASE = 16;
 const CRISP_TOLERANCE = 0.12;
+const RECAP_CONTROLS = 'a, button, input, select, textarea, label, [role="button"]';
+const RECAP_NOTE = 'You can also click anywhere in this window to dismiss it.';
+const ABYSSAL_REALM = 'melvorItA:Abyssal';
+const ABYSSAL_LOCKED_CLASS = 'osrs-abyssal-locked';
+const SUMMONING_TAB_KEY = 'summoningTab';
+const REMEMBERED_SUMMONING_TABS = new Set(['Mark', 'Tablet']);
 
 /** The OSRS fonts are pixel-exact at multiples of 16 device pixels: use one when it is close to the wanted size, else the wanted size. */
 function fontSize(scale, ratio) {
@@ -18,19 +24,22 @@ function fontSize(scale, ratio) {
   return Math.abs(crisp - target) / target <= CRISP_TOLERANCE ? crisp : exact;
 }
 const FEATURES = [
-  { name: 'shadows', label: 'Black text shadow', hint: 'OSRS draws all interface text with a 1px black shadow.' },
-  { name: 'bevels', label: 'Bevelled stone borders', hint: 'Panels, buttons and tabs get a light top-left edge and a dark bottom-right edge.' },
-  { name: 'tooltips', label: 'OSRS-style tooltips', hint: 'Translucent brown hover boxes with a thin border, like RuneLite.' },
-  { name: 'hp-bars', label: 'OSRS health and timer bars', hint: 'Green over red for your hitpoints and the enemy\'s, and OSRS yellow for timers like the attack interval.' },
-  { name: 'texture', label: 'Stone texture', hint: 'A faint speckled stone texture behind panels and the sidebar.' },
-  { name: 'stacks', label: 'OSRS bank stack colours', hint: 'Yellow under 100K, white with a K up to 10M, green with an M after that.' },
-  { name: 'hitsplats', label: 'OSRS hitsplats', hint: 'Damage numbers on red hitsplats, blue for a miss, green for poison, and so on.' },
-  { name: 'login', label: 'OSRS login background', hint: 'The classic OSRS login art behind character select, with the braziers burning.' },
-  { name: 'cards', label: 'Stone character select cards', hint: 'Save slots look like the stone OSRS login box.' },
-  { name: 'sidebar', label: 'OSRS sidebar', hint: 'Skill rows alternate dark and darker with stone edges, and section headers become bevelled title bars.' },
-  { name: 'buttons', label: 'OSRS stone buttons', hint: 'Bevelled stone buttons that match the panels, red for dangerous actions, with coloured text instead of coloured buttons.' },
   { name: 'font', label: 'OSRS font', hint: 'Titles, headings, the sidebar, buttons, tooltips, bank counts and hitsplats use the real OSRS fonts. Descriptions and stat tables stay in Melvor\'s font so they stay easy to read.' },
   { name: 'font-all', label: 'OSRS font for all text', hint: 'Also uses the OSRS fonts for descriptions, stats and small print, at Melvor\'s own text sizes. Turn off if it is hard to read.' },
+  { name: 'hitsplats', label: 'OSRS hitsplats', hint: 'Damage numbers on red hitsplats, blue for a miss, green for poison, and so on.' },
+  { name: 'login', label: 'OSRS login background', hint: 'The classic OSRS login art behind character select, with the braziers burning.' },
+  { name: 'stacks', label: 'OSRS bank stack colours', hint: 'Yellow under 100K, white with a K up to 10M, green with an M after that.' },
+  { name: 'tooltips', label: 'OSRS-style tooltips', hint: 'Translucent brown hover boxes with a thin border, like RuneLite.' },
+  { section: 'Advanced', name: 'shadows', label: 'Black text shadow', hint: 'OSRS draws all interface text with a 1px black shadow.' },
+  { section: 'Advanced', name: 'bevels', label: 'Bevelled stone borders', hint: 'Panels, buttons and tabs get a light top-left edge and a dark bottom-right edge.' },
+  { section: 'Advanced', name: 'hp-bars', label: 'OSRS health and timer bars', hint: 'Green over red for your hitpoints and the enemy\'s, and OSRS yellow for timers like the attack interval.' },
+  { section: 'Advanced', name: 'texture', label: 'Stone texture', hint: 'A faint speckled stone texture behind panels and the sidebar.' },
+  { section: 'Advanced', name: 'cards', label: 'Stone character select cards', hint: 'Save slots look like the stone OSRS login box.' },
+  { section: 'Advanced', name: 'sidebar', label: 'OSRS sidebar', hint: 'Skill rows alternate dark and darker with stone edges, and section headers become bevelled title bars.' },
+  { section: 'Advanced', name: 'buttons', label: 'OSRS stone buttons', hint: 'Bevelled stone buttons that match the panels, red for dangerous actions, with coloured text instead of coloured buttons.' },
+  { section: 'Advanced', name: 'compact-headers', label: 'Compact popup headers', hint: 'The offline recap\'s skill icon and the ! on character select warnings sit to the left of the title instead of as big pictures above it.' },
+  { section: 'Advanced', name: 'hide-abyssal-ui', label: 'Hide Abyssal extras until the Abyssal Realm unlocks', hint: 'Until you unlock the Abyssal Realm by completing Into the Abyss, skill headers hide their Abyssal level, XP and level cap button, and skill pages hide their Skill Tree button. The Skill Tree entry in the sidebar stays.' },
+  { section: 'Advanced', name: 'click-recap', label: 'Click to close the offline recap', hint: 'Clicking anywhere on the offline progress window closes it, like pressing OK. Better Offline Recap\'s section headers still fold their sections.' },
 ];
 const FONTS = {
   'OSRS Plain 11': { path: 'fonts/RuneScape-Plain-11.ttf' },
@@ -52,6 +61,7 @@ const ASSETS = {
   '--osrs-hitsplat-bleed': 'img/hitsplat-bleed.png',
   '--osrs-hitsplat-heal': 'img/hitsplat-heal.png',
   '--osrs-hitsplat-corruption': 'img/hitsplat-corruption.png',
+  '--osrs-recipe-book': 'img/recipe-book.png',
 };
 
 export async function setup(ctx) {
@@ -76,11 +86,61 @@ export async function setup(ctx) {
   let settingsSwitch = null;
   let minibar = null;
 
+  const advanced = ctx.settings.section('Advanced');
+  const sectionOf = (feature) => (feature.section === 'Advanced' ? advanced : section);
+  const featureSwitch = ({ section: _section, ...feature }) => ({ type: 'switch', default: true, ...feature, onChange: () => later(apply) });
   section.add([
-    { type: 'switch', name: 'enabled', label: 'OSRS Theme', hint: 'Old School RuneScape colours. Also in Settings, next to Dark Mode. Turning it off turns everything below off too.', default: true, onChange: (value) => later(() => apply(value)) },
-    ...FEATURES.map((feature) => ({ type: 'switch', default: true, ...feature, onChange: () => later(apply) })),
+    { type: 'switch', name: 'enabled', label: 'OSRS Theme', hint: 'Old School RuneScape colours. Also in Settings, next to Dark Mode. Turning it off turns everything here and under Advanced off too.', default: true, onChange: (value) => later(() => apply(value)) },
+    ...FEATURES.filter((feature) => sectionOf(feature) === section).map(featureSwitch),
+  ]);
+  advanced.add([
+    ...FEATURES.filter((feature) => sectionOf(feature) === advanced).map(featureSwitch),
     { type: 'button', name: 'debug', display: 'Copy theme debug info', color: 'secondary', onClick: showDebugInfo },
   ]);
+
+  document.addEventListener('click', (event) => {
+    if (!document.body.classList.contains('osrs-click-recap') || typeof Swal === 'undefined' || String(window.getSelection?.() ?? '')) return;
+    closeRecapOnClick(event.target, Swal);
+  });
+  new MutationObserver(() => {
+    if (typeof Swal === 'undefined') return;
+    if (document.body.classList.contains('osrs-compact-headers')) {
+      compactRecapHeader(Swal);
+      if (document.body.classList.contains('osrs-character-select')) compactWarningIcon(Swal);
+    }
+    if (document.body.classList.contains('osrs-click-recap')) addRecapNote(Swal, document);
+  }).observe(document.body, { childList: true });
+
+  function markAbyssalLock() {
+    const realm = typeof game !== 'undefined' ? game.realms?.getObjectByID(ABYSSAL_REALM) : undefined;
+    document.body.classList.toggle(ABYSSAL_LOCKED_CLASS, !realm?.isUnlocked);
+  }
+  if (typeof RealmManager !== 'undefined') ctx.patch(RealmManager, 'onRealmRequirementMet').after(markAbyssalLock);
+
+  let summoningRestored = false;
+  const switchSummoning = typeof switchSummoningCategory === 'function' ? switchSummoningCategory : null;
+  if (switchSummoning) {
+    globalThis.switchSummoningCategory = (category) => {
+      if (summoningRestored && REMEMBERED_SUMMONING_TABS.has(category?.type)) ctx.characterStorage.setItem(SUMMONING_TAB_KEY, category.id);
+      return switchSummoning(category);
+    };
+  }
+  function restoreSummoningTab() {
+    const summoning = typeof game !== 'undefined' ? game.summoning : undefined;
+    const category = summoning?.categories?.getObjectByID(ctx.characterStorage.getItem(SUMMONING_TAB_KEY));
+    if (switchSummoning && category && category.realm === summoning.currentRealm) switchSummoning(category);
+    summoningRestored = true;
+  }
+
+  function labelRecipeButtons() {
+    const label = typeof getLangString === 'function' ? getLangString('MENU_TEXT_SELECT_COOKING_RECIPE') : '';
+    for (const menu of document.querySelectorAll('cooking-menu')) {
+      const button = menu.selectRecipeButton;
+      if (!button) continue;
+      button.title = label;
+      button.setAttribute('aria-label', label);
+    }
+  }
 
   function showDebugInfo() {
     const root = document.getElementById('combat-footer-minibar');
@@ -88,7 +148,15 @@ export async function setup(ctx) {
       const style = window.getComputedStyle(element);
       return [element.tagName.toLowerCase(), element.id, String(element.className || ''), element.getAttribute('style') || '', style.backgroundColor, style.backgroundImage.slice(0, 60), style.borderTopColor].join(' | ');
     };
-    const lines = [`body: ${document.body.className}`, `minibar found: ${Boolean(root)}`, ...(root ? [root, ...root.querySelectorAll('*')].slice(0, 80).map(describe) : [])];
+    const realm = typeof game !== 'undefined' ? game.realms?.getObjectByID(ABYSSAL_REALM) : undefined;
+    const lines = [
+      `body: ${document.body.className}`,
+      `abyssal realm: ${realm ? (realm.isUnlocked ? 'unlocked' : 'locked') : 'missing'}`,
+      `skill headers: ${document.querySelectorAll('skill-header').length}, cooking menus: ${document.querySelectorAll('cooking-menu').length}`,
+      `failures: ${failures.join('; ') || 'none'}`,
+      `minibar found: ${Boolean(root)}`,
+      ...(root ? [root, ...root.querySelectorAll('*')].slice(0, 80).map(describe) : []),
+    ];
     const box = document.createElement('textarea');
     box.className = 'form-control font-size-sm';
     box.rows = 12;
@@ -97,13 +165,23 @@ export async function setup(ctx) {
     if (navigator.clipboard) navigator.clipboard.writeText(box.value).catch(() => {});
   }
 
+  const failures = [];
+  function attempt(name, fn) {
+    try {
+      fn();
+    } catch (error) {
+      failures.push(`${name}: ${error?.message ?? error}`);
+      console.error(`[OSRS Theme] ${name}`, error);
+    }
+  }
+
   function later(fn) {
     setTimeout(fn);
   }
 
   function apply(on = section.get('enabled')) {
     document.body.classList.toggle(THEME_CLASS, on);
-    for (const feature of FEATURES) document.body.classList.toggle(`osrs-${feature.name}`, on && section.get(feature.name));
+    for (const feature of FEATURES) document.body.classList.toggle(`osrs-${feature.name}`, on && sectionOf(feature).get(feature.name));
     if (settingsSwitch) settingsSwitch.setChecked(on);
     const atLogin = document.body.classList.contains('osrs-login') && document.body.classList.contains('osrs-character-select');
     if (atLogin) loginScene.show();
@@ -300,19 +378,77 @@ export async function setup(ctx) {
     window.addEventListener('resize', onLoginResize);
   });
   ctx.onCharacterLoaded(() => {
+    attempt('abyssal lock', markAbyssalLock);
     showBackground(storedBackground());
     document.body.classList.remove('osrs-character-select');
     window.removeEventListener('resize', onLoginResize);
     loginScene.hide();
   });
   ctx.onInterfaceReady(() => {
-    const background = storedBackground();
-    if (background) showChoice(background);
-    addToGameSettings();
-    watchMinibar();
-    watchCombatBars();
+    attempt('background', () => {
+      const background = storedBackground();
+      if (background) showChoice(background);
+    });
+    attempt('game settings switch', addToGameSettings);
+    attempt('recipe button labels', labelRecipeButtons);
+    attempt('abyssal lock', markAbyssalLock);
+    attempt('summoning tab', restoreSummoningTab);
+    attempt('minibar', watchMinibar);
+    attempt('combat bars', watchCombatBars);
     apply();
   });
+}
+
+/** Clicking the offline recap closes it the way its OK button does, except on its own controls, like Better Offline Recap's foldable section headers. */
+export function closeRecapOnClick(target, swal) {
+  if (!swal.isVisible()) return false;
+  const popup = swal.getPopup();
+  const container = swal.getContainer();
+  if (!popup?.querySelector('offline-progress') || !container?.contains(target)) return false;
+  for (let node = target; node && node !== popup && node !== container; node = node.parentElement) {
+    if (node.matches?.(RECAP_CONTROLS) || typeof node.onclick === 'function') return false;
+  }
+  swal.clickConfirm();
+  return true;
+}
+
+/** Puts the offline recap's skill icon inline before its title, in place of the large picture above it. */
+export function compactRecapHeader(swal) {
+  const popup = swal.getPopup();
+  const image = swal.getImage();
+  const title = swal.getTitle();
+  if (!popup?.querySelector('offline-progress') || !image?.getAttribute('src') || !title || title.querySelector('.osrs-recap-icon')) return false;
+  const icon = image.cloneNode();
+  icon.className = 'osrs-recap-icon';
+  icon.removeAttribute('style');
+  title.prepend(icon);
+  image.classList.add('d-none');
+  return true;
+}
+
+/** Puts a popup's warning ! inline before its title, in place of the large circle above it. */
+export function compactWarningIcon(swal) {
+  const icon = swal.getIcon();
+  const title = swal.getTitle();
+  if (!icon?.classList.contains('swal2-warning') || icon.classList.contains('d-none') || !title?.textContent || title.querySelector('.osrs-inline-icon')) return false;
+  const inline = icon.cloneNode(true);
+  inline.classList.add('osrs-inline-icon');
+  inline.removeAttribute('style');
+  title.prepend(inline);
+  icon.classList.add('d-none');
+  return true;
+}
+
+/** A red line under the offline recap's OK button saying a click anywhere closes it too. */
+export function addRecapNote(swal, doc) {
+  const popup = swal.getPopup();
+  const actions = swal.getActions();
+  if (!popup?.querySelector('offline-progress') || !actions || popup.querySelector('.osrs-recap-note')) return false;
+  const note = doc.createElement('small');
+  note.className = 'osrs-recap-note text-danger d-block text-center mt-2';
+  note.textContent = RECAP_NOTE;
+  actions.after(note);
+  return true;
 }
 
 export function osrsStack(quantity) {

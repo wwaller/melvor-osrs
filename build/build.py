@@ -48,6 +48,7 @@ HITSPLATS = {
     "corruption": "File:Corruption hitsplat.png",
 }
 LOGIN_BACKGROUND = "File:Login background mobile (original).png"
+RECIPE_BOOK = "File:Pie recipe book.png"
 LOGIN_SPRITES = {"titlebox": 499, "titlebutton": 2135}
 GAME_BACKGROUNDS = {
     "lumbridge": ("File:Lumbridge.png", "Lumbridge", "day"),
@@ -304,6 +305,7 @@ def main():
     for name, title in HITSPLATS.items():
         wiki_image(title).save(images / f"hitsplat-{name}.png")
     wiki_image(LOGIN_BACKGROUND).convert("RGB").save(images / "login.jpg", quality=82, optimize=True)
+    wiki_image(RECIPE_BOOK).save(images / "recipe-book.png", optimize=True)
     write_game_backgrounds(images)
     stone_texture().save(images / "stone.png", optimize=True)
     fonts = MOD_DIR / "fonts"
