@@ -1,0 +1,227 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="https://steam.melvoridle.com/assets/css/oneui.css"><style>body { width: 800px; } .d-none { display: none !important; } @keyframes progressBar { from { width: 0%; } to { width: 100%; } }</style></head><body>
+<div><div class="row row-deck" id="trees"><div class="col-12" id="xp-block"><div class="block">XP and progress</div></div></div></div>
+<div><div class="row row-deck" id="areas"></div></div>
+<div><div class="row row-deck" id="panels"></div></div>
+<template id="tree-template"><div class="block block-rounded d-none locked">Locked</div><div class="block block-rounded shown"><span class="name"></span><div class="progress"><div class="progress-bar" style="width: 0%"></div></div><button class="cut">Cut</button></div></template>
+<template id="area-template"><div class="block block-rounded"><h5 class="area-name"></h5><div class="buttons"></div><div class="media"><small>Fishing</small><span class="fish-name">-</span></div></div></template>
+<template id="panel-template"><div class="block block-rounded"><div class="targets"></div><div class="info"><div class="info-heading"><small class="info-skill-name">Thieving</small><span>Fisherman</span></div><button class="start">Pickpocket</button></div></div></template>
+<pre id="result"></pre>
+<script>
+class TreeCard extends HTMLElement {
+  constructor() {
+    super();
+    this._content = document.getElementById('tree-template').content.cloneNode(true);
+    this.name = this._content.querySelector('.name');
+    this.bar = this._content.querySelector('.progress-bar');
+    this.button = this._content.querySelector('.cut');
+    this.clicks = 0;
+    this.button.onclick = () => this.clicks++;
+  }
+  connectedCallback() { this.appendChild(this._content); }
+}
+customElements.define('tree-card', TreeCard);
+class FishButton extends HTMLElement {
+  connectedCallback() { if (!this.textContent) this.textContent = this.dataset.fish; }
+}
+customElements.define('fish-button', FishButton);
+class AreaCard extends HTMLElement {
+  constructor() {
+    super();
+    this._content = document.getElementById('area-template').content.cloneNode(true);
+    this.buttonContainer = this._content.querySelector('.buttons');
+    this.fishName = this._content.querySelector('.fish-name');
+    this.fishButtons = [];
+  }
+  connectedCallback() { this.appendChild(this._content); }
+  setFish(fish) {
+    this.buttonContainer.textContent = '';
+    this.fishButtons = fish.map((name) => {
+      const button = document.createElement('fish-button');
+      button.dataset.fish = name;
+      this.buttonContainer.append(button);
+      return button;
+    });
+  }
+}
+customElements.define('area-card', AreaCard);
+class NpcNav extends HTMLElement {
+  connectedCallback() { if (!this.textContent) this.textContent = this.dataset.npc; }
+}
+customElements.define('npc-nav', NpcNav);
+class PanelCard extends HTMLElement {
+  constructor() {
+    super();
+    this._content = document.getElementById('panel-template').content.cloneNode(true);
+    this.targetContainer = this._content.querySelector('.targets');
+    this.infoSkillName = this._content.querySelector('.info-skill-name');
+    this.npcNavs = new Map();
+  }
+  connectedCallback() { this.appendChild(this._content); }
+  setArea(area) {
+    for (const npc of area.npcs) {
+      const nav = document.createElement('npc-nav');
+      nav.dataset.npc = npc.id;
+      this.targetContainer.append(nav);
+      this.npcNavs.set(npc, nav);
+    }
+  }
+}
+customElements.define('panel-card', PanelCard);
+</script>
+<script type="module">
+const results = [];
+const check = (name, ok, detail = '') => results.push({ name, ok: Boolean(ok), detail: String(detail) });
+const report = () => (document.getElementById('result').textContent = JSON.stringify(results));
+addEventListener('error', (event) => {
+  check('the page runs to the end', false, event.error?.stack ?? event.message);
+  report();
+});
+const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+const shown = (element) => element.checkVisibility();
+
+const trees = ['Normal', 'Oak', 'Willow'].map((id) => ({ id }));
+const treeMenus = new Map(trees.map((tree) => {
+  const card = document.createElement('tree-card');
+  card.className = 'col-6 col-md-4';
+  document.getElementById('trees').append(card);
+  card.name.textContent = tree.id;
+  return [tree, card];
+}));
+const areas = [{ id: 'River', fish: ['Trout', 'Salmon'] }, { id: 'Shore', fish: ['Shrimp', 'Sardine', 'Herring'] }];
+const areaCards = areas.map((area) => {
+  const card = document.createElement('area-card');
+  card.className = 'col-12';
+  document.getElementById('areas').append(card);
+  card.setFish(area.fish);
+  return card;
+});
+const thievingAreas = [{ id: 'Farm', npcs: [{ id: 'Farmer' }] }, { id: 'Port', npcs: [{ id: 'Man' }, { id: 'Fisherman' }, { id: 'Guard' }] }];
+const panels = thievingAreas.map((area) => {
+  const panel = document.createElement('panel-card');
+  panel.className = 'col-12';
+  document.getElementById('panels').append(panel);
+  panel.setArea(area);
+  return panel;
+});
+const thieving = { id: 'melvorD:Thieving', isActive: false, currentArea: undefined, currentNPC: undefined };
+window.thievingMenu = { areaPanels: new Map(thievingAreas.map((area, index) => [area, panels[index]])) };
+const registryOf = (list) => ({ getObjectByID: (id) => list.find((entry) => entry.id === id) });
+const treeActions = trees.map((tree) => Object.assign(tree, { name: `${tree.id} Tree`, media: `/mod/icon.png?${tree.id}` }));
+const selectedTrees = [];
+const woodcutting = { id: 'melvorD:Woodcutting', isActive: false, activeTrees: new Set(), actions: registryOf(treeActions), selectTree: (tree) => selectedTrees.push(tree.id) };
+const fishing = { id: 'melvorD:Fishing', isActive: false, activeFishingArea: undefined, selectedAreaFish: new Map() };
+window.woodcuttingMenu = { treeMenus };
+window.fishingAreaMenus = new Map(areas.map((area, index) => [area, areaCards[index]]));
+window.Game = class Game { render() {} };
+window.game = { skills: { getObjectByID: (id) => ({ [woodcutting.id]: woodcutting, [fishing.id]: fishing, [thieving.id]: thieving })[id] } };
+const settingConfigs = {};
+const settingValues = {};
+const hooks = {};
+let render = () => {};
+const ctx = {
+  loadStylesheet: (path) => document.head.insertAdjacentHTML('beforeend', `<link rel="stylesheet" href="/mod/${path}">`),
+  settings: { section: () => ({ add: (config) => [config].flat().forEach((each) => (settingConfigs[each.name] = each)), get: (name) => settingValues[name] ?? settingConfigs[name]?.default }) },
+  patch: (target, method) => ({ after: (fn) => (render = fn) }),
+  onCharacterLoaded: (fn) => (hooks.character = fn),
+  onInterfaceReady: (fn) => (hooks.ready = fn),
+};
+const { setup } = await import('/mod/setup.mjs');
+setup(ctx);
+hooks.character();
+hooks.ready();
+await settle();
+
+const list = document.getElementById('trees');
+const treeOrder = () => [...list.children].filter((child) => child.localName === 'tree-card').map((card) => card.name.textContent).join(',');
+const comments = (element) => [...element.childNodes].filter((node) => node.nodeType === Node.COMMENT_NODE).length;
+const oak = treeMenus.get(trees[1]);
+const willow = treeMenus.get(trees[2]);
+const border = (card) => getComputedStyle(card.querySelector('.shown'));
+render();
+check('nothing moves while idle', treeOrder() === 'Normal,Oak,Willow', treeOrder());
+
+const eta = document.createElement('div');
+eta.className = 'eta';
+oak.querySelector('.shown').append(eta);
+woodcutting.isActive = true;
+woodcutting.activeTrees = new Set([trees[1]]);
+render();
+await settle();
+check('the active tree moves to be the first card', treeOrder() === 'Oak,Normal,Willow', treeOrder());
+check('it goes after the XP block, not ahead of it', list.firstElementChild.id === 'xp-block' && [...list.children].find((child) => child.localName === 'tree-card') === oak);
+check('the card is moved, not copied', document.querySelectorAll('tree-card').length === 3 && [...document.querySelectorAll('.name')].filter((name) => name.textContent === 'Oak').length === 1 && !document.querySelector('.active-first-cards'));
+check('the card comes as it is, without being built twice over', oak.querySelectorAll('.block').length === 2, oak.querySelectorAll('.block').length);
+check('what another mod put inside the card moves with it, once', document.querySelectorAll('.eta').length === 1 && oak.contains(eta));
+check('the card works where it now is', (oak.button.click(), oak.clicks === 1), oak.clicks);
+
+check('the border is off by default', settingConfigs.highlight.default === false && border(oak).outlineStyle === 'none', border(oak).outlineStyle);
+settingValues.highlight = true;
+hooks.character();
+check('a saved switch that was on shows the border once the character loads, since Melvor restores it without calling onChange', border(oak).outlineStyle === 'solid');
+settingValues.highlight = false;
+hooks.character();
+check('and a saved switch that was off shows none', border(oak).outlineStyle === 'none');
+delete settingValues.highlight;
+const melvorAccepts = (result) => typeof result !== 'string' && (result === undefined || Boolean(result));
+check('Melvor keeps the switch on when it is turned on', melvorAccepts(settingConfigs.highlight.onChange(true, false)));
+check('turned on, the active card gets a 1px yellow border', border(oak).outlineStyle === 'solid' && border(oak).outlineWidth === '1px' && border(oak).outlineColor === 'rgb(245, 208, 0)', `${border(oak).outlineStyle} ${border(oak).outlineWidth} ${border(oak).outlineColor}`);
+check('the border is on the block you see, not the hidden Locked block', !oak.querySelector('.locked').classList.contains('active-first-active'));
+check('only the border, no tint', getComputedStyle(oak.querySelector('.shown'), '::before').content === 'none' && border(oak).backgroundColor === border(treeMenus.get(trees[0])).backgroundColor, `${border(oak).backgroundColor} vs ${border(treeMenus.get(trees[0])).backgroundColor}`);
+check('the other cards get no border', border(treeMenus.get(trees[0])).outlineStyle === 'none');
+check('Melvor keeps the switch off when it is turned off', melvorAccepts(settingConfigs.highlight.onChange(false, true)));
+check('turned off, the border goes away', border(oak).outlineStyle === 'none');
+check('Melvor keeps the switch on when it is turned back on', melvorAccepts(settingConfigs.highlight.onChange(true, false)));
+check('and the border comes back', border(oak).outlineStyle === 'solid');
+
+woodcutting.activeTrees = new Set([trees[2]]);
+render();
+await settle();
+check('switching trees moves the new one first and puts the old one back where it was', treeOrder() === 'Willow,Normal,Oak', treeOrder());
+check('the border follows to the new tree', border(willow).outlineStyle === 'solid' && border(oak).outlineStyle === 'none');
+
+woodcutting.activeTrees = new Set([trees[2], trees[0]]);
+render();
+await settle();
+check('two trees at once both go first, in the order they were picked', treeOrder() === 'Willow,Normal,Oak', treeOrder());
+woodcutting.activeTrees = new Set([trees[0], trees[2]]);
+render();
+await settle();
+check('and follow that order when it changes', treeOrder() === 'Normal,Willow,Oak', treeOrder());
+woodcutting.activeTrees = new Set([trees[2]]);
+render();
+await settle();
+check('dropping one of the two puts it back in its place', treeOrder() === 'Willow,Normal,Oak', treeOrder());
+
+woodcutting.isActive = false;
+woodcutting.activeTrees = new Set();
+render();
+await settle();
+check('stopping puts every card back in its original order', treeOrder() === 'Normal,Oak,Willow', treeOrder());
+check('and leaves nothing behind in the list', comments(list) === 0 && border(willow).outlineStyle === 'none', comments(list));
+const areaOrder = () => [...document.getElementById('areas').children].filter((child) => child.localName === 'area-card');
+fishing.isActive = true;
+fishing.activeFishingArea = areas[1];
+fishing.selectedAreaFish.set(areas[1], 'Sardine');
+render();
+await settle();
+check('the fishing area in use moves first', areaOrder()[0] === areaCards[1] && areaOrder()[1] === areaCards[0]);
+check('it keeps every fish and its heading, exactly as it is', [...areaCards[1].querySelectorAll('fish-button')].filter(shown).length === 3 && shown(areaCards[1].querySelector('.media')));
+fishing.isActive = false;
+render();
+await settle();
+check('and goes back when fishing stops', areaOrder()[0] === areaCards[0] && areaOrder()[1] === areaCards[1]);
+
+const panelOrder = () => [...document.getElementById('panels').children].filter((child) => child.localName === 'panel-card');
+thieving.isActive = true;
+thieving.currentArea = thievingAreas[1];
+thieving.currentNPC = thievingAreas[1].npcs[1];
+render();
+await settle();
+check('the thieving area in use moves first, with every NPC', panelOrder()[0] === panels[1] && [...panels[1].querySelectorAll('npc-nav')].filter(shown).length === 3 && shown(panels[1].querySelector('.info-heading')));
+thieving.isActive = false;
+render();
+await settle();
+check('and goes back when thieving stops', panelOrder()[0] === panels[0]);
+
+report();
+</script></body></html>
