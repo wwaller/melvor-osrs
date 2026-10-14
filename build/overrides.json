@@ -252,7 +252,56 @@
     "melvorTotH:Slayer_Wizard_Hat_Mythical": "File:Ancestral hat.png",
     "melvorTotH:Slayer_Wizard_Robes_Mythical": "File:Ancestral robe top.png",
     "melvorF:Almighty_Lute": "File:Enchanted lyre.png",
-    "melvorF:Fishing_Hook": "File:Crabclaw hook.png"
+    "melvorF:Fishing_Hook": "File:Crabclaw hook.png",
+    "melvorD:Raw_Whale": {
+      "base": "File:Narwhal.png",
+      "erase_hue": [
+        20,
+        60
+      ],
+      "inflate": 1.5,
+      "rotate": 38,
+      "outline": 4
+    },
+    "melvorD:Whale": {
+      "base": "File:Narwhal.png",
+      "erase_hue": [
+        20,
+        60
+      ],
+      "inflate": 1.5,
+      "rotate": 38,
+      "recolor": {
+        "color": "#b0805a"
+      },
+      "outline": 4
+    },
+    "melvorD:Burnt_Whale": {
+      "base": "File:Narwhal.png",
+      "erase_hue": [
+        20,
+        60
+      ],
+      "inflate": 1.5,
+      "rotate": 38,
+      "recolor": {
+        "color": "#4a3424"
+      },
+      "outline": 4
+    },
+    "melvorD:Whale_Perfect": {
+      "base": "File:Narwhal.png",
+      "erase_hue": [
+        20,
+        60
+      ],
+      "inflate": 1.5,
+      "rotate": 38,
+      "recolor": {
+        "color": "#b0805a"
+      },
+      "outline": 4
+    }
   },
   "monster": {
     "melvorD:BlackKnight": "File:Black Knight (male).png",
@@ -271,7 +320,100 @@
     "melvorF:Pegasus": "Unicorn",
     "melvorF:Angel": "Commander Zilyana",
     "melvorF:Priest": "High Priest (Entrana)",
-    "melvorF:Phoenix": "File:Phoenix (follower).png"
+    "melvorF:Phoenix": "File:Phoenix (follower).png",
+    "melvorD:Chick": {
+      "base": "File:Chicken (1).png",
+      "recolor": {
+        "color": "#f2d040",
+        "greys": true
+      },
+      "shrink": 0.6
+    },
+    "melvorF:MioliteSprig": {
+      "base": "File:Jellyfish.png",
+      "recolor": {
+        "color": "#38c8e8"
+      }
+    },
+    "melvorF:MioliteTrio": {
+      "cluster": [
+        {
+          "base": "File:Jellyfish.png",
+          "share": 0.7,
+          "at": [
+            0.5,
+            0.0
+          ],
+          "recolor": {
+            "color": "#38c8e8"
+          }
+        },
+        {
+          "base": "File:Jellyfish.png",
+          "share": 0.5,
+          "at": [
+            0.2,
+            0.3
+          ],
+          "recolor": {
+            "color": "#5a8cf0"
+          }
+        },
+        {
+          "base": "File:Jellyfish.png",
+          "share": 0.46,
+          "at": [
+            0.8,
+            0.8
+          ],
+          "recolor": {
+            "color": "#9a5ad8"
+          }
+        }
+      ]
+    },
+    "melvorF:MioliteWarden": {
+      "base": "File:Jellyfish.png",
+      "recolor": {
+        "color": "#9a5ad8"
+      },
+      "top": {
+        "split": 0.32,
+        "scale": 1.7
+      }
+    },
+    "melvorF:MioliteMonarch": {
+      "local": "rs3/jellyfish_giant.png"
+    },
+    "melvorF:SuperiorEyedMonster": {
+      "cluster": [
+        {
+          "base": "File:Eye (Abyssal Nexus, green).png",
+          "share": 0.52,
+          "at": [
+            0.08,
+            0.42
+          ]
+        },
+        {
+          "base": "File:Eye (Abyssal Nexus, green).png",
+          "share": 0.52,
+          "at": [
+            0.92,
+            0.42
+          ]
+        },
+        {
+          "base": "File:Eye (Abyssal Nexus, green).png",
+          "share": 0.8,
+          "at": [
+            0.5,
+            0.72
+          ]
+        }
+      ]
+    },
+    "melvorF:NoxiousSerpent": "File:Swamp snake.png"
   },
   "npc": {
     "melvorF:GOLBIN": "File:Goblin.png",
@@ -833,6 +975,135 @@
     "assets/media/main/x.svg": {
       "asset": "drawn/x.png"
     },
-    "assets/media/skills/combat/spellbook.png": "File:Magic icon.png"
+    "assets/media/skills/combat/spellbook.png": "File:Magic icon.png",
+    "mod:multiplayer:Chat": "File:Chat-channel.png",
+    "mod:multiplayer:Guild": "File:Your Clan icon.png",
+    "mod:multiplayer:Transfer_Items": "File:Inventory.png",
+    "mod:multiplayer:Multiplayer_Market": "File:Grand Exchange icon.png",
+    "mod:multiplayer:Expedition": "File:Dungeon icon.png",
+    "mod:multiplayer:Guild_Raid": "File:Raids icon.png",
+    "mod:multiplayer:Updates": "File:Newspaper.png",
+    "assets/media/skills/summoning/synergy.png": {
+      "asset": "drawn/preservation.png"
+    }
+  },
+  "area": {
+    "melvorF:Shrouded_Badlands": "File:Vyrewatch.png",
+    "melvorF:UnhallowedWasteland": "File:Skeletal Wyvern.png",
+    "melvorF:Miolite_Caves": {
+      "base": "File:Jellyfish.png",
+      "recolor": {
+        "color": "#38c8e8"
+      }
+    },
+    "melvorF:Into_the_Mist": "File:Mysterious Figure.png",
+    "melvorF:Impending_Darkness": "File:The Nightmare.png",
+    "melvorTotH:JungleLabyrinth": "File:Jungle horror.png",
+    "melvorTotH:LavaLake": "File:Lava dragon.png",
+    "melvorTotH:ForsakenTundra": "File:Ice troll male.png",
+    "melvorTotH:FoggyLake": "File:The Leviathan.png",
+    "melvorTotH:AfflictedCity": "File:Mourner.png",
+    "melvorTotH:MidnightValley": "File:Ankou.png",
+    "melvorTotH:GoldenCloudMountains": "File:Kree'arra.png",
+    "melvorTotH:MillenniumGate": "File:Tekton.png",
+    "melvorTotH:Ancient_Sanctuary": "File:Hespori.png",
+    "melvorTotH:Underground_Lava_Lake": "File:Lava beast.png",
+    "melvorTotH:Lightning_Region": "File:Tempoross.png",
+    "melvorTotH:Lair_of_the_Spider_Queen": "File:Sarachnis.png",
+    "melvorTotH:Cursed_Forest": "File:Ent (lv 86).png",
+    "melvorTotH:Necromancers_Palace": "File:Necromancer.png",
+    "melvorTotH:Throne_of_the_Herald": "File:Elidinis' Warden.png",
+    "melvorAoD:EyeConicCave": "File:Eye (Abyssal Nexus, green).png",
+    "melvorAoD:MuckyCave": "File:Cave slime.png",
+    "melvorAoD:RitualSite": "File:Dark wizard.png",
+    "melvorAoD:CollapsedCity": "File:Ancient Zygomite.png",
+    "melvorAoD:LostTemple": "File:The Mimic.png",
+    "melvorAoD:ShipwreckCove": "File:Ghost captain.png",
+    "melvorAoD:UnderwaterRuins": "File:Enormous Tentacle.png",
+    "melvorAoD:TreeOvergrowth": "File:Tree spirit.png",
+    "melvorAoD:CrystalCaves": "File:Crystalline Hunllef.png",
+    "melvorAoD:CrystalDepths": "File:Corrupted Hunllef.png",
+    "melvorAoD:DarkQuarry": "File:Rock golem.png",
+    "melvorAoD:Golem_Territory": "File:Zalcano.png",
+    "melvorAoD:Unholy_Forest": {
+      "cluster": [
+        {
+          "base": "File:Dead tree.png",
+          "share": 0.62,
+          "at": [
+            0.0,
+            0.6
+          ],
+          "recolor": {
+            "color": "#4a3c5a"
+          }
+        },
+        {
+          "base": "File:Undead tree.png",
+          "share": 0.66,
+          "at": [
+            1.0,
+            0.55
+          ],
+          "recolor": {
+            "color": "#4a3c5a"
+          }
+        },
+        {
+          "base": "File:Dead tree (Draynor Manor).png",
+          "share": 0.95,
+          "at": [
+            0.5,
+            0.2
+          ],
+          "recolor": {
+            "color": "#4a3c5a"
+          }
+        },
+        {
+          "base": "File:Ghost.png",
+          "share": 0.42,
+          "at": [
+            0.22,
+            1.0
+          ]
+        }
+      ]
+    },
+    "melvorAoD:Trickery_Temple": "File:Imp.png",
+    "melvorAoD:Cult_Grounds": "File:Skotizo.png",
+    "melvorAoD:Underwater_City": "File:Cave kraken.png",
+    "melvorItA:AbyssalFarmlands": "File:Scarecrow.png",
+    "melvorItA:DarkDescent": "File:Abyssal leech.png",
+    "melvorItA:SmoggyPlain": "File:Smoke devil.png",
+    "melvorItA:BlightedMarsh": "File:Kalphite Soldier.png",
+    "melvorItA:LightlessCave": "File:Shade.png",
+    "melvorItA:DreadedCrossing": "File:Revenant knight.png",
+    "melvorItA:FracturedPlains": "File:Spitting Wyvern.png",
+    "melvorItA:WitheringBastion": "File:Calvar'ion.png",
+    "melvorItA:MurmuringForest": "File:Tanglefoot.png",
+    "melvorItA:WhisperwindCove": "File:Gemstone Crab.png",
+    "melvorItA:EldritchDomain": "File:Phantom Muspah (ranged).png",
+    "melvorItA:VoidConflux": "File:Ravager.png",
+    "melvorItA:CrimsonForest": "File:Bloodveld.png",
+    "melvorItA:TangledGrove": "File:Kurask.png",
+    "melvorItA:ToxicWastes": "File:Venenatis.png",
+    "melvorItA:BlightedReach": "File:Drake.png",
+    "melvorItA:ParanoiaPit": "File:Ankou.png",
+    "melvorItA:PetrifiedLair": "File:Basilisk Knight.png",
+    "melvorItA:FracturedSpires": "File:Aviansie (level 131).png",
+    "melvorItA:WitheringCatacombs": "File:Deviant spectre.png",
+    "melvorItA:EchoMire": "File:The Whisperer.png",
+    "melvorItA:WhisperingSea": "File:Great white shark.png",
+    "melvorItA:EldritchChasm": "File:Tormented Demon (1).png",
+    "melvorItA:TendrilHollow": "File:Abyssal Sire.png",
+    "melvorItA:VoidEnclave": "File:Abyssal demon.png",
+    "melvorItA:VoidNexus": "File:Duke Sucellus.png",
+    "melvorItA:The_Abyssal_Approach": "File:Abyssal walker.png",
+    "melvorItA:Into_The_Abyss": "File:Abyssal leech.png",
+    "melvorItA:StrongholdOfBlight": "File:Vardorvis.png",
+    "melvorItA:StrongholdOfFear": "File:Cerberus.png",
+    "melvorItA:StrongholdOfNightmares": "File:The Nightmare.png",
+    "melvorItA:StrongholdOfTheOverlords": "File:Yama.png"
   }
 }

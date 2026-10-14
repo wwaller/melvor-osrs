@@ -207,11 +207,14 @@ def pixel_sprite(data, canvas=0, label=None, star=False, decal=None, recolor=Non
     return _png(square)
 
 
-def _finish_render(image, label=None, badge=None, grounded=False, recolor=None):
+def _finish_render(image, label=None, badge=None, grounded=False, recolor=None, shrink=None, star=False, outline=None):
     image.thumbnail((RENDER_SIZE, RENDER_SIZE), Image.LANCZOS)
     if recolor:
         tint(image, recolor["color"], recolor.get("greys", False))
-    square = _pad_square(image, max(image.width, image.height), grounded)
+    if outline:
+        image = _outline(image, outline)
+    side = max(image.width, image.height)
+    square = _pad_square(image, round(side / shrink) if shrink else side, grounded)
     if badge:
         icon = _trim(_open(badge))
         scale = max(1, math.floor(square.width * 0.42 / max(icon.width, icon.height)))
@@ -219,15 +222,54 @@ def _finish_render(image, label=None, badge=None, grounded=False, recolor=None):
         square.alpha_composite(icon, (square.width - icon.width, square.height - icon.height))
     if label:
         _stamp(square, label, max(2, square.width // 64))
+    if star:
+        _star(square, max(2, round(square.width / SLOT_SIZE)))
     return _png(square)
 
 
-def render(data, label=None, badge=None, grounded=False, recolor=None):
-    """Grounded renders sit on the bottom edge, so a creature stands where Melvor's own monster art does."""
-    return _finish_render(_trim(_open(data)), label, badge, grounded, recolor)
+def erase_hue(image, low, high, min_saturation=0.15, min_alpha=32):
+    """Clear the pixels of one colour range from a render (the Narwhal's tusk, to leave a whale), and the faint fringe around it so the crop closes in."""
+    pixels = image.load()
+    for y in range(image.height):
+        for x in range(image.width):
+            r, g, b, a = pixels[x, y]
+            h, _, s = colorsys.rgb_to_hls(r / 255, g / 255, b / 255)
+            if a < min_alpha or (s >= min_saturation and low <= h * 360 <= high):
+                pixels[x, y] = (0, 0, 0, 0)
+    return _trim(image)
 
 
-def row(datas, overlap=0.25, grounded=False):
+def big_top(image, split, scale, stack=1, overlap=0.45):
+    """Enlarge the part of a render above split (a jellyfish's bell) over the rest, and stack smaller copies of it upward, for Melvor monsters drawn mostly as head."""
+    cut = round(image.height * split)
+    top, rest = image.crop((0, 0, image.width, cut)), image.crop((0, cut, image.width, image.height))
+    tiers = [top.resize((max(1, round(top.width * scale * 0.78 ** i)), max(1, round(top.height * scale * 0.78 ** i))), Image.LANCZOS) for i in range(stack)]
+    rises = [0]
+    for lower, upper in zip(tiers, tiers[1:]):
+        rises.append(rises[-1] + round(upper.height * (1 - overlap)))
+    width = max([rest.width] + [tier.width for tier in tiers])
+    height = rises[-1] + tiers[0].height + rest.height
+    canvas = Image.new("RGBA", (width, height))
+    base = height - rest.height
+    canvas.alpha_composite(rest, ((width - rest.width) // 2, base))
+    for tier, rise in reversed(list(zip(tiers, rises))):
+        canvas.alpha_composite(tier, ((width - tier.width) // 2, base - tier.height - rise + round(tier.height * 0.08)))
+    return _trim(canvas)
+
+
+def render(data, label=None, badge=None, grounded=False, recolor=None, shrink=None, top=None, star=False, rotate=None, erase=None, inflate=None, outline=None):
+    """Grounded renders sit on the bottom edge, so a creature stands where Melvor's own monster art does; shrink draws it smaller in the same frame (a chick from a chicken), inflate makes it taller (a chubby whale from a narwhal), and rotate tilts a long render to fill the square."""
+    image = _trim(_open(data))
+    if erase:
+        image = erase_hue(image, *erase)
+    if inflate:
+        image = image.resize((image.width, round(image.height * inflate)), Image.LANCZOS)
+    if rotate:
+        image = _trim(image.rotate(rotate, resample=Image.BICUBIC, expand=True))
+    return _finish_render(big_top(image, **top) if top else image, label, badge, grounded, recolor, shrink, star, outline)
+
+
+def row(datas, overlap=0.25, grounded=False, recolor=None):
     """Line several renders up side by side at a shared height, overlapping a little."""
     height = RENDER_SIZE
     parts = []
@@ -241,7 +283,21 @@ def row(datas, overlap=0.25, grounded=False):
     for part, advance in zip(parts, step):
         canvas.alpha_composite(part, (x, 0))
         x += advance
-    return _finish_render(canvas, grounded=grounded)
+    return _finish_render(canvas, grounded=grounded, recolor=recolor)
+
+
+def cluster(parts, grounded=False):
+    """Several renders at their own size and spot in one frame, drawn back to front, for groups like the Miolite Trio. Each part is (data, size as a share of the frame, (x, y) as shares of the free space, recolor)."""
+    side = RENDER_SIZE * 2
+    canvas = Image.new("RGBA", (side, side))
+    for data, share, (fx, fy), recolor in parts:
+        image = _trim(_open(data))
+        fit = side * share / max(image.size)
+        image = image.resize((max(1, round(image.width * fit)), max(1, round(image.height * fit))), Image.LANCZOS)
+        if recolor:
+            tint(image, recolor["color"], recolor.get("greys", False))
+        canvas.alpha_composite(image, (round((side - image.width) * fx), round((side - image.height) * fy)))
+    return _finish_render(_trim(canvas), grounded=grounded)
 
 
 def tablet(blank, creature_data, fill=0.7):

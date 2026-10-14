@@ -33,7 +33,8 @@ GROUPS = {
     "npcs": ("Skilling", "thieving", "Thieving targets"),
     "obstacles": ("Skilling", "agility", "Agility obstacles"),
 }
-SECTIONS = ["General", "Content packs", "Combat", "Skilling", "Shop", "Item categories", "Item types"]
+SECTIONS = ["General", "Content packs", "Combat", "Skilling", "Shop", "Item categories", "Item types", "Other mods"]
+OTHER_MODS = {"multiplayer": "Multiplayer"}
 MIN_IMAGES = 5
 ITEM_CATEGORIES = {
     "Combat": "Combat", "Herblore": "Herblore", "Cooking": "Cooking", "Farming": "Farming", "Openable": "Openables",
@@ -69,7 +70,10 @@ def tags_for(entity, thematic_ids):
     if entity.package in PACKS:
         name, label = PACKS[entity.package]
         tags.append(("Content packs", name, label))
-    if entity.kind == "icon":
+    if entity.kind == "icon" and entity.media_path.startswith("mod:"):
+        namespace = entity.media_path.split(":")[1]
+        tags.append(("Other mods", f"mod-{namespace}", OTHER_MODS.get(namespace, namespace)))
+    elif entity.kind == "icon":
         tags.append(("Skilling", "currency", "Currency icons") if entity.media_path in CURRENCIES else ("Skilling", "skill-icons", "Skill and menu icons"))
     elif entity.kind == "item":
         category, kind = ITEM_CATEGORIES.get(clean(entity.category)), ITEM_TYPES.get(clean(entity.type))

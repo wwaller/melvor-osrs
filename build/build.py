@@ -203,21 +203,33 @@ def spec_of(title):
 
 
 def spec_titles(spec):
-    titles = spec.get("row") or spec.get("group") or [spec.get(k) for k in ("base", "badge", "inset", "tablet", "cape")]
+    titles = spec.get("row") or spec.get("group") or [part["base"] for part in spec.get("cluster", [])] or [spec.get(k) for k in ("base", "badge", "inset", "tablet", "cape")]
     return [t for t in titles + [spec.get("decal"), spec.get("emblem")] if t and t.startswith("File:")]
 
 
 def spec_slug(spec):
-    titles = spec.get("row") or spec.get("group") or [spec.get(k) for k in ("base", "badge", "inset", "tablet")]
-    parts = (["tablet"] if spec.get("tablet") else []) + [slug(t) for t in titles if t]
-    if spec.get("asset"):
-        parts.append(re.sub(r"[^A-Za-z0-9]+", "_", spec["asset"].rsplit(".", 1)[0]).strip("_"))
+    titles = spec.get("row") or spec.get("group") or [part["base"] for part in spec.get("cluster", [])] or [spec.get(k) for k in ("base", "badge", "inset", "tablet")]
+    parts = (["tablet"] if spec.get("tablet") else []) + (["cluster"] if spec.get("cluster") else []) + [slug(t) for t in titles if t]
+    if spec.get("asset") or spec.get("local"):
+        parts.append(re.sub(r"[^A-Za-z0-9]+", "_", (spec.get("asset") or spec["local"]).rsplit(".", 1)[0]).strip("_"))
     if spec.get("cape"):
         parts.append("cape_" + re.sub(r"[^A-Za-z0-9]+", "_", spec["emblem"].rsplit("/", 1)[-1].rsplit(".", 1)[0]).strip("_"))
     if spec.get("recolor"):
         parts.append(spec["recolor"]["color"].lstrip("#"))
     if spec.get("trim"):
         parts.append(f"trim_{spec['trim']}")
+    if spec.get("shrink"):
+        parts.append(f"x{round(spec['shrink'] * 100)}")
+    if spec.get("erase_hue"):
+        parts.append("erase{}_{}".format(*spec["erase_hue"]))
+    if spec.get("inflate"):
+        parts.append(f"fat{round(spec['inflate'] * 100)}")
+    if spec.get("rotate"):
+        parts.append(f"rot{spec['rotate']}")
+    if spec.get("outline"):
+        parts.append(f"line{spec['outline']}")
+    if spec.get("top"):
+        parts.append(f"top{round(spec['top']['scale'] * 100)}x{spec['top'].get('stack', 1)}")
     if spec.get("label"):
         parts.append(spec["label"])
     if spec.get("star"):
@@ -242,14 +254,19 @@ def decal_bytes(value, fetch):
 def process(entity, spec, info, wiki):
     fetch = lambda title: wiki.download(info[title]["url"])
     grounded = entity.kind == "monster"
+    if spec.get("cluster"):
+        return "render", images.cluster([(fetch(part["base"]), part["share"], part["at"], part.get("recolor")) for part in spec["cluster"]], grounded=grounded)
     if spec.get("row"):
-        return "render", images.row([fetch(t) for t in spec["row"]], grounded=grounded)
+        return "render", images.row([fetch(t) for t in spec["row"]], grounded=grounded, recolor=spec.get("recolor"))
     if spec.get("tablet"):
         return "render", images.tablet(BLANK_TABLET.read_bytes(), fetch(spec["tablet"]))
     if spec.get("group"):
         return "sprite", images.group([fetch(t) for t in spec["group"]])
+    if spec.get("local"):
+        return "render", images.render((ASSET_DIR / spec["local"]).read_bytes(), spec.get("label"), None, grounded, spec.get("recolor"), spec.get("shrink"), spec.get("top"), spec.get("star", False))
     if spec.get("asset"):
-        return "sprite", images.pixel_sprite((ASSET_DIR / spec["asset"]).read_bytes())
+        canvas = images.ITEM_CANVAS if entity.kind in SPRITE_CANVAS_KINDS else 0
+        return "sprite", images.pixel_sprite((ASSET_DIR / spec["asset"]).read_bytes(), canvas, spec.get("label"), spec.get("star", False))
     if spec.get("cape"):
         return "sprite", images.skillcape(fetch(spec["cape"]), decal_bytes(spec["emblem"], fetch), spec["color"], spec.get("trim"))
     base = info[spec["base"]]
@@ -258,7 +275,7 @@ def process(entity, spec, info, wiki):
         decal = decal_bytes(spec["decal"], fetch) if spec.get("decal") else None
         return "sprite", images.pixel_sprite(fetch(spec["base"]), canvas, spec.get("label"), spec.get("star", False), decal, spec.get("recolor"), spec.get("trim"))
     badge = fetch(spec["badge"]) if spec.get("badge") else None
-    return "render", images.render(fetch(spec["base"]), spec.get("label"), badge, grounded, spec.get("recolor"))
+    return "render", images.render(fetch(spec["base"]), spec.get("label"), badge, grounded, spec.get("recolor"), spec.get("shrink"), spec.get("top"), spec.get("star", False), spec.get("rotate"), spec.get("erase_hue"), spec.get("inflate"), spec.get("outline"))
 
 
 def apply_decals(matches, decals):

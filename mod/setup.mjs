@@ -2,6 +2,7 @@ const ITEM_CHOICES_KEY = 'items';
 const MEDIA_PATH = /assets\/media\/[^?#"']+/;
 const ITEM_MEDIA = 'assets/media/bank/';
 const SETTINGS_ICON = 'assets/media/main/settings_header.png';
+const MODDED = 'mod:';
 
 export async function setup(ctx) {
   const { settings, entries } = await ctx.loadData('mapping.json');
@@ -17,6 +18,7 @@ export async function setup(ctx) {
   let enabled = true;
   let active = new Map();
   let choices = loadChoices(ctx);
+  const moddedUrls = new Map();
 
   const pick = (entry, followCategories) => {
     if (!entry || (followCategories && !entry.t.every(isOn))) return undefined;
@@ -58,8 +60,8 @@ export async function setup(ctx) {
   const swapImage = (image) => {
     if (!enabled) return;
     const src = image.getAttribute('src');
-    if (!src || src.startsWith('blob:')) return;
-    const media = src.match(MEDIA_PATH)?.[0];
+    if (!src) return;
+    const media = moddedUrls.get(src) ?? (src.startsWith('blob:') ? undefined : src.match(MEDIA_PATH)?.[0]);
     const item = media && media.startsWith(ITEM_MEDIA) && itemWithMedia(media);
     const sprite = media && (media.startsWith(ITEM_MEDIA) ? item && spriteFor(item, media) : active.get(media));
     if (!sprite) return;
@@ -115,6 +117,15 @@ export async function setup(ctx) {
   swapWithin(document.body);
 
   ctx.patch(NamespacedObject, 'getMediaURL').replace(function (getMediaURL, media) {
+    if (enabled && this.isModded && typeof media === 'string') {
+      const key = MODDED + this.id;
+      const sprite = active.get(key);
+      if (sprite) {
+        const original = getMediaURL(media);
+        if (original.startsWith('blob:')) moddedUrls.set(original, key);
+        return spriteUrl(sprite);
+      }
+    }
     if (enabled && !this.isModded && typeof media === 'string') {
       /** A page's sidebar icon can be other art than its header (the Shop's is the GP coin); give both the header's OSRS art. */
       const headerMedia = this.sidebarItem && media === this.sidebarItem.icon ? this._media : undefined;
@@ -124,11 +135,17 @@ export async function setup(ctx) {
     return getMediaURL(media);
   });
 
-  /** Mod Settings shows a gear glyph rather than an image; give it the Settings page's OSRS wrench. */
   ctx.onInterfaceReady(() => {
+    /** Mod Settings shows a gear glyph rather than an image; give it the Settings page's OSRS wrench. */
     const sprite = enabled && active.get(SETTINGS_ICON);
     const modding = sprite && sidebar.category('Modding');
     if (modding && modding.items().some((item) => item.id === 'Mod Settings')) modding.item('Mod Settings', { icon: spriteUrl(sprite) });
+    /** Mapped pages of other mods (Multiplayer) reuse their bundled icons elsewhere, such as Mod Settings; reading each page's media records those icons' URLs so every copy is swapped. */
+    for (const key of Object.keys(entries)) {
+      const page = key.startsWith(MODDED) && game.pages.getObjectByID(key.slice(MODDED.length));
+      if (page) page.getMediaURL(page._media);
+    }
+    swapWithin(document.body);
   });
 
   ctx.patch(BankItemSettingsMenuElement, 'setItem').after(function (_result, bankItem) {

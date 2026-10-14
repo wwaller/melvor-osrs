@@ -36,6 +36,10 @@ const GAME = `
       new NamespacedObject('melvorD:Unmapped', 'assets/media/bank/not_a_real_item.png'),
       new NamespacedObject('someMod:Bronze_Dagger', 'assets/media/bank/weapon_dagger_bronze.png', true),
     ]),
+    pages: registry([
+      new NamespacedObject('multiplayer:Guild', 'assets/multiplayer.svg', true),
+      new NamespacedObject('multiplayer:Crucible', 'assets/crucible.png', true),
+    ]),
   };
   globalThis.NamespacedObject = NamespacedObject;
   class BankItemSettingsMenuElement { setItem() {} }
@@ -94,6 +98,13 @@ test('injected setup swaps mapped base-game media and leaves the rest alone', as
   assert.deepStrictEqual(status.counts.items, { replaced: 1, total: 3 });
   assert.match(status.samples['melvorD:Bronze_Dagger'].media, /^blob:/);
   assert.strictEqual(status.samples['melvorD:Bronze_Dagger'].decoded, '72x72');
+});
+
+test('pages other mods add get OSRS art only where the mapping names them', async () => {
+  const { status } = await runGame();
+  assert.deepStrictEqual(status.counts.pages, { replaced: 1, total: 2 }, 'the Multiplayer Guild page is mapped; its Crucible is not');
+  const off = await runGame({ 'osrs-sprites-dev:Other mods:mod-multiplayer': false });
+  assert.deepStrictEqual(off.status.counts.pages, { replaced: 0, total: 2 }, 'the Multiplayer switch turns its icons off');
 });
 
 test('a category switch turned off restores Melvor art', async () => {

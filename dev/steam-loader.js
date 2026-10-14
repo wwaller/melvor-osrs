@@ -82,7 +82,7 @@ const data = ${JSON.stringify({ mapping, sprites })};
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
       if (typeof game === 'undefined' || !game.items) return post({ ok: false, error: 'game never loaded' });
-      const registries = ['items', 'monsters', 'prayers', 'attackSpells', 'curseSpells', 'skills', 'currencies'];
+      const registries = ['items', 'monsters', 'prayers', 'attackSpells', 'curseSpells', 'skills', 'currencies', 'pages'];
       const counts = {};
       for (const name of registries) {
         const objects = game[name] && game[name].allObjects;
