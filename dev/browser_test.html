@@ -845,26 +845,37 @@ const cornerFightButton = () => cornerStack()?.querySelector('.mobile-combat-cor
 const minibarBox = document.getElementById('skill-footer-minibar-container');
 render();
 const cornerButton = (title) => cornerButtons().find((button) => button.title === title);
+window.game.openPage = combatPage;
 check('the corner combat menu buttons are on by default, and off here since this character saved them off', settingConfigs['combat-menu-buttons'].default === true && (!cornerStack() || !shown(cornerStack())));
 check('Melvor keeps the switch on when it is turned on', melvorAccepts(settingConfigs['combat-menu-buttons'].onChange(true, false)));
 render();
-check('turned on, Equipment, Spellbook, Prayer and Slayer buttons sit in the bottom right corner, in Melvor\'s tab order, on their own when Skill Switcher is not installed', shown(cornerStack()) && JSON.stringify(cornerButtons().map((button) => button.title)) === '["Equipment","Spellbook","Prayer","Slayer"]' && cornerStack().parentElement.classList.contains('sidemenu') && box(cornerButtons().at(-1)).right > innerWidth - 60 && box(cornerButtons().at(-1)).bottom > innerHeight - 60, `${box(cornerButtons().at(-1)).right},${box(cornerButtons().at(-1)).bottom} of ${innerWidth}x${innerHeight}`);
+check('turned on, on the combat page, Equipment, Spellbook, Prayer and Slayer buttons sit in the bottom right corner, in Melvor\'s tab order, on their own when Skill Switcher is not installed', shown(cornerStack()) && JSON.stringify(cornerButtons().map((button) => button.title)) === '["Equipment","Spellbook","Prayer","Slayer"]' && cornerStack().parentElement.classList.contains('sidemenu') && box(cornerButtons().at(-1)).right > innerWidth - 60 && box(cornerButtons().at(-1)).bottom > innerHeight - 60, `${box(cornerButtons().at(-1)).right},${box(cornerButtons().at(-1)).bottom} of ${innerWidth}x${innerHeight}`);
 check('with the icons Melvor uses for those combat menus, stacked top to bottom', JSON.stringify(cornerButtons().map((button) => button.querySelector('img').getAttribute('src').split('?')[1])) === '["equipment","spellbook","prayer","slayer"]' && cornerButtons().every((button, index, all) => index === 0 || box(all[index - 1]).bottom <= box(button).top + 1));
+const cornerFloat = () => document.querySelector('.mobile-combat-corner-float');
+window.game.openPage = { id: 'melvorD:Woodcutting', name: 'Woodcutting' };
 minibarBox.classList.remove('d-none');
 render();
-check('on a skill page they move into the minibar column, just above its arrow', cornerStack().parentElement === minibarBox && cornerStack().nextElementSibling.id === 'minibar-arrow' && !shown(document.querySelector('.mobile-combat-corner-float')));
+check('on a skill page there are none, minibar or not', !shown(cornerStack()) && !shown(cornerFloat()));
+minibarBox.classList.add('d-none');
+window.game.openPage = { id: 'melvorD:Bank', name: 'Bank' };
+render();
+check('nor on any other page that is not combat', !shown(cornerStack()) && !shown(cornerFloat()));
+window.game.openPage = combatPage;
+render();
+check('back on the combat page they show again', shown(cornerStack()) && cornerButtons().length === 4);
+const fakeSwitcherTop = Object.assign(document.createElement('button'), { className: 'btn btn-sm btn-light skill-switcher-top' });
 const fakeSwitcherMenu = Object.assign(document.createElement('button'), { className: 'btn btn-sm btn-light skill-switcher-menu d-none' });
 const fakeSwitcher = Object.assign(document.createElement('button'), { className: 'btn btn-sm btn-light skill-switcher-button' });
-minibarBox.insertBefore(fakeSwitcherMenu, minibarBox.lastElementChild);
-minibarBox.insertBefore(fakeSwitcher, minibarBox.lastElementChild);
-render();
-check('with Skill Switcher installed they sit just above its buttons', cornerStack().nextElementSibling === fakeSwitcherMenu && fakeSwitcherMenu.nextElementSibling === fakeSwitcher);
-minibarBox.classList.add('d-none');
 const switcherFloat = Object.assign(document.createElement('div'), { className: 'sidemenu bg-white rounded' });
 document.body.append(switcherFloat);
-switcherFloat.append(fakeSwitcherMenu, fakeSwitcher);
+switcherFloat.append(fakeSwitcherTop, fakeSwitcherMenu, fakeSwitcher);
+await new Promise((resolve) => setTimeout(resolve, 1100));
 render();
-check('and follow its buttons when Skill Switcher moves them off a skill page', cornerStack().parentElement === switcherFloat && cornerStack().nextElementSibling === fakeSwitcherMenu && !shown(document.querySelector('.mobile-combat-corner-float')));
+check('with Skill Switcher installed they sit just above all its buttons, Jump to Top included, on the combat page', cornerStack().parentElement === switcherFloat && cornerStack().nextElementSibling === fakeSwitcherTop && shown(cornerStack()) && !shown(cornerFloat()));
+window.game.openPage = { id: 'melvorD:Woodcutting', name: 'Woodcutting' };
+render();
+check('and leave Skill Switcher on its own on other pages', !shown(cornerStack()) && shown(fakeSwitcher));
+window.game.openPage = combatPage;
 switcherFloat.remove();
 render();
 check('back on their own once Skill Switcher is gone', cornerStack().parentElement.classList.contains('mobile-combat-corner-float') && shown(cornerStack()));
@@ -873,7 +884,6 @@ check('only one set of buttons, ever', document.querySelectorAll('.mobile-combat
 
 const playerContainer = document.getElementById('combat-player-container');
 playerContainer.classList.add('d-mobile-none');
-window.game.openPage = undefined;
 window.scrollTo(0, 0);
 const cornerScrolls = [];
 const realScroll = window.scrollTo.bind(window);
@@ -884,7 +894,6 @@ window.scrollTo = (options) => {
 cornerButton('Prayer').click();
 await settle();
 await new Promise((resolve) => setTimeout(resolve, 100));
-check('pressing Prayer from another page opens the combat page, without toggling the sidebar', JSON.stringify(pageChanges.at(-1)) === '["melvorD:Combat",-1,null,false,false]', JSON.stringify(pageChanges.at(-1)));
 check('unfolds your side of the combat page if it was folded away', !playerContainer.classList.contains('d-mobile-none'));
 check('switches to Melvor\'s own Prayer menu', !document.getElementById('combat-menu-2').classList.contains('d-none') && document.getElementById('combat-menu-0').classList.contains('d-none') && document.getElementById('combat-menu-item-2').classList.contains('border-combat-outline'));
 check('and scrolls the combat menus up to just under the sticky header', cornerScrolls.length === 1 && cornerScrolls[0].behavior === 'smooth' && Math.abs(box(document.getElementById('combat-menu-tabs')).top - box(document.getElementById('page-header')).height) < 3, `${box(document.getElementById('combat-menu-tabs')).top} after ${JSON.stringify(cornerScrolls)}`);
@@ -924,12 +933,10 @@ if (innerWidth < 768) {
   combat.selectedMonster = cow;
   render();
   check('its icon follows the enemy you are fighting', cornerFightButton().querySelector('img').getAttribute('src').endsWith('cow'));
-  window.game.openPage = undefined;
   realScroll(0, 0);
-  const pagesBefore = pageChanges.length;
   cornerFightButton().click();
   await new Promise((resolve) => setTimeout(resolve, 100));
-  check('pressing it from another page opens the combat page and scrolls the enemy panel up under the sticky header', pageChanges.length === pagesBefore + 1 && pageChanges.at(-1)[0] === 'melvorD:Combat' && Math.abs(box(document.getElementById('combat-fight-container-enemy')).top - box(document.getElementById('page-header')).height) < 3 && cornerScrolls.at(-1).behavior === 'smooth', `${box(document.getElementById('combat-fight-container-enemy')).top}`);
+  check('pressing it scrolls the enemy panel up under the sticky header',  Math.abs(box(document.getElementById('combat-fight-container-enemy')).top - box(document.getElementById('page-header')).height) < 3 && cornerScrolls.at(-1).behavior === 'smooth', `${box(document.getElementById('combat-fight-container-enemy')).top}`);
 } else {
   check('on a wide screen, where the enemy sits beside you, there is no Scroll to Combat button', !shown(cornerFightButton()), innerWidth);
 }

@@ -5,6 +5,7 @@ const JUMP_CLASS = 'mobile-combat-jump-on';
 const AREA_GRID_CLASS = 'mobile-combat-area-grid-on';
 const STYLES_MOVE_CLASS = 'mobile-combat-styles-on';
 const CORNER_CLASS = 'mobile-combat-corner-on';
+const SWITCHER_LOOKUP_MS = 1000;
 const FIGHT_SCROLL_CLASS = 'mobile-combat-fight-scroll-on';
 const HIDE_HP_CLASS = 'mobile-combat-hide-hp-on';
 const HP_BAR_CLASS = 'mobile-combat-hp-bar';
@@ -215,7 +216,7 @@ export function setup(ctx) {
     { type: 'switch', name: 'jump-to-last', label: 'Jump To Last section', hint: 'On the combat page, a section above your Player panel with a button to fight the last enemy again once a fight ends.', default: true, onChange: switches['jump-to-last'] },
     { type: 'switch', name: 'compact-area-select', label: 'Compact Area Select', hint: 'Made for mobile. Shows the area types as a 2x2 grid in place of the Select Combat Area dropdown (the open one in red, pressed again to hide its areas), and each area as just its art and name, two to a row and dimmed if you cannot enter it yet. An opened area shows its full card and enemies across the whole width.', default: true, onChange: switches['compact-area-select'] },
     { type: 'switch', name: 'attack-styles-under-enemy', label: 'Attack Styles above the enemy stats', hint: 'Made for mobile. Moves the Attack Style section to just above the Offensive Stats of the enemy, so you can switch without scrolling back up. It is the same section, moved, so buttons other mods add to it come along.', default: false, onChange: switches['attack-styles-under-enemy'] },
-    { type: 'switch', name: 'combat-menu-buttons', label: 'Combat buttons in the corner', hint: 'Adds Equipment, Spellbook, Prayer and Slayer buttons in the bottom right, above the Skill Switcher buttons if you have that mod. Each opens the combat page on that menu, unfolds your side of the page if it is folded away, and scrolls to it. While you fight on a narrow screen, a button with the enemy on top scrolls down to the fight.', default: true, onChange: switches['combat-menu-buttons'] },
+    { type: 'switch', name: 'combat-menu-buttons', label: 'Combat buttons in the corner', hint: 'On the combat page, adds Equipment, Spellbook, Prayer and Slayer buttons in the bottom right, above the Skill Switcher buttons if you have that mod. Each switches to that menu, unfolds your side of the page if it is folded away, and scrolls to it. While you fight on a narrow screen, a button with the enemy on top scrolls down to the fight.', default: true, onChange: switches['combat-menu-buttons'] },
     { type: 'switch', name: 'scroll-on-area-fight', label: 'Scroll to Combat after picking an enemy', hint: 'When you start a fight from an area card (a monster, dungeon or stronghold), scrolls down to the fight.', default: true, onChange: switches['scroll-on-area-fight'] },
     { type: 'switch', name: 'hide-hp-bars', label: 'Hide the HP bars and attack intervals on the combat page', hint: 'Hides your HP bar, the enemy HP and barrier bars, and both attack interval timers (your familiar one too) on the combat page, since the combat minibar already shows them. The HP numbers stay.', default: false, onChange: switches['hide-hp-bars'] },
     { type: 'switch', name: 'hide-food', label: 'Hide the Food section on the combat page', hint: 'Hides the Food section on the combat page, since the combat minibar already has your food.', default: false, onChange: switches['hide-food'] },
@@ -298,7 +299,6 @@ export function setup(ctx) {
   };
 
   const openCombatMenu = ({ tab, element }) => {
-    showCombatPage();
     const player = document.getElementById('combat-player-container');
     if (player?.classList.contains('d-mobile-none')) togglePlayerContainer();
     const target = document.getElementById(element);
@@ -313,6 +313,18 @@ export function setup(ctx) {
     scrollUnderHeader(document.getElementById(`combat-menu-item-${tab}`)?.closest('.block') ?? panel);
   };
 
+  let switcher = null;
+  let switcherLookedAt = -Infinity;
+  /** Finding Quick Skill Switcher's button searches the whole page, so until it turns up that is done at most once a second, not on every render. */
+  const skillSwitcher = () => {
+    if (switcher?.isConnected) return switcher;
+    const now = performance.now();
+    if (now - switcherLookedAt < SWITCHER_LOOKUP_MS) return null;
+    switcherLookedAt = now;
+    switcher = document.querySelector('.skill-switcher-button');
+    return switcher;
+  };
+
   const showCorner = () => {
     if (!corner) {
       if (!document.body.classList.contains(CORNER_CLASS)) return;
@@ -324,10 +336,7 @@ export function setup(ctx) {
       cornerFight.title = 'Scroll to Combat';
       cornerFight.setAttribute('aria-label', 'Scroll to Combat');
       cornerFight.append(Object.assign(document.createElement('img'), { className: 'skill-icon-xs m-0' }));
-      cornerFight.addEventListener('click', () => {
-        showCombatPage();
-        scrollToCombat();
-      });
+      cornerFight.addEventListener('click', scrollToCombat);
       corner.append(cornerFight);
       for (const menu of CORNER_MENUS) {
         const button = document.createElement('button');
@@ -344,18 +353,24 @@ export function setup(ctx) {
       cornerFloat.className = 'sidemenu bg-white rounded mobile-combat-corner-float d-none';
       (document.getElementById('page-container') ?? document.body).append(cornerFloat);
     }
-    const switcher = document.querySelector('.skill-switcher-button');
+    if (game.openPage?.id !== 'melvorD:Combat') {
+      corner.classList.add('d-none');
+      cornerFloat.classList.add('d-none');
+      return;
+    }
+    const switcher = skillSwitcher();
     const minibar = document.getElementById('skill-footer-minibar-container');
     let parent = cornerFloat;
     let before = null;
     if (switcher?.parentElement) {
-      before = switcher.previousElementSibling?.classList.contains('skill-switcher-menu') ? switcher.previousElementSibling : switcher;
-      parent = before.parentElement;
+      parent = switcher.parentElement;
+      before = [...parent.children].find((child) => child.matches('.skill-switcher-top, .skill-switcher-menu, .skill-switcher-button'));
     } else if (minibar && !minibar.classList.contains('d-none')) {
       parent = minibar;
       before = minibar.lastElementChild;
     }
     if (corner.parentElement !== parent || corner.nextElementSibling !== before) parent.insertBefore(corner, before);
+    corner.classList.remove('d-none');
     cornerFloat.classList.toggle('d-none', parent !== cornerFloat);
     const enemyMedia = game.combat?.isActive && !game.golbinRaid?.isActive ? game.combat.selectedMonster?.media : undefined;
     cornerFight.classList.toggle('d-none', !enemyMedia);
@@ -431,11 +446,6 @@ export function setup(ctx) {
   const scrollToCombat = () => {
     const enemy = document.getElementById('combat-fight-container-enemy');
     if (enemy) scrollUnderHeader(enemy);
-  };
-
-  const showCombatPage = () => {
-    const combatPage = game.pages?.getObjectByID('melvorD:Combat');
-    if (combatPage && game.openPage !== combatPage) changePage(combatPage, -1, undefined, false, false);
   };
 
   const showJump = (combat) => {
