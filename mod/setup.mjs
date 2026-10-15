@@ -37,6 +37,7 @@ export function setup(ctx) {
   ctx.loadStylesheet('style.css');
   const settings = ctx.settings.section('General');
   let menuButton;
+  let topButton;
   const aboveSidebar = (on) => {
     document.body.classList.toggle(ABOVE_SIDEBAR_CLASS, Boolean(on));
   };
@@ -54,9 +55,19 @@ export function setup(ctx) {
     },
     {
       type: 'switch',
+      name: 'top-button',
+      label: 'Jump to Top button',
+      hint: 'Adds an up arrow above the menu button (or above the skill switcher) that scrolls back to the top of the page.',
+      default: true,
+      onChange: (on) => {
+        topButton?.classList.toggle('d-none', !on);
+      },
+    },
+    {
+      type: 'switch',
       name: 'above-sidebar',
       label: 'Keep these buttons over the sidebar on mobile',
-      hint: 'On small screens the sidebar covers the whole page. This keeps the switcher (and the menu button) showing on top of it, to switch skills or close it from the corner.',
+      hint: 'On small screens the sidebar covers the whole page. This keeps the switcher (and the menu and Jump to Top buttons) showing on top of it, to switch skills or close it from the corner.',
       default: false,
       onChange: aboveSidebar,
     },
@@ -119,6 +130,7 @@ export function setup(ctx) {
     if (minibarShown) container.insertBefore(button, container.lastElementChild);
     else floating.append(button);
     button.before(menuButton);
+    menuButton.before(topButton);
     floating.classList.toggle('d-none', minibarShown);
     showButtonIcon();
   };
@@ -146,6 +158,14 @@ export function setup(ctx) {
     menuButton.append(Object.assign(document.createElement('i'), { className: 'fas fa-bars text-white' }));
     menuButton.onclick = () => One.layout('sidebar_toggle');
     menuButton.classList.toggle('d-none', !settings.get('menu-button'));
+    topButton = document.createElement('button');
+    topButton.type = 'button';
+    topButton.className = 'btn btn-sm btn-light skill-switcher-top';
+    topButton.setAttribute('aria-label', 'Jump to top');
+    topButton.title = 'Jump to Top';
+    topButton.append(Object.assign(document.createElement('i'), { className: 'fas fa-arrow-up text-white' }));
+    topButton.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+    topButton.classList.toggle('d-none', !settings.get('top-button'));
     floating = document.createElement('div');
     floating.className = 'sidemenu bg-white rounded skill-switcher-float d-none';
     (document.getElementById('page-container') ?? document.body).append(floating);

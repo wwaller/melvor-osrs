@@ -96,7 +96,8 @@ async function boot(values = {}, { interfaceReady = true, desktop = false, sideb
   let tip;
   const layouts = [];
   globalThis.One = { layout: (action) => layouts.push(action) };
-  globalThis.window = { matchMedia: (query) => ({ matches: query === '(min-width: 992px)' && desktop }) };
+  const scrolls = [];
+  globalThis.window = { matchMedia: (query) => ({ matches: query === '(min-width: 992px)' && desktop }), scrollTo: (options) => scrolls.push(options) };
   const pageContainer = element('div');
   if (sidebarOpen) pageContainer.classList.add('sidebar-o-xs');
   globalThis.sidebar = sidebarAPI;
@@ -116,7 +117,7 @@ async function boot(values = {}, { interfaceReady = true, desktop = false, sideb
   const { setup } = await import(`../mod/setup.mjs?${Math.random()}`);
   setup(ctx);
   if (interfaceReady) ready();
-  return { ctx, ready, patches, body, minibarContainer, pageChanges, pages, actions, layouts, tip: () => tip };
+  return { ctx, ready, patches, body, minibarContainer, pageChanges, pages, actions, layouts, scrolls, tip: () => tip };
 }
 
 test('on skill pages the button sits just above the minibar arrow; elsewhere it floats in the same corner', async () => {
@@ -177,8 +178,8 @@ const melvorAccepts = (result) => typeof result !== 'string' && (result === unde
 test('the menu button is off by default and waits just above the switcher', async () => {
   const { ctx, minibarContainer } = await boot();
   assert.strictEqual(ctx.configs['menu-button'].default, false);
-  const [, menu, button, arrow] = minibarContainer.children;
-  assert.ok(menu.classList.contains('skill-switcher-menu') && button.classList.contains('skill-switcher-button'), 'menu, then switcher');
+  const [, top, menu, button, arrow] = minibarContainer.children;
+  assert.ok(top.classList.contains('skill-switcher-top') && menu.classList.contains('skill-switcher-menu') && button.classList.contains('skill-switcher-button'), 'Jump to Top, then menu, then switcher');
   assert.strictEqual(arrow, minibarContainer.lastElementChild, 'the arrow stays last');
   assert.ok(menu.classList.contains('d-none'));
   assert.strictEqual(menu.children[0].className, 'fas fa-bars text-white');
@@ -186,7 +187,7 @@ test('the menu button is off by default and waits just above the switcher', asyn
 
 test('the menu switch turns the button on and off, and Melvor keeps each change', async () => {
   const { ctx, minibarContainer } = await boot();
-  const menu = minibarContainer.children[1];
+  const menu = minibarContainer.find('skill-switcher-menu');
   const { onChange } = ctx.configs['menu-button'];
   assert.ok(melvorAccepts(onChange(true, false)), 'Melvor would flip the switch back on a false or string return');
   assert.ok(!menu.classList.contains('d-none'));
@@ -198,7 +199,7 @@ test('the menu switch turns the button on and off, and Melvor keeps each change'
 
 test('a switch saved as on shows the button at startup, since Melvor restores it without calling onChange', async () => {
   const { minibarContainer } = await boot({ 'menu-button': true });
-  assert.ok(!minibarContainer.children[1].classList.contains('d-none'));
+  assert.ok(!minibarContainer.find('skill-switcher-menu').classList.contains('d-none'));
 });
 
 test('flipping the switch before the interface is up is accepted and still applies once it is', async () => {
@@ -207,14 +208,14 @@ test('flipping the switch before the interface is up is accepted and still appli
   assert.ok(melvorAccepts(ctx.configs['menu-button'].onChange(true, false)));
   values['menu-button'] = true;
   ready();
-  assert.ok(!minibarContainer.children[1].classList.contains('d-none'));
+  assert.ok(!minibarContainer.find('skill-switcher-menu').classList.contains('d-none'));
 });
 
 test('pressing the menu button toggles the sidebar the way the top-left button does', async () => {
   const { minibarContainer, layouts } = await boot({ 'menu-button': true });
-  minibarContainer.children[1].onclick();
+  minibarContainer.find('skill-switcher-menu').onclick();
   assert.deepStrictEqual(layouts, ['sidebar_toggle']);
-  minibarContainer.children[1].onclick();
+  minibarContainer.find('skill-switcher-menu').onclick();
   assert.deepStrictEqual(layouts, ['sidebar_toggle', 'sidebar_toggle']);
 });
 
@@ -223,11 +224,12 @@ test('off the skill pages the menu button floats with the switcher, still above 
   const floating = body.children[0];
   minibarContainer.classList.add('d-none');
   patches['Minibar.setSkill']();
-  assert.deepStrictEqual(floating.children.map((child) => child.className.split(' ').pop()), ['skill-switcher-menu', 'skill-switcher-button']);
+  assert.deepStrictEqual(floating.children.map((child) => child.className.split(' ').pop()), ['skill-switcher-top', 'skill-switcher-menu', 'skill-switcher-button']);
   assert.strictEqual(minibarContainer.children.length, 2);
   minibarContainer.classList.toggle('d-none', false);
   patches['Minibar.setSkill']();
-  assert.ok(minibarContainer.children[1].classList.contains('skill-switcher-menu') && minibarContainer.children[2].classList.contains('skill-switcher-button') && minibarContainer.children.length === 4);
+  assert.deepStrictEqual(minibarContainer.children.slice(1, 4).map((child) => child.className.split(' ').pop()), ['skill-switcher-top', 'skill-switcher-menu', 'skill-switcher-button']);
+  assert.strictEqual(minibarContainer.children.length, 5);
   assert.strictEqual(floating.children.length, 0);
 });
 
@@ -257,4 +259,34 @@ test('picking a skill with the phone sidebar open closes the sidebar; otherwise 
     assert.strictEqual(pageChanges.length, 1);
     assert.deepStrictEqual(layouts, expected, JSON.stringify(options));
   }
+});
+
+test('the Jump to Top button is on by default, an up arrow just above the menu button', async () => {
+  const { ctx, minibarContainer } = await boot();
+  assert.strictEqual(ctx.configs['top-button'].default, true);
+  const top = minibarContainer.find('skill-switcher-top');
+  assert.strictEqual(top.nextElementSibling ?? minibarContainer.children[minibarContainer.children.indexOf(top) + 1], minibarContainer.find('skill-switcher-menu'));
+  assert.ok(!top.classList.contains('d-none'));
+  assert.strictEqual(top.children[0].className, 'fas fa-arrow-up text-white');
+});
+
+test('pressing Jump to Top scrolls smoothly back to the top of the page', async () => {
+  const { minibarContainer, scrolls } = await boot();
+  minibarContainer.find('skill-switcher-top').onclick();
+  assert.deepStrictEqual(scrolls, [{ top: 0, behavior: 'smooth' }]);
+});
+
+test('the Jump to Top switch turns the button off and on, and Melvor keeps each change', async () => {
+  const { ctx, minibarContainer } = await boot();
+  const top = minibarContainer.find('skill-switcher-top');
+  const { onChange } = ctx.configs['top-button'];
+  assert.ok(melvorAccepts(onChange(false, true)));
+  assert.ok(top.classList.contains('d-none'));
+  assert.ok(melvorAccepts(onChange(true, false)));
+  assert.ok(!top.classList.contains('d-none'));
+});
+
+test('a Jump to Top switch saved as off keeps the button hidden at startup', async () => {
+  const { minibarContainer } = await boot({ 'top-button': false });
+  assert.ok(minibarContainer.find('skill-switcher-top').classList.contains('d-none'));
 });

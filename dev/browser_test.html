@@ -3,7 +3,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <script src="https://steam.melvoridle.com/assets/js/oneui.core.min.js"></script><script src="https://steam.melvoridle.com/assets/js/oneui.app.min.js"></script>
 <script src="https://unpkg.com/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script><script src="https://unpkg.com/tippy.js@6.3.7/dist/tippy-bundle.umd.min.js"></script>
-</head><body class="darkMode">
+<style>#sidebar { transition: none !important; }</style></head><body class="darkMode">
 <div id="page-container" class="sidebar-o sidebar-dark enable-page-overlay page-header-fixed-mobile"><nav id="sidebar">Sidebar</nav><main id="main-container">Page</main>
 <div class="sidemenu bg-white rounded" id="skill-footer-minibar-container">
   <div id="skill-footer-minibar"><button class="btn btn-sm btn-light" style="width:42px; height:34px;">M</button></div>
@@ -59,6 +59,7 @@ const minibar = document.getElementById('skill-footer-minibar-container');
 const sidebarEl = document.getElementById('sidebar');
 const menu = document.querySelector('.skill-switcher-menu');
 const switcher = document.querySelector('.skill-switcher-button');
+const topButton = document.querySelector('.skill-switcher-top');
 const openSidebar = async () => {
   One.layout('sidebar_open');
   await wait(600);
@@ -72,7 +73,7 @@ const b = switcher.getBoundingClientRect();
 check('turned on, the menu button shows', shown(menu));
 check('it sits directly above the switcher, same width and column', Math.abs(a.left - b.left) < 1 && Math.abs(a.width - b.width) < 1 && Math.abs(a.bottom - b.top) < 2, `menu ${a.left},${a.top}-${a.bottom} switcher ${b.left},${b.top}`);
 check('both sit in the bottom right corner', b.right > innerWidth - 50 && b.bottom > innerHeight - 120, `${b.right},${b.bottom} of ${innerWidth}x${innerHeight}`);
-check('the icon is a hamburger', getComputedStyle(menu.querySelector('i'), '::before').content.includes(''), getComputedStyle(menu.querySelector('i'), '::before').content);
+check('the icon is a hamburger', getComputedStyle(menu.querySelector('i'), '::before').content.includes('\uf0c9'), getComputedStyle(menu.querySelector('i'), '::before').content);
 
 check('a tap on the menu button opens the sidebar', tapAt(menu).closest('.skill-switcher-menu') && page.classList.contains('sidebar-o-xs'), page.className);
 await wait(600);
@@ -115,6 +116,32 @@ check('Melvor keeps the menu switch off when it is turned off', melvorAccepts(co
 check('turned off, the menu button hides again', !shown(menu));
 check('Melvor keeps the menu switch on when it is turned back on', melvorAccepts(configs['menu-button'].onChange(true, false)));
 check('and it shows again', shown(menu));
+
+const t = topButton.getBoundingClientRect();
+const m = menu.getBoundingClientRect();
+check('Jump to Top is on by default and shows as an up arrow', configs['top-button'].default === true && shown(topButton) && getComputedStyle(topButton.querySelector('i'), '::before').content.includes('\uf062'), getComputedStyle(topButton.querySelector('i'), '::before').content);
+check('it sits directly above the menu button, same width and column', Math.abs(t.left - m.left) < 1 && Math.abs(t.width - m.width) < 1 && Math.abs(t.bottom - m.top) < 2, `top ${t.left},${t.top}-${t.bottom} menu ${m.left},${m.top}`);
+document.body.style.minHeight = '3000px';
+window.scrollTo(0, 1200);
+const topScrolls = [];
+const realScrollTo = window.scrollTo.bind(window);
+window.scrollTo = (options) => {
+  topScrolls.push(options);
+  realScrollTo({ top: options.top, behavior: 'instant' });
+};
+const topHit = tapAt(topButton);
+window.scrollTo = realScrollTo;
+await wait(100);
+check('a tap on it scrolls smoothly back to the top of the page', topScrolls.length === 1 && topScrolls[0].top === 0 && topScrolls[0].behavior === 'smooth' && scrollY === 0, `${JSON.stringify(topScrolls)} ${scrollY} hit ${topHit.tagName}.${topHit.className}`);
+check('Melvor keeps the Jump to Top switch off when it is turned off', melvorAccepts(configs['top-button'].onChange(false, true)));
+check('turned off, it hides and the menu button is back on top', !shown(topButton) && shown(menu));
+check('Melvor keeps it on when it is turned back on', melvorAccepts(configs['top-button'].onChange(true, false)));
+check('and it is back', shown(topButton));
+configs['above-sidebar'].onChange(true, false);
+await openSidebar();
+check('with the over-the-sidebar setting on, it shows on top of the open phone sidebar too', topAt(topButton).closest('.skill-switcher-top') === topButton, topAt(topButton).className);
+One.layout('sidebar_close');
+await wait(600);
 
 report();
 </script></body></html>
