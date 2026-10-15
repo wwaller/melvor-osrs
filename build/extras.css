@@ -127,12 +127,57 @@ html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked skill-header 
 html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked skill-header .skill-header-container > .justify-horizontal-center:nth-child(3) { display: none !important; }
 html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked skill-header .skill-header-container > .justify-horizontal-center:nth-child(4) { display: none !important; }
 .osrs-slayer-master { display: none; }
-html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master { --osrs-slayer-master-width: clamp(32px, 16vw, 80px); position: relative; padding-right: calc(var(--osrs-slayer-master-width) + 4px); }
-html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master > .osrs-slayer-master { display: block; position: absolute; top: 0; right: 0; bottom: 0; width: var(--osrs-slayer-master-width); height: 100%; object-fit: contain; object-position: center bottom; }
-html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master .media-body { min-width: 0; overflow-wrap: anywhere; }
-html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master .media > .mr-3 { margin-right: min(1rem, 3vw) !important; }
-html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master .slayer-task-img-container { width: clamp(56px, 22vw, 96px); height: clamp(56px, 22vw, 96px); }
-html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master .slayer-task { width: clamp(56px, 22vw, 96px); max-height: clamp(56px, 22vw, 96px); }
+html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master:not(.osrs-master-narrow) { --osrs-slayer-master-width: clamp(32px, 16vw, 80px); position: relative; padding-right: calc(var(--osrs-slayer-master-width) + 4px); }
+html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master:not(.osrs-master-narrow) > .osrs-slayer-master { display: block; position: absolute; top: 0; right: 0; bottom: 0; width: var(--osrs-slayer-master-width); height: 100%; object-fit: contain; object-position: center bottom; }
+html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master:not(.osrs-master-narrow) .media-body { min-width: 0; overflow-wrap: anywhere; }
+html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master:not(.osrs-master-narrow) .media > .mr-3 { margin-right: min(1rem, 3vw) !important; }
+html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master:not(.osrs-master-narrow) .slayer-task-img-container { width: clamp(56px, 22vw, 96px); height: clamp(56px, 22vw, 96px); }
+html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master:not(.osrs-master-narrow) .slayer-task { width: clamp(56px, 22vw, 96px); max-height: clamp(56px, 22vw, 96px); }
 html:root body.osrs-theme.osrs-bank-options-below #bank-container > .row > :is(#main-bank-options, #main-bank-move-mode, #main-bank-sell-mode) { order: 1; }
 @media (max-width: 991.98px) { html:root body.osrs-theme.osrs-bank-options-below #bank-container > .row > :has(> #bank-item-box) { order: 2; } }
 html:root body.osrs-theme.osrs-hide-dlc #sidebar :is(.expansion-1-version, .expansion-2-version, .expansion-3-version), html:root body.osrs-theme.osrs-hide-dlc #sidebar li:has(> :is(.expansion-1-version, .expansion-2-version, .expansion-3-version)) { display: none !important; }
+html:root body.osrs-theme.osrs-bank-layout #bank-tab-menu .nav-tabs-block { display: flex; flex-wrap: wrap; gap: 3px; padding: 6px 6px 0; border-bottom: 1px solid #0e0c09; }
+html:root body.osrs-theme.osrs-bank-layout #bank-tab-menu .nav-tabs-block > .nav-item { flex: none; margin: 0; }
+html:root body.osrs-theme.osrs-bank-layout #bank-tab-menu .nav-tabs-block .nav-link { display: grid; place-items: center; width: 54px; height: 46px; margin: 0 !important; padding: 0 !important; border: 1px solid #0e0c09 !important; border-bottom: 0 !important; border-radius: 6px 6px 0 0 !important; background-image: linear-gradient(rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.28)); box-shadow: inset 1px 1px 0 rgba(255, 236, 200, 0.12); }
+html:root body.osrs-theme.osrs-bank-layout #bank-tab-menu .nav-tabs-block .nav-link.active { background-image: linear-gradient(rgba(255, 236, 200, 0.08), rgba(255, 236, 200, 0.08)); box-shadow: inset 1px 1px 0 rgba(255, 236, 200, 0.28), inset -1px 0 0 rgba(0, 0, 0, 0.5); }
+html:root body.osrs-theme.osrs-bank-layout #bank-tab-menu .nav-tabs-block .nav-link img { width: 34px; height: 34px; margin: 0 !important; object-fit: contain; }
+html:root body.osrs-theme.osrs-bank-layout #bank-tab-menu .tab-content { padding: 8px 6px !important; }
+html:root body.osrs-theme.osrs-bank-layout #bank-tab-menu .tab-pane > .row { margin-left: 0; margin-right: 0; }
+html:root body.osrs-theme.osrs-bank-layout #bank-container .bank-item { width: 52px; height: 52px; margin: 3px !important; background-image: none !important; background-color: transparent !important; }
+html:root body.osrs-theme.osrs-bank-layout #bank-container .bank-item .bank-img { width: 100%; height: 100%; padding: 4px !important; object-fit: contain; filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.6)); }
+html:root body.osrs-theme.osrs-bank-layout #bank-container .bank-item div.in-bank { position: absolute; top: -1px; left: 2px; right: auto; bottom: auto; width: auto; text-align: left; pointer-events: none; }
+html:root body.osrs-theme.osrs-bank-layout #bank-container .bank-item div.in-bank small { padding: 0 !important; background: none !important; color: #ffff00; line-height: 1.1; text-shadow: 1px 1px 0 #000; }
+html:root body.osrs-theme.osrs-bank-layout #bank-container .bank-item > a > div:last-child { top: 0 !important; left: auto !important; right: 1px; width: auto !important; }
+html:root body.osrs-theme.osrs-bank-layout #bank-container .bank-item .bank-img.border { border: 0 !important; outline: 1px solid #ffffff; outline-offset: -1px; }
+html:root body.osrs-theme.osrs-bank-layout #bank-container .bank-item .bank-img.border-info { outline-color: #00ffff; }
+html:root body.osrs-theme.osrs-bank-layout #bank-container .bank-item .bank-img.border-warning { outline-color: #ffff00; }
+html:root body.osrs-theme.osrs-bank-layout #bank-container .bank-item.bank-locked::after { content: ""; position: absolute; right: 2px; bottom: 2px; width: 13px; height: 15px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 16'%3E%3Cpath d='M4 7.5V5a3 3 0 0 1 6 0v2.5' fill='none' stroke='%23000' stroke-width='3.4'/%3E%3Cpath d='M4 7.5V5a3 3 0 0 1 6 0v2.5' fill='none' stroke='%23d6d6d6' stroke-width='1.6'/%3E%3Crect x='1' y='7' width='12' height='8.4' rx='1' fill='%23e3a500' stroke='%23000'/%3E%3Crect x='6.2' y='9.4' width='1.6' height='3.6' fill='%235a3c00'/%3E%3C/svg%3E") center / contain no-repeat; pointer-events: none; }
+@media (max-width: 575.98px) {
+  html:root body.osrs-theme.osrs-bank-layout #bank-tab-menu .tab-pane > .row { display: grid !important; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 2px 2px 16px !important; }
+  html:root body.osrs-theme.osrs-bank-layout #bank-tab-menu .tab-pane > .row > .bank-item { width: auto; height: auto; aspect-ratio: 1; margin: 0 !important; }
+}
+html:root body.osrs-theme.osrs-bank-layout #bank-container .bank-item.osrs-named { width: 60px; height: auto; }
+html:root body.osrs-theme.osrs-bank-layout #bank-container .bank-item.osrs-named > a { display: flex; flex-direction: column; align-items: center; }
+html:root body.osrs-theme.osrs-bank-layout #bank-container .bank-item.osrs-named .bank-img { height: auto; aspect-ratio: 1; }
+.osrs-bank-name { display: none; }
+html:root body.osrs-theme.osrs-bank-layout #bank-container .bank-item.osrs-named .osrs-bank-name { display: block; width: 100%; padding: 0 1px 3px; color: #ffffff; font-size: 12px; line-height: 1.15; text-align: center; white-space: normal; overflow-wrap: break-word; text-shadow: 1px 1px 0 #000; }
+html:root body.osrs-theme.osrs-font-all .osrs-bank-name { font-family: "OSRS Plain 12", Inter, sans-serif; }
+@media (max-width: 575.98px) {
+  html:root body.osrs-theme.osrs-bank-layout #bank-tab-menu .tab-pane > .row > .bank-item.osrs-named { width: auto; aspect-ratio: auto; }
+}
+html:root body.osrs-theme.osrs-bank-layout #bank-container .bank-item.osrs-named.bank-locked::after { top: 0; left: 0; right: auto; bottom: auto; width: 100%; height: auto; aspect-ratio: 1; background-position: right 2px bottom 2px; background-size: 13px 15px; }
+html:root body.osrs-theme.osrs-bank-layout.osrs-bank-big-icons #bank-container .bank-item { width: 68px; height: 68px; }
+html:root body.osrs-theme.osrs-bank-layout.osrs-bank-big-icons #bank-container .bank-item div.in-bank small { font-size: 115% !important; font-weight: 700 !important; }
+html:root body.osrs-theme.osrs-font.osrs-bank-layout.osrs-bank-big-icons #bank-container .bank-item div.in-bank small[data-osrs-stack] { font-family: "OSRS Bold 12", Inter, sans-serif !important; font-size: var(--osrs-font-size, 16px) !important; font-weight: 400 !important; }
+html:root body.osrs-theme.osrs-bank-layout.osrs-bank-big-icons #bank-container .bank-item.osrs-named { width: 76px; height: auto; }
+@media (max-width: 575.98px) {
+  html:root body.osrs-theme.osrs-bank-layout.osrs-bank-big-icons #bank-tab-menu .tab-pane > .row { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+}
+html:root body.osrs-theme.osrs-bank-layout.osrs-bank-hide-upgrades #bank-container .bank-item > a > div:last-child > img:not(:first-child) { display: none !important; }
+.osrs-bank-footer { display: none; }
+html:root body.osrs-theme.osrs-bank-layout .osrs-bank-footer { position: sticky; bottom: 0; z-index: 3; display: flex; align-items: center; gap: 6px; padding: 6px 52px calc(6px + env(safe-area-inset-bottom, 0px)) 6px; border-top: 1px solid #0e0c09; }
+html:root body.osrs-theme.osrs-bank-layout .osrs-bank-footer > .input-group { display: none; flex: 1; min-width: 0; }
+html:root body.osrs-theme.osrs-bank-layout .osrs-bank-footer.osrs-searching > .input-group { display: flex; }
+html:root body.osrs-theme.osrs-bank-layout .osrs-bank-footer .input-group-append { display: none; }
+html:root body.osrs-theme.osrs-bank-layout .osrs-bank-search { flex: none; min-width: 88px; margin: 0; }
+html:root body.osrs-theme.osrs-bank-layout #main-bank-options .row > .col-md-6:not(:has(button, input)) { display: none; }

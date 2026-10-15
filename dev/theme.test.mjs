@@ -11,6 +11,7 @@ function element(tag) {
     style: {},
     children: [],
     input: { checked: false },
+    classList: { names: new Set(), toggle(name, on = !this.names.has(name)) { if (on) this.names.add(name); else this.names.delete(name); return on; }, contains(name) { return this.names.has(name); } },
     append(child) { this.children.push(child); },
     getContext: () => ({ createImageData: (w, h) => ({ data: new Uint8ClampedArray(w * h * 4) }), putImageData() {} }),
     setAttribute(name, value) { this.attributes[name] = value; },
@@ -33,7 +34,11 @@ async function boot(values = {}) {
   const sectionOf = {};
   const patches = {};
   const hooks = {};
+  const sectionOrder = [];
   globalThis.BankItemIconElement = class BankItemIconElement { updateQuantity() {} };
+  globalThis.Bank = class Bank { sellItemOnClick() {} };
+  globalThis.BankSelectedItemMenuElement = class BankSelectedItemMenuElement { setItemLocked() {} updateItemQuantity() {} };
+  globalThis.OfflineProgressElement = class OfflineProgressElement { setMessages() {} };
   globalThis.SplashManager = class SplashManager { renderSplash() {} };
   globalThis.Settings = class Settings { changeChoiceSetting() {} };
   globalThis.saveData = () => {};
@@ -62,14 +67,14 @@ async function boot(values = {}) {
     characterStorage: { getItem: (key) => stored.get(key), setItem: (key, value) => stored.set(key, value), removeItem: (key) => stored.delete(key) },
     loadModule: (path) => import(`../mod/${path}`),
     patch: (target, method) => ({ after: (fn) => (patches[`${target.name}.${method}`] = fn), replace: (fn) => (patches[`${target.name}.${method}`] = fn) }),
-    settings: { section: (sectionName) => ({ add: (list) => list.forEach((c) => { configs[c.name] = c; sectionOf[c.name] = sectionName; }), get: (key) => settings[key] ?? configs[key]?.default, set: (key, value) => (settings[key] = value) }) },
+    settings: { section: (sectionName) => (sectionOrder.includes(sectionName) || sectionOrder.push(sectionName), { add: (list) => list.forEach((c) => { configs[c.name] = c; sectionOf[c.name] = sectionName; }), get: (key) => settings[key] ?? configs[key]?.default, set: (key, value) => (settings[key] = value) }) },
     onCharacterLoaded: (fn) => (hooks.character = fn),
     onCharacterSelectionLoaded: (fn) => (hooks.select = fn),
     onInterfaceReady: (fn) => (hooks.ready = fn),
   };
   const module = await import(`../mod/setup.mjs?${Math.random()}`);
   await module.setup(ctx);
-  return { ctx, module, classes, properties, darkMode, settings, configs, patches, hooks, fonts, stored, documentListeners, sectionOf };
+  return { ctx, module, classes, properties, darkMode, settings, configs, patches, hooks, fonts, stored, documentListeners, sectionOf, sectionOrder };
 }
 
 test('loads the theme, points the CSS at the bundled images, and turns every feature on by default', async () => {
@@ -119,8 +124,8 @@ test('bank stacks follow the OSRS rules', async () => {
   assert.deepStrictEqual(module.osrsStack(100000), ['100K', 'white']);
   assert.deepStrictEqual(module.osrsStack(9999999), ['9999K', 'white']);
   assert.deepStrictEqual(module.osrsStack(10000000), ['10M', 'green']);
-  const icon = { quantity: { textContent: '', dataset: {} } };
-  patches['BankItemIconElement.updateQuantity'].call(icon, undefined, { quantity: 2500000, item: { name: 'Coal Ore' } }, false);
+  const icon = bankIcon();
+  patches['BankItemIconElement.updateQuantity'].call(icon, melvorUpdate.bind(icon), { quantity: 2500000, item: { name: 'Coal Ore' } }, false);
   assert.strictEqual(icon.quantity.textContent, '2500K');
   assert.strictEqual(icon.quantity.dataset.osrsStack, 'white');
   icon.onmouseleave();
@@ -190,7 +195,8 @@ test('on character select, every full-screen layer Melvor paints its art on gets
   const picture = element('IMG', full, {});
   const fullPanel = element('DIV', full, {}, 'rgb(44, 52, 63)');
   const popup = Object.assign(element('DIV', full, {}, 'rgb(71, 62, 51)'), { closest: (selector) => selector.includes('.swal2-container') });
-  globalThis.pageElements = [art, panel, plain, picture, fullPanel, popup];
+  const modal = Object.assign(element('DIV', full, {}, 'rgb(20, 17, 14)'), { closest: (selector) => selector.includes('[aria-modal="true"]') });
+  globalThis.pageElements = [art, panel, plain, picture, fullPanel, popup, modal];
   document.body.layers = { before: 'url("bg_3.jpg")' };
   window.getComputedStyle = (el, pseudo) => ({ backgroundImage: el.layers[pseudo ? pseudo.slice(2) : 'self'] || 'none', backgroundColor: el.color || 'rgba(0, 0, 0, 0)', getPropertyValue: () => '' });
   hooks.select();
@@ -202,6 +208,7 @@ test('on character select, every full-screen layer Melvor paints its art on gets
   assert.strictEqual(plain['data-osrs-login'], undefined, 'elements without a background are left alone');
   assert.strictEqual(fullPanel['data-osrs-login'], 'fill', 'a full-screen solid panel turns see-through');
   assert.strictEqual(popup['data-osrs-login'], undefined, 'a popup that fills a phone screen keeps its background');
+  assert.strictEqual(modal['data-osrs-login'], undefined, 'so does another mod\'s full-screen modal, like Idle Guard\'s lock screen');
   delete globalThis.pageElements;
 });
 
@@ -351,11 +358,13 @@ test('the Abyssal level cap and Skill Tree buttons stay hidden until the Abyssal
   delete globalThis.game;
 });
 
-test('General keeps the main switches and everything smaller lives under Advanced', async () => {
-  const { sectionOf } = await boot();
+test('General keeps the main switches, Accessibility comes second, and everything smaller lives under Advanced', async () => {
+  const { sectionOf, sectionOrder } = await boot();
+  assert.deepStrictEqual(sectionOrder, ['General', 'Accessibility', 'Advanced']);
   const inSection = (name) => Object.keys(sectionOf).filter((key) => sectionOf[key] === name).sort();
-  assert.deepStrictEqual(inSection('General'), ['enabled', 'font', 'font-all', 'hitsplats', 'login', 'slayer-masters', 'stacks', 'tooltips']);
-  assert.deepStrictEqual(inSection('Advanced'), ['bank-options-below', 'bevels', 'buttons', 'cards', 'click-recap', 'compact-headers', 'debug', 'hide-abyssal-ui', 'hide-dlc', 'hp-bars', 'shadows', 'sidebar', 'texture']);
+  assert.deepStrictEqual(inSection('General'), ['bank-layout', 'enabled', 'font', 'font-all', 'hitsplats', 'login', 'slayer-masters', 'stacks', 'tooltips']);
+  assert.deepStrictEqual(inSection('Accessibility'), ['bank-big-icons', 'bank-names']);
+  assert.deepStrictEqual(inSection('Advanced'), ['bank-hide-upgrades', 'bank-options-below', 'bevels', 'buttons', 'cards', 'click-recap', 'compact-headers', 'debug', 'hide-abyssal-ui', 'hide-dlc', 'hp-bars', 'sell-locked', 'shadows', 'short-recap', 'sidebar', 'texture']);
 });
 
 test('Summoning reopens whichever of Marks or Tablets you had open last', async () => {
@@ -417,12 +426,12 @@ test('the Slayer Master is as wide as it needs to be to fill the task view, but 
   const { fitSlayerMaster } = await import(`../mod/setup.mjs?${Math.random()}`);
   const fit = (clientWidth, clientHeight, naturalWidth, naturalHeight) => {
     const properties = {};
-    const view = { clientWidth, clientHeight, style: { getPropertyValue: (name) => properties[name] ?? '', setProperty: (name, value) => (properties[name] = value) } };
+    const view = { clientWidth, clientHeight, classList: element('div').classList, style: { getPropertyValue: (name) => properties[name] ?? '', setProperty: (name, value) => (properties[name] = value) } };
     fitSlayerMaster(view, { naturalWidth, naturalHeight });
     return properties['--osrs-slayer-master-width'];
   };
   assert.strictEqual(fit(600, 150, 180, 360), '75px', 'half as wide as tall, at the full 150px height');
-  assert.strictEqual(fit(280, 200, 180, 360), '92px', 'a tall box on a narrow phone is capped at a third of its width');
+  assert.strictEqual(fit(330, 240, 180, 360), '108px', 'a tall box on a phone is capped at a third of its width');
   assert.strictEqual(fit(600, 0, 180, 360), undefined, 'nothing while the box is hidden');
   assert.strictEqual(fit(600, 150, 0, 0), undefined, 'nothing until the picture has loaded');
 });
@@ -442,4 +451,244 @@ test('the DLC bars at the top of the sidebar stay unless Hide the DLC bars is tu
   assert.ok(!off.classes.has('osrs-hide-dlc'), 'off by default');
   const on = await boot({ 'hide-dlc': true });
   assert.ok(on.classes.has('osrs-hide-dlc'));
+});
+
+test('the OSRS bank tabs and items are on by default and follow their switch', async () => {
+  const { classes, configs, sectionOf } = await boot();
+  assert.notStrictEqual(configs['bank-layout'].default, false);
+  assert.strictEqual(sectionOf['bank-layout'], 'General');
+  assert.ok(classes.has('osrs-bank-layout'));
+  assert.ok(!(await boot({ 'bank-layout': false })).classes.has('osrs-bank-layout'));
+});
+
+function bankIcon() {
+  const holder = { after(node) { this.next = node; } };
+  return { quantity: { textContent: '', dataset: {}, parentElement: holder }, holder, classList: { names: new Set(), toggle(name, on) { if (on) this.names.add(name); else this.names.delete(name); }, contains(name) { return this.names.has(name); } } };
+}
+
+const melvorUpdate = function (bankItem, enableAccessibility) {
+  this.quantity.textContent = `${bankItem.quantity}${enableAccessibility ? ` ${bankItem.item.name}` : ''}`;
+};
+
+const platebody = { quantity: 12000, item: { name: 'Rune Platebody' } };
+
+test('in the OSRS bank, a name goes in its own label under the item and the stack count keeps just the count, from Melvor\'s accessibility names or the Item names switch', async () => {
+  for (const [values, accessibility] of [[{ 'bank-layout': true }, true], [{ 'bank-layout': true, 'bank-names': true }, false], [{ 'bank-layout': true, stacks: false }, true]]) {
+    const { patches } = await boot(values);
+    const icon = bankIcon();
+    patches['BankItemIconElement.updateQuantity'].call(icon, melvorUpdate.bind(icon), platebody, accessibility);
+    assert.strictEqual(icon.quantity.textContent, '12000', JSON.stringify(values));
+    assert.strictEqual(icon.holder.next.textContent, 'Rune Platebody');
+    assert.strictEqual(icon.holder.next.className, 'osrs-bank-name');
+    assert.ok(icon.classList.contains('osrs-named'));
+  }
+});
+
+test('outside the OSRS bank, Melvor\'s accessibility names stay in the stack count and no label is added', async () => {
+  for (const values of [{ 'bank-layout': false }, { 'bank-layout': false, stacks: false }, { 'bank-layout': false, 'bank-names': true }]) {
+    const { patches } = await boot(values);
+    const icon = bankIcon();
+    patches['BankItemIconElement.updateQuantity'].call(icon, melvorUpdate.bind(icon), platebody, true);
+    assert.strictEqual(icon.quantity.textContent, '12000 Rune Platebody', JSON.stringify(values));
+    assert.strictEqual(icon.holder.next, undefined);
+    assert.ok(!icon.classList.contains('osrs-named'));
+  }
+});
+
+test('the OSRS bank with no names leaves items unnamed', async () => {
+  const { patches } = await boot({ 'bank-layout': true });
+  const icon = bankIcon();
+  patches['BankItemIconElement.updateQuantity'].call(icon, melvorUpdate.bind(icon), platebody, false);
+  assert.strictEqual(icon.quantity.textContent, '12000');
+  assert.strictEqual(icon.holder.next, undefined);
+  assert.ok(!icon.classList.contains('osrs-named'));
+});
+
+test('Melvor\'s Minor Accessibility Features setting turns every Accessibility switch on, once per character and again when switched on, and each can still be turned off', async () => {
+  const { classes, hooks, settings, configs, stored } = await boot({ 'bank-layout': true });
+  const toggle = { listeners: [], addEventListener(type, fn) { this.listeners.push([type, fn]); } };
+  document.querySelectorAll = (selector) => (selector === '[data-setting-id="enableAccessibility"]' ? [toggle] : []);
+  globalThis.game = { settings: { enableAccessibility: true } };
+  hooks.ready();
+  assert.ok(classes.has('osrs-bank-big-icons') && classes.has('osrs-bank-names'), 'on at first load');
+  settings['bank-names'] = false;
+  configs['bank-names'].onChange(false);
+  await settle();
+  assert.ok(!classes.has('osrs-bank-names'), 'turned off again by the player');
+  hooks.ready();
+  assert.ok(!classes.has('osrs-bank-names'), 'only the first load turns them on');
+  assert.strictEqual(stored.get('accessibilityDefaults'), true);
+  const [[type, onChange]] = toggle.listeners;
+  assert.strictEqual(type, 'change');
+  onChange();
+  await settle();
+  assert.ok(classes.has('osrs-bank-names'), 'on again when Melvor\'s setting is switched on');
+  delete globalThis.game;
+});
+
+test('a character without Melvor\'s accessibility setting keeps the Accessibility switches off', async () => {
+  const { classes, hooks } = await boot({ 'bank-layout': true });
+  globalThis.game = { settings: { enableAccessibility: false } };
+  hooks.ready();
+  assert.ok(!classes.has('osrs-bank-big-icons') && !classes.has('osrs-bank-names'));
+  delete globalThis.game;
+});
+
+test('bigger bank icons are off by default and follow their switch', async () => {
+  const { classes, configs } = await boot({ 'bank-layout': true });
+  assert.strictEqual(configs['bank-big-icons'].default, false);
+  assert.ok(!classes.has('osrs-bank-big-icons'));
+  assert.ok((await boot({ 'bank-big-icons': true })).classes.has('osrs-bank-big-icons'));
+});
+
+test('if the OSRS Theme switch next to Dark Mode cannot be built, switching settings still redraws the bank', async () => {
+  const icon = { item: platebody.item, calls: 0, updateQuantity() { this.calls++; } };
+  const { hooks, configs, settings } = await boot({ 'bank-layout': true });
+  globalThis.game = { bank: { items: new Map([[platebody.item, platebody]]) }, settings: { enableAccessibility: false } };
+  document.createElement = (tag) => (tag === 'settings-switch' ? { setAttribute() {} } : element(tag));
+  document.querySelectorAll = (selector) => (selector === 'bank-item-icon' ? [icon] : []);
+  hooks.ready();
+  const before = icon.calls;
+  settings['bank-names'] = true;
+  configs['bank-names'].onChange(true);
+  await settle();
+  assert.ok(icon.calls > before, 'the bank items were redrawn after the switch changed');
+  delete globalThis.game;
+});
+
+test('the upgrade arrows on bank items are hidden by default and come back with their switch', async () => {
+  const { classes, configs, sectionOf } = await boot();
+  assert.strictEqual(sectionOf['bank-hide-upgrades'], 'Advanced');
+  assert.notStrictEqual(configs['bank-hide-upgrades'].default, false);
+  assert.ok(classes.has('osrs-bank-hide-upgrades'));
+  assert.ok(!(await boot({ 'bank-hide-upgrades': false })).classes.has('osrs-bank-hide-upgrades'));
+});
+
+function lockedSale(quantity, equipped) {
+  const item = { name: 'Rune Scimitar' };
+  const bankItem = { item, quantity, locked: true };
+  globalThis.game = { bank: { selectedBankItem: bankItem }, combat: { player: { checkEquipmentSetsForItem: (each) => equipped && each === item } } };
+  const sold = [];
+  const bank = { items: new Map([[item, bankItem]]) };
+  const modes = [];
+  const allButOneClicks = [];
+  const menu = { sellItemButton: { disabled: true }, sellAllButOneButton: { onclick: () => allButOneClicks.push(1) }, sellItemQuantitySlider: { setSliderMode: (mode) => modes.push(mode) } };
+  return { item, bankItem, bank, menu, sold, modes, allButOneClicks, sell: (patches, asked) => patches['Bank.sellItemOnClick'].call(bank, (each, amount) => sold.push(amount), item, asked) };
+}
+
+test('selling locked items is off by default: the Sell button stays disabled and sales go through untouched', async () => {
+  const { patches, configs, sectionOf, classes } = await boot();
+  assert.strictEqual(configs['sell-locked'].default, false);
+  assert.strictEqual(sectionOf['sell-locked'], 'Advanced');
+  assert.ok(!classes.has('osrs-sell-locked'));
+  const sale = lockedSale(10, false);
+  patches['BankSelectedItemMenuElement.setItemLocked'].call(sale.menu, undefined, true);
+  assert.strictEqual(sale.menu.sellItemButton.disabled, true);
+  sale.sell(patches, 10);
+  assert.deepStrictEqual(sale.sold, [10]);
+  delete globalThis.game;
+});
+
+test('with Sell locked items down to 1 on, a locked item sells all but one, and an equipped copy counts as the one kept', async () => {
+  const { patches } = await boot({ 'sell-locked': true });
+  const kept = lockedSale(10, false);
+  patches['BankSelectedItemMenuElement.setItemLocked'].call(kept.menu, undefined, true);
+  assert.strictEqual(kept.menu.sellItemButton.disabled, false, 'the Sell button works on the locked item');
+  kept.sell(patches, 10);
+  assert.deepStrictEqual(kept.sold, [9], 'one stays in the bank');
+  kept.menu.sellAllButOneButton.onclick();
+  assert.deepStrictEqual(kept.modes, [], 'All but 1 keeps one in the bank when none is equipped');
+
+  const worn = lockedSale(10, true);
+  patches['BankSelectedItemMenuElement.setItemLocked'].call(worn.menu, undefined, true);
+  worn.sell(patches, 10);
+  assert.deepStrictEqual(worn.sold, [10], 'the equipped copy is the one kept');
+  worn.menu.sellAllButOneButton.onclick();
+  assert.deepStrictEqual(worn.allButOneClicks, [1]);
+  assert.deepStrictEqual(worn.modes, [2], 'All but 1 picks every copy in the bank');
+
+  const last = lockedSale(1, false);
+  patches['BankSelectedItemMenuElement.setItemLocked'].call(last.menu, undefined, true);
+  assert.strictEqual(last.menu.sellItemButton.disabled, true, 'the last unequipped copy cannot be sold');
+  last.sell(patches, 1);
+  assert.deepStrictEqual(last.sold, [0]);
+  delete globalThis.game;
+});
+
+test('Sell locked items down to 1 leaves unlocked items alone', async () => {
+  const { patches } = await boot({ 'sell-locked': true });
+  const sale = lockedSale(10, false);
+  sale.bankItem.locked = false;
+  sale.sell(patches, 10);
+  assert.deepStrictEqual(sale.sold, [10]);
+  delete globalThis.game;
+});
+
+test('the OSRS bank swaps Search Bank for a Search button in a bar under the items that opens the search, and Close clears it', async () => {
+  const home = element('div');
+  const group = element('div');
+  const pane = element('div');
+  group.parentElement = home;
+  let focused = 0;
+  let cleared = 0;
+  const options = { searchBar: { value: '', closest: () => group, focus: () => focused++ }, clearSearchButton: { click: () => cleared++ } };
+  const { hooks, configs, settings } = await boot();
+  document.getElementById = (id) => (id === 'main-bank-options' ? options : null);
+  document.querySelector = (selector) => (selector === '#bank-tab-menu .tab-content' ? pane : null);
+  hooks.ready();
+  const bar = pane.next;
+  const [button] = bar.children;
+  assert.ok(bar.className.includes('osrs-bank-footer'));
+  assert.ok(bar.children.includes(group), 'Melvor\'s search box moves into the bar');
+  assert.strictEqual(button.textContent, 'Search');
+  button.onclick();
+  assert.ok(bar.classList.contains('osrs-searching'));
+  assert.strictEqual(button.textContent, 'Close');
+  assert.strictEqual(focused, 1);
+  button.onclick();
+  assert.ok(!bar.classList.contains('osrs-searching'));
+  assert.strictEqual(button.textContent, 'Search');
+  assert.strictEqual(cleared, 1);
+  settings['bank-layout'] = false;
+  configs['bank-layout'].onChange(false);
+  await settle();
+  assert.ok(home.children.includes(group), 'back where Melvor had it with the OSRS bank off');
+});
+
+function recapLines(...texts) {
+  const lines = texts.map((text) => ({ firstChild: typeof text === 'string' ? { nodeType: 3, textContent: text } : { nodeType: 1 } }));
+  return { lines, messageContainer: { querySelectorAll: (selector) => (selector === 'h5' ? lines : []) } };
+}
+
+test('the offline recap drops "You gained", "You used" and the like by default, and the "You" from other lines', async () => {
+  const { configs, sectionOf, patches, classes } = await boot();
+  assert.notStrictEqual(configs['short-recap'].default, false);
+  assert.strictEqual(sectionOf['short-recap'], 'Advanced');
+  assert.ok(classes.has('osrs-short-recap'));
+  const recap = recapLines('You gained ', 'You earned ', 'You used ', 'You ate ', 'You spent ', 'You killed 12 ', 'You leveled up Woodcutting once (1->2)', 'You have ', 'Township Health: 100%', null);
+  patches['OfflineProgressElement.setMessages'].call(recap);
+  assert.deepStrictEqual(recap.lines.map((line) => line.firstChild.textContent), ['', '', '', '', '', 'Killed 12 ', 'Leveled up Woodcutting once (1->2)', 'You have ', 'Township Health: 100%', undefined]);
+});
+
+test('the offline recap keeps its full lines with Shorter offline recap lines off', async () => {
+  const { patches } = await boot({ 'short-recap': false });
+  const recap = recapLines('You gained ');
+  patches['OfflineProgressElement.setMessages'].call(recap);
+  assert.strictEqual(recap.lines[0].firstChild.textContent, 'You gained ');
+});
+
+test('the Slayer Master goes away when the task box is narrower than on an average phone, and comes back when it widens', async () => {
+  const { fitSlayerMaster } = await import(`../mod/setup.mjs?${Math.random()}`);
+  const view = { clientWidth: 265, clientHeight: 300, classList: element('div').classList, style: { getPropertyValue: () => '', setProperty() {} } };
+  const image = { naturalWidth: 180, naturalHeight: 360 };
+  fitSlayerMaster(view, image);
+  assert.ok(view.classList.contains('osrs-master-narrow'), 'a narrow desktop column');
+  view.clientWidth = 334;
+  fitSlayerMaster(view, image);
+  assert.ok(!view.classList.contains('osrs-master-narrow'), 'a 390px phone');
+  view.clientWidth = 265;
+  fitSlayerMaster(view, image);
+  view.clientWidth = 0;
+  fitSlayerMaster(view, image);
+  assert.ok(view.classList.contains('osrs-master-narrow'), 'unchanged while the combat page is hidden');
 });

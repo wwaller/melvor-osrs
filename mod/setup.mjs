@@ -1,7 +1,7 @@
 const THEME_CLASS = 'osrs-theme';
 const FONT_SCALES = { '--osrs-font-size': 1 };
 const UI_FONT_SIZE_ADJUST = '125%';
-const POPUPS = '.swal2-container, .modal';
+const POPUPS = '.swal2-container, .modal, [aria-modal="true"]';
 const COMBAT_SPLASH_CONTAINERS = new Set(['combat-player-splash-container', 'combat-enemy-splash-container']);
 const BACKGROUND_SETTING = 'backgroundImage';
 const SMOOTH_FONT_RATIO = 2;
@@ -9,11 +9,15 @@ const FONT_BASE = 16;
 const CRISP_TOLERANCE = 0.12;
 const RECAP_CONTROLS = 'a, button, input, select, textarea, label, [role="button"]';
 const RECAP_NOTE = 'You can also click anywhere in this window to dismiss it.';
+const RECAP_DROPPED = /^You (?:gained|earned|spent|used|ate) /;
+const RECAP_YOU = /^You (?=killed|completed|located|leveled|found|looted)/;
 const ABYSSAL_REALM = 'melvorItA:Abyssal';
 const ABYSSAL_LOCKED_CLASS = 'osrs-abyssal-locked';
 const SUMMONING_TAB_KEY = 'summoningTab';
+const ACCESSIBILITY_DEFAULTS_KEY = 'accessibilityDefaults';
 const REMEMBERED_SUMMONING_TABS = new Set(['Mark', 'Tablet']);
 const SLAYER_MASTER_MAX_SHARE = 0.33;
+const SLAYER_MASTER_MIN_VIEW = 320;
 const SLAYER_MASTERS = {
   'melvorF:Easy': 'Turael',
   'melvorF:Normal': 'Krystilia',
@@ -39,6 +43,7 @@ const FEATURES = [
   { name: 'hitsplats', label: 'OSRS hitsplats', hint: 'Damage numbers on red hitsplats, blue for a miss, green for poison, and so on.' },
   { name: 'login', label: 'OSRS login background', hint: 'The classic OSRS login art behind character select, with the braziers burning.' },
   { name: 'stacks', label: 'OSRS bank stack colours', hint: 'Yellow under 100K, white with a K up to 10M, green with an M after that.' },
+  { name: 'bank-layout', label: 'OSRS bank tabs and items', hint: 'Bank tabs become OSRS folder tabs, and items sit bare on the bank with the stack count in the top left, a white box around the selected item and a padlock on locked ones. Search Bank becomes a Search button in a bar under the items.' },
   { name: 'tooltips', label: 'OSRS-style tooltips', hint: 'Translucent brown hover boxes with a thin border, like RuneLite.' },
   { name: 'slayer-masters', label: 'OSRS Slayer Masters', hint: 'The Slayer Task box shows the OSRS Slayer Master for the task\'s tier beside the monster: Turael for Easy, then Krystilia, Mazchna, Vannaka, Nieve, Duradel, and Mortimer for Mythical. Abyssal tasks have none.' },
   { section: 'Advanced', name: 'shadows', label: 'Black text shadow', hint: 'OSRS draws all interface text with a 1px black shadow.' },
@@ -51,8 +56,13 @@ const FEATURES = [
   { section: 'Advanced', name: 'compact-headers', label: 'Compact popup headers', hint: 'The offline recap\'s skill icon and the ! on character select warnings sit to the left of the title instead of as big pictures above it.' },
   { section: 'Advanced', name: 'hide-abyssal-ui', label: 'Hide Abyssal extras until the Abyssal Realm unlocks', hint: 'Until you unlock the Abyssal Realm by completing Into the Abyss, skill headers hide their Abyssal level, XP and level cap button, and skill pages hide their Skill Tree button. The Skill Tree entry in the sidebar stays.' },
   { section: 'Advanced', name: 'click-recap', label: 'Click to close the offline recap', hint: 'Clicking anywhere on the offline progress window closes it, like pressing OK. Better Offline Recap\'s section headers still fold their sections.' },
+  { section: 'Advanced', name: 'short-recap', label: 'Shorter offline recap lines', hint: 'Lines in the offline recap drop "You gained", "You earned", "You used", "You ate" and "You spent", since a green count is a gain and a red one a loss. Lines like "You killed" just drop the "You".' },
   { section: 'Advanced', name: 'hide-dlc', label: 'Hide the DLC bars in the sidebar', hint: 'Hides the Throne of the Herald, Atlas of Discovery and Into the Abyss bars at the top of the sidebar that show each expansion is on.', default: false },
   { section: 'Advanced', name: 'bank-options-below', label: 'Bank options below the bank', hint: 'Moves the box with Sort, Move items, Sell Mode and Search Bank under your bank items, closer to your thumb on a phone.', default: false },
+  { section: 'Advanced', name: 'bank-hide-upgrades', label: 'Hide upgrade arrows on bank items', hint: 'With OSRS bank tabs and items on, the small upgrade and downgrade arrows in the top right of bank items are hidden. Selecting an item still shows what it upgrades into.' },
+  { section: 'Advanced', name: 'sell-locked', label: 'Sell locked items down to 1', hint: 'Locked bank items can be sold from the selected item\'s Sell box, always keeping one. A copy equipped in any equipment set counts as the one kept, so All but 1 sells every copy in the bank. Sell Mode and selling a whole tab still skip locked items.', default: false },
+  { section: 'Accessibility', name: 'bank-big-icons', label: 'Bigger bank icons', hint: 'With OSRS bank tabs and items on, bank items are drawn bigger: 5 to a row on a phone instead of 6. Turned on for you when Melvor\'s Minor Accessibility Features setting is on, and you can turn it off again here.', default: false },
+  { section: 'Accessibility', name: 'bank-names', label: 'Item names under bank items', hint: 'With OSRS bank tabs and items on, each bank item has its name written under it and the stack count stays in the top left. Melvor\'s Minor Accessibility Features setting shows the names the same way.', default: false },
 ];
 const FONTS = {
   'OSRS Plain 11': { path: 'fonts/RuneScape-Plain-11.ttf' },
@@ -100,13 +110,15 @@ export async function setup(ctx) {
   let settingsSwitch = null;
   let minibar = null;
 
-  const advanced = ctx.settings.section('Advanced');
-  const sectionOf = (feature) => (feature.section === 'Advanced' ? advanced : section);
+  const sections = { Accessibility: ctx.settings.section('Accessibility'), Advanced: ctx.settings.section('Advanced') };
+  const { Accessibility: accessibility, Advanced: advanced } = sections;
+  const sectionOf = (feature) => sections[feature.section] ?? section;
   const featureSwitch = ({ section: _section, ...feature }) => ({ type: 'switch', default: true, ...feature, onChange: () => later(apply) });
   section.add([
-    { type: 'switch', name: 'enabled', label: 'OSRS Theme', hint: 'Old School RuneScape colours. Also in Settings, next to Dark Mode. Turning it off turns everything here and under Advanced off too.', default: true, onChange: (value) => later(() => apply(value)) },
+    { type: 'switch', name: 'enabled', label: 'OSRS Theme', hint: 'Old School RuneScape colours. Also in Settings, next to Dark Mode. Turning it off turns everything here, under Accessibility and under Advanced off too.', default: true, onChange: (value) => later(() => apply(value)) },
     ...FEATURES.filter((feature) => sectionOf(feature) === section).map(featureSwitch),
   ]);
+  accessibility.add(FEATURES.filter((feature) => sectionOf(feature) === accessibility).map(featureSwitch));
   advanced.add([
     ...FEATURES.filter((feature) => sectionOf(feature) === advanced).map(featureSwitch),
     { type: 'button', name: 'debug', display: 'Copy theme debug info', color: 'secondary', onClick: showDebugInfo },
@@ -146,6 +158,23 @@ export async function setup(ctx) {
     summoningRestored = true;
   }
 
+  const melvorAccessibilityOn = () => typeof game !== 'undefined' && Boolean(game.settings?.enableAccessibility);
+
+  function turnOnAccessibility() {
+    for (const feature of FEATURES) if (sectionOf(feature) === accessibility) accessibility.set(feature.name, true);
+  }
+
+  function followMelvorAccessibility() {
+    if (!ctx.characterStorage.getItem(ACCESSIBILITY_DEFAULTS_KEY)) {
+      ctx.characterStorage.setItem(ACCESSIBILITY_DEFAULTS_KEY, true);
+      if (melvorAccessibilityOn()) turnOnAccessibility();
+    }
+    document.querySelectorAll('[data-setting-id="enableAccessibility"]').forEach((toggle) => toggle.addEventListener('change', () => later(() => {
+      if (melvorAccessibilityOn()) turnOnAccessibility();
+      apply();
+    })));
+  }
+
   function labelRecipeButtons() {
     const label = typeof getLangString === 'function' ? getLangString('MENU_TEXT_SELECT_COOKING_RECIPE') : '';
     for (const menu of document.querySelectorAll('cooking-menu')) {
@@ -167,8 +196,10 @@ export async function setup(ctx) {
       `body: ${document.body.className}`,
       `abyssal realm: ${realm ? (realm.isUnlocked ? 'unlocked' : 'locked') : 'missing'}`,
       `skill headers: ${document.querySelectorAll('skill-header').length}, cooking menus: ${document.querySelectorAll('cooking-menu').length}`,
-      `slayer master: ${document.querySelector('.osrs-has-master > .osrs-slayer-master')?.alt || 'none'}`,
+      `slayer master: ${document.querySelector('.osrs-has-master:not(.osrs-master-narrow) > .osrs-slayer-master')?.alt || 'none'}`,
       `failures: ${failures.join('; ') || 'none'}`,
+      `bank: ${document.querySelectorAll('bank-item-icon').length} items, ${document.querySelectorAll('bank-item-icon.osrs-named').length} named, melvor accessibility ${melvorAccessibilityOn()}`,
+      `bank search: ${bankSearch ? 'placed' : 'missing'}`,
       `minibar found: ${Boolean(root)}`,
       ...(root ? [root, ...root.querySelectorAll('*')].slice(0, 80).map(describe) : []),
     ];
@@ -205,6 +236,7 @@ export async function setup(ctx) {
     else recolorer.clear();
     alignCombatBars();
     refreshBank();
+    attempt('bank search', placeBankSearch);
   }
 
   function alignCombatBars() {
@@ -268,12 +300,64 @@ export async function setup(ctx) {
     });
   }
 
-  ctx.patch(BankItemIconElement, 'updateQuantity').after(function (_result, bankItem, enableAccessibility) {
+  let bankSearch = null;
+
+  function placeBankSearch() {
+    const options = document.getElementById('main-bank-options');
+    const group = options?.searchBar?.closest('.input-group');
+    const pane = document.querySelector('#bank-tab-menu .tab-content');
+    if (!group || !pane) return;
+    if (!bankSearch) {
+      const bar = document.createElement('div');
+      bar.className = 'osrs-bank-footer bg-dark-bank-info';
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn btn-warning osrs-bank-search';
+      const setOpen = (open) => {
+        bar.classList.toggle('osrs-searching', open);
+        button.textContent = open ? 'Close' : 'Search';
+      };
+      button.onclick = () => {
+        const open = !bar.classList.contains('osrs-searching');
+        setOpen(open);
+        if (open) options.searchBar.focus();
+        else options.clearSearchButton.click();
+      };
+      setOpen(false);
+      bar.append(button);
+      pane.after(bar);
+      bankSearch = { bar, setOpen, home: group.parentElement };
+    }
+    if (document.body.classList.contains('osrs-bank-layout')) {
+      bankSearch.bar.append(group);
+      if (options.searchBar.value) bankSearch.setOpen(true);
+    } else {
+      bankSearch.home.append(group);
+      bankSearch.setOpen(false);
+    }
+  }
+
+  function showBankName(icon, name) {
+    if (!icon.osrsName) {
+      if (!name) return;
+      icon.osrsName = document.createElement('span');
+      icon.osrsName.className = 'osrs-bank-name';
+      icon.quantity.parentElement.after(icon.osrsName);
+    }
+    if (icon.osrsName.textContent !== name) icon.osrsName.textContent = name;
+  }
+
+  ctx.patch(BankItemIconElement, 'updateQuantity').replace(function (updateQuantity, bankItem, enableAccessibility) {
+    const classes = document.body.classList;
+    const named = classes.contains('osrs-bank-layout') && (Boolean(enableAccessibility) || classes.contains('osrs-bank-names'));
+    updateQuantity(bankItem, enableAccessibility && !named);
+    this.classList.toggle('osrs-named', named);
+    showBankName(this, named ? bankItem.item.name : '');
     if (!stacksOn()) {
       delete this.quantity.dataset.osrsStack;
       return;
     }
-    const suffix = enableAccessibility ? ` ${bankItem.item.name}` : '';
+    const suffix = enableAccessibility && !named ? ` ${bankItem.item.name}` : '';
     const show = () => {
       const [text, colour] = osrsStack(bankItem.quantity);
       this.quantity.textContent = text + suffix;
@@ -281,6 +365,34 @@ export async function setup(ctx) {
     };
     show();
     this.onmouseleave = show;
+  });
+
+  const sellLockedOn = () => document.body.classList.contains('osrs-sell-locked');
+  const equippedAnywhere = (item) => Boolean(game.combat?.player?.checkEquipmentSetsForItem?.(item));
+  const lockedSellable = (bankItem) => Math.max(0, bankItem.quantity - (equippedAnywhere(bankItem.item) ? 0 : 1));
+
+  ctx.patch(Bank, 'sellItemOnClick').replace(function (sellItemOnClick, item, quantity) {
+    const bankItem = this.items.get(item);
+    if (bankItem?.locked && sellLockedOn()) quantity = Math.min(quantity, lockedSellable(bankItem));
+    return sellItemOnClick(item, quantity);
+  });
+
+  ctx.patch(BankSelectedItemMenuElement, 'setItemLocked').after(function (_result, isLocked) {
+    if (!this.osrsAllButOne) {
+      this.osrsAllButOne = true;
+      const allButOne = this.sellAllButOneButton.onclick;
+      this.sellAllButOneButton.onclick = () => {
+        allButOne();
+        const bankItem = game.bank.selectedBankItem;
+        if (bankItem?.locked && sellLockedOn() && equippedAnywhere(bankItem.item)) this.sellItemQuantitySlider.setSliderMode(2);
+      };
+    }
+    const bankItem = game.bank?.selectedBankItem;
+    if (isLocked && sellLockedOn() && bankItem && lockedSellable(bankItem) > 0) this.sellItemButton.disabled = false;
+  });
+
+  ctx.patch(BankSelectedItemMenuElement, 'updateItemQuantity').after(function (_result, bankItem) {
+    if (bankItem.locked) this.setItemLocked(true);
   });
 
   const hitsplatsOn = () => document.body.classList.contains('osrs-hitsplats');
@@ -334,6 +446,12 @@ export async function setup(ctx) {
     menu.osrsSlayerMaster.title = name;
   }
 
+  if (typeof OfflineProgressElement !== 'undefined') {
+    ctx.patch(OfflineProgressElement, 'setMessages').after(function () {
+      if (document.body.classList.contains('osrs-short-recap')) attempt('short recap', () => shortenRecapLines(this.messageContainer));
+    });
+  }
+
   if (typeof SlayerTaskMenuElement !== 'undefined') {
     ctx.patch(SlayerTaskMenuElement, 'setTaskMonster').after(function (_result, _monster, _killsLeft, category) {
       attempt('slayer master', () => showSlayerMaster(this, category));
@@ -346,15 +464,16 @@ export async function setup(ctx) {
   function addToGameSettings() {
     const darkMode = document.querySelector('[data-setting-id="darkMode"]');
     if (!darkMode || typeof darkMode.initialize !== 'function') return;
-    settingsSwitch = document.createElement(darkMode.tagName.toLowerCase());
-    settingsSwitch.className = darkMode.className;
-    settingsSwitch.setAttribute('data-size', darkMode.getAttribute('data-size') || 'small');
-    settingsSwitch.initialize({ currentValue: section.get('enabled'), name: 'OSRS Theme' }, () => {
-      const on = settingsSwitch.input.checked;
+    const toggle = document.createElement(darkMode.tagName.toLowerCase());
+    toggle.className = darkMode.className;
+    toggle.setAttribute('data-size', darkMode.getAttribute('data-size') || 'small');
+    toggle.initialize({ currentValue: section.get('enabled'), name: 'OSRS Theme' }, () => {
+      const on = toggle.input.checked;
       section.set('enabled', on);
       apply(on);
     });
-    darkMode.after(settingsSwitch);
+    darkMode.after(toggle);
+    settingsSwitch = toggle;
   }
 
   function markLoginLayers() {
@@ -436,6 +555,7 @@ export async function setup(ctx) {
     attempt('summoning tab', restoreSummoningTab);
     attempt('minibar', watchMinibar);
     attempt('combat bars', watchCombatBars);
+    attempt('accessibility defaults', followMelvorAccessibility);
     apply();
   });
 }
@@ -480,6 +600,16 @@ export function compactWarningIcon(swal) {
   return true;
 }
 
+/** Drops "You gained", "You used" and the like from the start of each offline recap line, and the "You" from lines like "You killed". */
+export function shortenRecapLines(container) {
+  for (const line of container.querySelectorAll('h5')) {
+    const text = line.firstChild;
+    if (text?.nodeType !== 3) continue;
+    const short = text.textContent.replace(RECAP_DROPPED, '').replace(RECAP_YOU, '');
+    if (short !== text.textContent) text.textContent = short.charAt(0).toUpperCase() + short.slice(1);
+  }
+}
+
 /** A red line under the offline recap's OK button saying a click anywhere closes it too. */
 export function addRecapNote(swal, doc) {
   const popup = swal.getPopup();
@@ -492,8 +622,9 @@ export function addRecapNote(swal, doc) {
   return true;
 }
 
-/** The Slayer Master fills the task view's height, so its width follows the view's height: the text beside it wraps to make room, up to a share of the box. */
+/** The Slayer Master fills the task view's height, so its width follows the view's height: the text beside it wraps to make room, up to a share of the box. A box narrower than on an average phone has no room for one. */
 export function fitSlayerMaster(view, image) {
+  if (view.clientWidth) view.classList.toggle('osrs-master-narrow', view.clientWidth < SLAYER_MASTER_MIN_VIEW);
   if (!image.naturalHeight || !view.clientHeight) return;
   const width = Math.min(Math.ceil(view.clientHeight * image.naturalWidth / image.naturalHeight), Math.floor(view.clientWidth * SLAYER_MASTER_MAX_SHARE));
   if (view.style.getPropertyValue('--osrs-slayer-master-width') !== `${width}px`) view.style.setProperty('--osrs-slayer-master-width', `${width}px`);
