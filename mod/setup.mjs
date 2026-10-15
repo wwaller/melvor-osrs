@@ -29,7 +29,7 @@ function shownBlock(card) {
   return [...card.querySelectorAll('.block')].find((block) => !hidden(block)) ?? card;
 }
 
-/** One skill's cards in use, moved to the head of its card list and put back where they were once out of use. */
+/** One skill's cards in use, moved to the head of its card list and put back where they were once out of use. Showing them says whether a card newly came into use. */
 function pinner(spec) {
   const homes = new Map();
   const outlined = new Map();
@@ -41,19 +41,22 @@ function pinner(spec) {
       homes.delete(card);
     }
     const container = active.find((card) => card.parentElement)?.parentElement;
-    if (!container) return;
+    if (!container) return false;
     const cardSet = new Set(cards.values());
     let next = [...container.children].find((child) => cardSet.has(child));
+    let changed = false;
     for (const card of active) {
       if (card.parentElement !== container) continue;
       if (!homes.has(card)) {
         const home = document.createComment('');
         card.before(home);
         homes.set(card, home);
+        changed = true;
       }
       if (card === next) next = card.nextElementSibling;
       else container.insertBefore(card, next);
     }
+    return changed;
   };
 
   const outline = (cards) => {
@@ -72,8 +75,9 @@ function pinner(spec) {
 
   return {
     show(cards, active) {
-      pin(cards, active);
+      const changed = pin(cards, active);
       outline(active);
+      return changed;
     },
   };
 }
@@ -84,10 +88,23 @@ export function setup(ctx) {
   const highlight = (on) => {
     document.body.classList.toggle(HIGHLIGHT_CLASS, Boolean(on));
   };
+  let scrollOnChange = false;
+  const scrollSetting = (on) => {
+    scrollOnChange = Boolean(on);
+  };
   settings.add([
     { type: 'switch', name: 'highlight', label: 'Yellow border on the active card', hint: 'Draws a thin yellow border around the card in use.', default: false, onChange: highlight },
+    { type: 'switch', name: 'scroll-to-active', label: 'Scroll to the active card when it changes', hint: 'When you start a different target, scrolls up so its card, now at the front of the list, sits at the top of the screen.', default: false, onChange: scrollSetting },
   ]);
   const pinners = new Map();
+  let started = false;
+
+  const scrollToCard = (card) => {
+    const header = document.getElementById('page-header');
+    const covered = header && ['fixed', 'sticky'].includes(getComputedStyle(header).position) ? header.getBoundingClientRect().height : 0;
+    card.style.scrollMarginTop = `${covered}px`;
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const sync = () => {
     if (typeof game === 'undefined' || !game.skills) return;
@@ -97,13 +114,18 @@ export function setup(ctx) {
       if (!skill || !cards) continue;
       if (!pinners.has(spec.id)) pinners.set(spec.id, pinner(spec));
       const active = skill.isActive ? spec.active(skill).map((action) => action && cards.get(action)).filter(Boolean) : [];
-      pinners.get(spec.id).show(cards, active);
+      const changed = pinners.get(spec.id).show(cards, active);
+      if (changed && started && scrollOnChange && active[0]?.offsetParent) scrollToCard(active[0]);
     }
   };
 
-  ctx.onCharacterLoaded(() => highlight(settings.get('highlight')));
+  ctx.onCharacterLoaded(() => {
+    highlight(settings.get('highlight'));
+    scrollSetting(settings.get('scroll-to-active'));
+  });
   ctx.onInterfaceReady(() => {
     sync();
+    started = true;
     ctx.patch(Game, 'render').after(sync);
   });
 }

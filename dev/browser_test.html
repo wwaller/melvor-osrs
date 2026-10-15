@@ -1,10 +1,13 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="https://steam.melvoridle.com/assets/css/oneui.css"><style>body { width: 800px; } .d-none { display: none !important; } @keyframes progressBar { from { width: 0%; } to { width: 100%; } }</style></head><body>
-<div><div class="row row-deck" id="trees"><div class="col-12" id="xp-block"><div class="block">XP and progress</div></div></div></div>
+<header id="page-header" style="position: sticky; top: 0; height: 56px; z-index: 10; background: #444; color: #fff;">Header</header>
+<div id="skill-header" style="height: 900px;">Skill header</div>
+<div id="woodcutting-page"><div class="row row-deck" id="trees"><div class="col-12" id="xp-block"><div class="block">XP and progress</div></div></div></div>
 <div><div class="row row-deck" id="areas"></div></div>
 <div><div class="row row-deck" id="panels"></div></div>
 <template id="tree-template"><div class="block block-rounded d-none locked">Locked</div><div class="block block-rounded shown"><span class="name"></span><div class="progress"><div class="progress-bar" style="width: 0%"></div></div><button class="cut">Cut</button></div></template>
 <template id="area-template"><div class="block block-rounded"><h5 class="area-name"></h5><div class="buttons"></div><div class="media"><small>Fishing</small><span class="fish-name">-</span></div></div></template>
 <template id="panel-template"><div class="block block-rounded"><div class="targets"></div><div class="info"><div class="info-heading"><small class="info-skill-name">Thieving</small><span>Fisherman</span></div><button class="start">Pickpocket</button></div></div></template>
+<div style="height: 1600px"></div>
 <pre id="result"></pre>
 <script>
 class TreeCard extends HTMLElement {
@@ -222,6 +225,64 @@ thieving.isActive = false;
 render();
 await settle();
 check('and goes back when thieving stops', panelOrder()[0] === panels[0]);
+
+const scrollCalls = [];
+const realScrollTo = window.scrollTo.bind(window);
+const realScrollIntoView = Element.prototype.scrollIntoView;
+Element.prototype.scrollIntoView = function (options) {
+  scrollCalls.push(options);
+  realScrollIntoView.call(this, { ...options, behavior: 'instant' });
+};
+const headerHeight = document.getElementById('page-header').getBoundingClientRect().height;
+const startTree = async (...picked) => {
+  woodcutting.isActive = true;
+  woodcutting.activeTrees = new Set(picked);
+  render();
+  await settle();
+};
+const stopTrees = async () => {
+  woodcutting.isActive = false;
+  woodcutting.activeTrees = new Set();
+  render();
+  await settle();
+};
+realScrollTo(0, 2000);
+await startTree(trees[1]);
+check('scrolling to the active card is off by default, so starting a tree leaves the page where it is', settingConfigs['scroll-to-active'].default === false && scrollCalls.length === 0 && scrollY === 2000, scrollY);
+await stopTrees();
+check('Melvor keeps the scroll switch on when it is turned on', melvorAccepts(settingConfigs['scroll-to-active'].onChange(true, false)));
+realScrollTo(0, 2000);
+await startTree(trees[1]);
+check('turned on, starting a tree scrolls smoothly so its card, now first, sits just under the sticky header', scrollCalls.length === 1 && scrollCalls[0].behavior === 'smooth' && Math.abs(oak.getBoundingClientRect().top - headerHeight) < 2, `${scrollCalls.length} ${oak.getBoundingClientRect().top}`);
+for (let i = 0; i < 5; i++) render();
+check('the same card staying in use does not scroll again', scrollCalls.length === 1);
+realScrollTo(0, 2000);
+await startTree(trees[2]);
+check('switching to another tree scrolls to that one', scrollCalls.length === 2 && Math.abs(willow.getBoundingClientRect().top - headerHeight) < 2, `${willow.getBoundingClientRect().top}`);
+realScrollTo(0, 2000);
+await startTree(trees[2], trees[0]);
+check('adding a second tree scrolls to the front of the list, where the first of them is', scrollCalls.length === 3 && Math.abs(willow.getBoundingClientRect().top - headerHeight) < 2);
+await stopTrees();
+check('stopping does not scroll', scrollCalls.length === 3);
+document.getElementById('woodcutting-page').classList.add('d-none');
+await startTree(trees[1]);
+check('a skill started while its page is not open does not scroll the page you are on', scrollCalls.length === 3);
+await stopTrees();
+document.getElementById('woodcutting-page').classList.remove('d-none');
+check('Melvor keeps the scroll switch off when it is turned off', melvorAccepts(settingConfigs['scroll-to-active'].onChange(false, true)));
+realScrollTo(0, 2000);
+await startTree(trees[1]);
+check('turned off, it stops scrolling', scrollCalls.length === 3 && scrollY === 2000);
+await stopTrees();
+settingValues['scroll-to-active'] = true;
+hooks.character();
+realScrollTo(0, 2000);
+await startTree(trees[2]);
+check('a switch saved as on scrolls once the character loads, since Melvor restores it without calling onChange', scrollCalls.length === 4);
+await stopTrees();
+delete settingValues['scroll-to-active'];
+hooks.character();
+Element.prototype.scrollIntoView = realScrollIntoView;
 
 report();
 </script></body></html>
