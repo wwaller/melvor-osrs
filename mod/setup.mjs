@@ -1,1 +1,1 @@
-export function setup() {}
+export function setup(_ctx) {}
