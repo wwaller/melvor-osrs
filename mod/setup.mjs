@@ -13,7 +13,7 @@ export async function setup(ctx) {
 
   section.add([
     { type: 'switch', name: 'enabled', label: 'Keep the screen on', hint: 'Stops the screen from dimming or locking while the game is open.', default: true, onChange: later(update) },
-    { type: 'switch', name: 'only-active', label: 'Only while something is running', hint: 'Lets the screen lock as usual when no skill or combat is active. Saves battery.', default: false, onChange: later(update) },
+    { type: 'switch', name: 'only-while-running', label: 'Only while something is running', hint: 'Lets the screen lock as usual when no skill or combat is active. Saves battery.', default: true, onChange: later(update) },
     { type: 'button', name: 'status', display: 'Show status', color: 'secondary', onClick: () => notify(status, statusTheme) },
   ]);
 
@@ -32,7 +32,7 @@ export async function setup(ctx) {
 
   function wanted() {
     if (!section.get('enabled') || document.hidden) return false;
-    if (!section.get('only-active')) return true;
+    if (!section.get('only-while-running')) return true;
     return typeof game !== 'undefined' && game.activeAction !== undefined;
   }
 

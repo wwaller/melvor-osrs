@@ -8,7 +8,7 @@ async function boot({ wakeLock = 'grant', settings = {}, app = null } = {}) {
   const intervals = [];
   const toasts = [];
   const locks = [];
-  const values = { 'General:enabled': true, 'General:only-active': false, ...settings };
+  const values = { 'General:enabled': true, 'General:only-while-running': false, ...settings };
   const request = async () => {
     if (wakeLock === 'tap' && !globalThis.tapping) throw Object.assign(new Error('needs a tap'), { name: 'NotAllowedError' });
     const handlers = {};
@@ -30,9 +30,10 @@ async function boot({ wakeLock = 'grant', settings = {}, app = null } = {}) {
   globalThis.imageNotify = (media, message, theme) => toasts.push({ message, theme });
   delete globalThis.game;
   let ready;
+  const configs = {};
   const ctx = {
     getResourceUrl: (path) => `blob:${path}`,
-    settings: { section: (name) => ({ add() {}, get: (key) => values[`${name}:${key}`] }) },
+    settings: { section: (name) => ({ add: (list) => list.forEach((config) => (configs[config.name] = config)), get: (key) => values[`${name}:${key}`] }) },
     onInterfaceReady: (fn) => (ready = fn),
   };
   const { setup } = await import(`../mod/setup.mjs?${Math.random()}`);
@@ -47,7 +48,7 @@ async function boot({ wakeLock = 'grant', settings = {}, app = null } = {}) {
     await settle();
     globalThis.tapping = false;
   };
-  return { listeners, toasts, locks, values, ready, tick, tap };
+  return { configs, listeners, toasts, locks, values, ready, tick, tap };
 }
 
 test('keeps the screen on once the game is ready, lets go when hidden, takes it back on return', async () => {
@@ -89,7 +90,7 @@ test('says so when the app has no wake lock support', async () => {
 });
 
 test('only while something is running: locks during an action and releases when idle', async () => {
-  const { locks, ready, tick } = await boot({ settings: { 'General:only-active': true } });
+  const { locks, ready, tick } = await boot({ settings: { 'General:only-while-running': true } });
   globalThis.game = { activeAction: undefined };
   ready();
   await settle();
@@ -114,4 +115,10 @@ test('uses the Melvor app\'s own keep-screen-on command when the app offers it',
   values['General:enabled'] = false;
   await tick();
   assert.deepStrictEqual(calls, ['on', 'normal']);
+});
+
+test('by default the screen only stays on while something is running, under a new setting name so saves made before that change get it too', async () => {
+  const { configs } = await boot();
+  assert.strictEqual(configs['only-while-running'].default, true);
+  assert.strictEqual(configs['only-active'], undefined);
 });
