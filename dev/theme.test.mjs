@@ -18,6 +18,7 @@ function element(tag) {
     initialize(data, onChange) { this.input.checked = data.currentValue; this.label = data.name; this.onChange = onChange; },
     setChecked(on) { this.input.checked = on; },
     after(node) { this.next = node; },
+    addEventListener() {},
   };
 }
 
@@ -353,8 +354,8 @@ test('the Abyssal level cap and Skill Tree buttons stay hidden until the Abyssal
 test('General keeps the main switches and everything smaller lives under Advanced', async () => {
   const { sectionOf } = await boot();
   const inSection = (name) => Object.keys(sectionOf).filter((key) => sectionOf[key] === name).sort();
-  assert.deepStrictEqual(inSection('General'), ['enabled', 'font', 'font-all', 'hitsplats', 'login', 'stacks', 'tooltips']);
-  assert.deepStrictEqual(inSection('Advanced'), ['bevels', 'buttons', 'cards', 'click-recap', 'compact-headers', 'debug', 'hide-abyssal-ui', 'hp-bars', 'shadows', 'sidebar', 'texture']);
+  assert.deepStrictEqual(inSection('General'), ['enabled', 'font', 'font-all', 'hitsplats', 'login', 'slayer-masters', 'stacks', 'tooltips']);
+  assert.deepStrictEqual(inSection('Advanced'), ['bank-options-below', 'bevels', 'buttons', 'cards', 'click-recap', 'compact-headers', 'debug', 'hide-abyssal-ui', 'hide-dlc', 'hp-bars', 'shadows', 'sidebar', 'texture']);
 });
 
 test('Summoning reopens whichever of Marks or Tablets you had open last', async () => {
@@ -377,4 +378,68 @@ test('Summoning reopens whichever of Marks or Tablets you had open last', async 
   assert.strictEqual(stored.get('summoningTab'), 'melvorD:Marks', 'the synergies popup is not a tab');
   delete globalThis.game;
   delete globalThis.switchSummoningCategory;
+});
+
+test("the Slayer Task box shows the OSRS Slayer Master for the task's tier, and none for Abyssal tasks or no task", async () => {
+  const { existsSync } = await import('node:fs');
+  globalThis.SlayerTaskMenuElement = class SlayerTaskMenuElement { setTaskMonster() {} setNoTask() {} };
+  try {
+    const { patches, classes, sectionOf } = await boot();
+    assert.ok(classes.has('osrs-slayer-masters'), 'on by default');
+    assert.strictEqual(sectionOf['slayer-masters'], 'General');
+    const viewClasses = new Set();
+    const view = { children: [], append(child) { this.children.push(child); }, classList: { toggle: (name, on) => (on ? viewClasses.add(name) : viewClasses.delete(name)) } };
+    const menu = { monsterContainer: { parentElement: view } };
+    const show = (id) => patches['SlayerTaskMenuElement.setTaskMonster'].call(menu, undefined, {}, 10, { id });
+    const tiers = {
+      'melvorF:Easy': 'turael', 'melvorF:Normal': 'krystilia', 'melvorF:Hard': 'mazchna', 'melvorF:Elite': 'vannaka',
+      'melvorF:Master': 'nieve', 'melvorTotH:Legendary': 'duradel', 'melvorTotH:Mythical': 'mortimer',
+    };
+    for (const [id, file] of Object.entries(tiers)) {
+      show(id);
+      assert.strictEqual(view.children[0].src, `blob:img/slayer/${file}.png`, id);
+      assert.ok(viewClasses.has('osrs-has-master'), id);
+      assert.ok(existsSync(new URL(`../mod/img/slayer/${file}.png`, import.meta.url)), `${file}.png is bundled`);
+    }
+    assert.strictEqual(view.children.length, 1, 'one picture, reused across tasks');
+    assert.strictEqual(view.children[0].alt, 'Mortimer');
+    show('melvorItA:Woe');
+    assert.ok(!viewClasses.has('osrs-has-master'), 'Abyssal tasks have no master');
+    show('melvorF:Master');
+    patches['SlayerTaskMenuElement.setNoTask'].call(menu);
+    assert.ok(!viewClasses.has('osrs-has-master'), 'no task, no master');
+  } finally {
+    delete globalThis.SlayerTaskMenuElement;
+  }
+});
+
+test('the Slayer Master is as wide as it needs to be to fill the task view, but never more than a third of it', async () => {
+  const { fitSlayerMaster } = await import(`../mod/setup.mjs?${Math.random()}`);
+  const fit = (clientWidth, clientHeight, naturalWidth, naturalHeight) => {
+    const properties = {};
+    const view = { clientWidth, clientHeight, style: { getPropertyValue: (name) => properties[name] ?? '', setProperty: (name, value) => (properties[name] = value) } };
+    fitSlayerMaster(view, { naturalWidth, naturalHeight });
+    return properties['--osrs-slayer-master-width'];
+  };
+  assert.strictEqual(fit(600, 150, 180, 360), '75px', 'half as wide as tall, at the full 150px height');
+  assert.strictEqual(fit(280, 200, 180, 360), '92px', 'a tall box on a narrow phone is capped at a third of its width');
+  assert.strictEqual(fit(600, 0, 180, 360), undefined, 'nothing while the box is hidden');
+  assert.strictEqual(fit(600, 150, 0, 0), undefined, 'nothing until the picture has loaded');
+});
+
+test('moving the bank options below the bank is off by default and follows its switch', async () => {
+  const { classes, configs, sectionOf } = await boot();
+  assert.strictEqual(configs['bank-options-below'].default, false);
+  assert.strictEqual(sectionOf['bank-options-below'], 'Advanced');
+  assert.ok(!classes.has('osrs-bank-options-below'), 'off by default');
+  const on = await boot({ 'bank-options-below': true });
+  assert.ok(on.classes.has('osrs-bank-options-below'), 'on once switched on');
+});
+
+test('the DLC bars at the top of the sidebar stay unless Hide the DLC bars is turned on', async () => {
+  const off = await boot();
+  assert.strictEqual(off.configs['hide-dlc'].default, false);
+  assert.ok(!off.classes.has('osrs-hide-dlc'), 'off by default');
+  const on = await boot({ 'hide-dlc': true });
+  assert.ok(on.classes.has('osrs-hide-dlc'));
 });

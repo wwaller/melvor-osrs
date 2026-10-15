@@ -13,6 +13,16 @@ const ABYSSAL_REALM = 'melvorItA:Abyssal';
 const ABYSSAL_LOCKED_CLASS = 'osrs-abyssal-locked';
 const SUMMONING_TAB_KEY = 'summoningTab';
 const REMEMBERED_SUMMONING_TABS = new Set(['Mark', 'Tablet']);
+const SLAYER_MASTER_MAX_SHARE = 0.33;
+const SLAYER_MASTERS = {
+  'melvorF:Easy': 'Turael',
+  'melvorF:Normal': 'Krystilia',
+  'melvorF:Hard': 'Mazchna',
+  'melvorF:Elite': 'Vannaka',
+  'melvorF:Master': 'Nieve',
+  'melvorTotH:Legendary': 'Duradel',
+  'melvorTotH:Mythical': 'Mortimer',
+};
 
 /** The OSRS fonts are pixel-exact at multiples of 16 device pixels: use one when it is close to the wanted size, else the wanted size. */
 function fontSize(scale, ratio) {
@@ -30,6 +40,7 @@ const FEATURES = [
   { name: 'login', label: 'OSRS login background', hint: 'The classic OSRS login art behind character select, with the braziers burning.' },
   { name: 'stacks', label: 'OSRS bank stack colours', hint: 'Yellow under 100K, white with a K up to 10M, green with an M after that.' },
   { name: 'tooltips', label: 'OSRS-style tooltips', hint: 'Translucent brown hover boxes with a thin border, like RuneLite.' },
+  { name: 'slayer-masters', label: 'OSRS Slayer Masters', hint: 'The Slayer Task box shows the OSRS Slayer Master for the task\'s tier beside the monster: Turael for Easy, then Krystilia, Mazchna, Vannaka, Nieve, Duradel, and Mortimer for Mythical. Abyssal tasks have none.' },
   { section: 'Advanced', name: 'shadows', label: 'Black text shadow', hint: 'OSRS draws all interface text with a 1px black shadow.' },
   { section: 'Advanced', name: 'bevels', label: 'Bevelled stone borders', hint: 'Panels, buttons and tabs get a light top-left edge and a dark bottom-right edge.' },
   { section: 'Advanced', name: 'hp-bars', label: 'OSRS health and timer bars', hint: 'Green over red for your hitpoints and the enemy\'s, and OSRS yellow for timers like the attack interval.' },
@@ -40,6 +51,8 @@ const FEATURES = [
   { section: 'Advanced', name: 'compact-headers', label: 'Compact popup headers', hint: 'The offline recap\'s skill icon and the ! on character select warnings sit to the left of the title instead of as big pictures above it.' },
   { section: 'Advanced', name: 'hide-abyssal-ui', label: 'Hide Abyssal extras until the Abyssal Realm unlocks', hint: 'Until you unlock the Abyssal Realm by completing Into the Abyss, skill headers hide their Abyssal level, XP and level cap button, and skill pages hide their Skill Tree button. The Skill Tree entry in the sidebar stays.' },
   { section: 'Advanced', name: 'click-recap', label: 'Click to close the offline recap', hint: 'Clicking anywhere on the offline progress window closes it, like pressing OK. Better Offline Recap\'s section headers still fold their sections.' },
+  { section: 'Advanced', name: 'hide-dlc', label: 'Hide the DLC bars in the sidebar', hint: 'Hides the Throne of the Herald, Atlas of Discovery and Into the Abyss bars at the top of the sidebar that show each expansion is on.', default: false },
+  { section: 'Advanced', name: 'bank-options-below', label: 'Bank options below the bank', hint: 'Moves the box with Sort, Move items, Sell Mode and Search Bank under your bank items, closer to your thumb on a phone.', default: false },
 ];
 const FONTS = {
   'OSRS Plain 11': { path: 'fonts/RuneScape-Plain-11.ttf' },
@@ -81,6 +94,7 @@ export async function setup(ctx) {
   const section = ctx.settings.section('General');
   const { createLoginScene } = await ctx.loadModule('fire.mjs');
   const { createRecolorer } = await ctx.loadModule('palette.mjs');
+  (await ctx.loadModule('overhaul.mjs')).offerOverhaul(ctx);
   const loginScene = createLoginScene(document, window);
   const recolorer = createRecolorer(window);
   let settingsSwitch = null;
@@ -103,7 +117,7 @@ export async function setup(ctx) {
     closeRecapOnClick(event.target, Swal);
   });
   new MutationObserver(() => {
-    if (typeof Swal === 'undefined') return;
+    if (typeof Swal === 'undefined' || !document.body.classList.contains('swal2-shown')) return;
     if (document.body.classList.contains('osrs-compact-headers')) {
       compactRecapHeader(Swal);
       if (document.body.classList.contains('osrs-character-select')) compactWarningIcon(Swal);
@@ -153,6 +167,7 @@ export async function setup(ctx) {
       `body: ${document.body.className}`,
       `abyssal realm: ${realm ? (realm.isUnlocked ? 'unlocked' : 'locked') : 'missing'}`,
       `skill headers: ${document.querySelectorAll('skill-header').length}, cooking menus: ${document.querySelectorAll('cooking-menu').length}`,
+      `slayer master: ${document.querySelector('.osrs-has-master > .osrs-slayer-master')?.alt || 'none'}`,
       `failures: ${failures.join('; ') || 'none'}`,
       `minibar found: ${Boolean(root)}`,
       ...(root ? [root, ...root.querySelectorAll('*')].slice(0, 80).map(describe) : []),
@@ -302,6 +317,32 @@ export async function setup(ctx) {
     return result;
   });
 
+  function showSlayerMaster(menu, category) {
+    const view = menu.monsterContainer?.parentElement;
+    if (!view) return;
+    if (!menu.osrsSlayerMaster) {
+      menu.osrsSlayerMaster = document.createElement('img');
+      menu.osrsSlayerMaster.className = 'osrs-slayer-master';
+      view.append(menu.osrsSlayerMaster);
+      watchSlayerMaster(view, menu.osrsSlayerMaster, window);
+    }
+    const name = SLAYER_MASTERS[category?.id];
+    view.classList.toggle('osrs-has-master', Boolean(name));
+    if (!name) return;
+    menu.osrsSlayerMaster.src = ctx.getResourceUrl(`img/slayer/${name.toLowerCase()}.png`);
+    menu.osrsSlayerMaster.alt = name;
+    menu.osrsSlayerMaster.title = name;
+  }
+
+  if (typeof SlayerTaskMenuElement !== 'undefined') {
+    ctx.patch(SlayerTaskMenuElement, 'setTaskMonster').after(function (_result, _monster, _killsLeft, category) {
+      attempt('slayer master', () => showSlayerMaster(this, category));
+    });
+    ctx.patch(SlayerTaskMenuElement, 'setNoTask').after(function () {
+      attempt('slayer master', () => showSlayerMaster(this, null));
+    });
+  }
+
   function addToGameSettings() {
     const darkMode = document.querySelector('[data-setting-id="darkMode"]');
     if (!darkMode || typeof darkMode.initialize !== 'function') return;
@@ -449,6 +490,19 @@ export function addRecapNote(swal, doc) {
   note.textContent = RECAP_NOTE;
   actions.after(note);
   return true;
+}
+
+/** The Slayer Master fills the task view's height, so its width follows the view's height: the text beside it wraps to make room, up to a share of the box. */
+export function fitSlayerMaster(view, image) {
+  if (!image.naturalHeight || !view.clientHeight) return;
+  const width = Math.min(Math.ceil(view.clientHeight * image.naturalWidth / image.naturalHeight), Math.floor(view.clientWidth * SLAYER_MASTER_MAX_SHARE));
+  if (view.style.getPropertyValue('--osrs-slayer-master-width') !== `${width}px`) view.style.setProperty('--osrs-slayer-master-width', `${width}px`);
+}
+
+export function watchSlayerMaster(view, image, win) {
+  const fit = () => win.requestAnimationFrame(() => fitSlayerMaster(view, image));
+  image.addEventListener('load', fit);
+  if (typeof win.ResizeObserver !== 'undefined') new win.ResizeObserver(fit).observe(view);
 }
 
 export function osrsStack(quantity) {

@@ -126,3 +126,13 @@ html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked skill-header 
 html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked skill-header > .block > .progress + .progress { display: none !important; }
 html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked skill-header .skill-header-container > .justify-horizontal-center:nth-child(3) { display: none !important; }
 html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked skill-header .skill-header-container > .justify-horizontal-center:nth-child(4) { display: none !important; }
+.osrs-slayer-master { display: none; }
+html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master { --osrs-slayer-master-width: clamp(32px, 16vw, 80px); position: relative; padding-right: calc(var(--osrs-slayer-master-width) + 4px); }
+html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master > .osrs-slayer-master { display: block; position: absolute; top: 0; right: 0; bottom: 0; width: var(--osrs-slayer-master-width); height: 100%; object-fit: contain; object-position: center bottom; }
+html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master .media-body { min-width: 0; overflow-wrap: anywhere; }
+html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master .media > .mr-3 { margin-right: min(1rem, 3vw) !important; }
+html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master .slayer-task-img-container { width: clamp(56px, 22vw, 96px); height: clamp(56px, 22vw, 96px); }
+html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master .slayer-task { width: clamp(56px, 22vw, 96px); max-height: clamp(56px, 22vw, 96px); }
+html:root body.osrs-theme.osrs-bank-options-below #bank-container > .row > :is(#main-bank-options, #main-bank-move-mode, #main-bank-sell-mode) { order: 1; }
+@media (max-width: 991.98px) { html:root body.osrs-theme.osrs-bank-options-below #bank-container > .row > :has(> #bank-item-box) { order: 2; } }
+html:root body.osrs-theme.osrs-hide-dlc #sidebar :is(.expansion-1-version, .expansion-2-version, .expansion-3-version), html:root body.osrs-theme.osrs-hide-dlc #sidebar li:has(> :is(.expansion-1-version, .expansion-2-version, .expansion-3-version)) { display: none !important; }

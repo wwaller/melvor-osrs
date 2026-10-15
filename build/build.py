@@ -69,6 +69,8 @@ VOID_LIGHTNESS = 6
 VOID_MIN_SIZE = 5
 GAME_BACKGROUND_WIDTH = 1440
 GAME_BACKGROUND_THUMB_WIDTH = 384
+SLAYER_MASTERS = ["Turael", "Krystilia", "Mazchna", "Vannaka", "Nieve", "Duradel", "Mortimer"]
+SLAYER_MASTER_HEIGHT = 360
 FONTS_URL = "https://github.com/RuneStar/fonts/releases/download/1.103-0/RuneScape-Fonts.zip"
 FONTS = ["RuneScape-Plain-11", "RuneScape-Plain-12", "RuneScape-Bold-12"]
 STONE_SIZE = 128
@@ -294,6 +296,18 @@ def write_game_backgrounds(images):
         thumb.save(folder / f"{key}-thumb.jpg", quality=82, optimize=True)
     (images / "backgrounds.json").write_text(json.dumps([{"key": key, "label": label} for key, (_title, label, _sky) in GAME_BACKGROUNDS.items()]))
 
+
+def write_slayer_masters(images):
+    """Full-body OSRS Slayer Masters for the Slayer Task box, standing right of the task and facing left towards it as the wiki renders do."""
+    folder = images / "slayer"
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir()
+    for name in SLAYER_MASTERS:
+        art = wiki_image(f"File:{name}.png")
+        art = art.crop(art.getbbox())
+        art = art.resize((round(art.width * SLAYER_MASTER_HEIGHT / art.height), SLAYER_MASTER_HEIGHT), Image.LANCZOS)
+        art.save(folder / f"{name.lower()}.png", optimize=True)
+
 def main():
     MOD_DIR.mkdir(exist_ok=True)
     theme = build_theme()
@@ -307,6 +321,7 @@ def main():
     wiki_image(LOGIN_BACKGROUND).convert("RGB").save(images / "login.jpg", quality=82, optimize=True)
     wiki_image(RECIPE_BOOK).save(images / "recipe-book.png", optimize=True)
     write_game_backgrounds(images)
+    write_slayer_masters(images)
     stone_texture().save(images / "stone.png", optimize=True)
     fonts = MOD_DIR / "fonts"
     fonts.mkdir(exist_ok=True)
