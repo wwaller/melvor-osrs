@@ -1,0 +1,5 @@
+{
+  "namespace": "mobileShop",
+  "icon": "icon.png",
+  "setup": "setup.mjs"
+}
