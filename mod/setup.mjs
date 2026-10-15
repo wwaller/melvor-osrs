@@ -6,6 +6,7 @@ const MODDED = 'mod:';
 
 export async function setup(ctx) {
   const { settings, entries } = await ctx.loadData('mapping.json');
+  (await ctx.loadModule('overhaul.mjs')).offerOverhaul(ctx);
   const sectionOf = new Map(settings.map((s) => [s.name, s.section]));
   const urls = new Map();
   const spriteUrl = (sprite) => {

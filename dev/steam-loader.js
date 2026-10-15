@@ -29,6 +29,7 @@ const data = ${JSON.stringify({ mapping, sprites })};
     const blobUrls = new Map();
     const ctx = {
       onInterfaceReady() {},
+      loadModule: async () => ({ offerOverhaul() {} }),
       loadData: async (file) => (file === 'mapping.json' ? data.mapping : undefined),
       getResourceUrl(file) {
         if (!blobUrls.has(file)) {
