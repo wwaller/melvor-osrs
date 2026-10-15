@@ -141,7 +141,10 @@ const ctx = {
   patch: (owner, name) => ({ replace: (hook) => { const original = owner.prototype[name]; owner.prototype[name] = function (...args) { return hook.call(this, original.bind(this), ...args); }; } }),
   accountStorage: { getItem: (key) => stored.get(key), setItem: (key, value) => stored.set(key, value) },
   onInterfaceReady: (fn) => (ready = fn),
+  onCharacterSelectionLoaded: () => {},
 };
+const getContext = HTMLCanvasElement.prototype.getContext;
+HTMLCanvasElement.prototype.getContext = function (type, options) { return getContext.call(this, type, { ...options, preserveDrawingBuffer: true }); };
 const { setup } = await import(PORT_ROOT + "setup.mjs");
 await setup(ctx);
 ready();

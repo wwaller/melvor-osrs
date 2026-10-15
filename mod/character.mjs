@@ -415,8 +415,8 @@ function compile(gl, type, source) {
 }
 
 /** Draws lit, posed player models onto a canvas the way the OSRS client rasterises them, back to front. */
-export function createRenderer(canvas) {
-  const gl = canvas.getContext('webgl', { antialias: true, premultipliedAlpha: false, preserveDrawingBuffer: true });
+export function createRenderer(canvas, { antialias = true } = {}) {
+  const gl = canvas.getContext('webgl', { antialias, premultipliedAlpha: false });
   if (!gl) return null;
   const program = gl.createProgram();
   gl.attachShader(program, compile(gl, gl.VERTEX_SHADER, VERTEX_SHADER));

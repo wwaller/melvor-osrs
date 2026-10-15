@@ -17,6 +17,7 @@ const SKIN_PART = 4;
 const HIDEABLE_SLOTS = { hideHelm: 'melvorD:Helmet', hideCape: 'melvorD:Cape' };
 const CLIENT_TICK_MS = 20;
 const HIDDEN_CHECK_MS = 1000;
+const PHONE_FRAME_MS = 60;
 const HAND_ITEM_OFFSET = 512;
 const ROD_POSE = 623;
 const ATTACK_RETRIGGER_MS = 100;
@@ -56,6 +57,7 @@ const MELEE_WEAPON_POSES = [[/2h|godsword/i, 407], [/dagger/i, 376], [/axe/i, 39
 
 export async function setup(ctx) {
   const { createRenderer, litPlayer, poseFrame, DEFAULT_COLORS, BODY_COLOR_COUNTS, STAND_POSE } = await ctx.loadModule('character.mjs');
+  (await ctx.loadModule('overhaul.mjs')).offerOverhaul(ctx);
   ctx.loadStylesheet('style.css');
   const [index, base] = await Promise.all([ctx.loadData('data/index.json'), ctx.loadData('data/base.json')]);
   const itemFiles = new Map();
@@ -257,6 +259,7 @@ export async function setup(ctx) {
     .filter((value) => value >= HAND_ITEM_OFFSET)
     .map((value) => value - HAND_ITEM_OFFSET);
 
+  const phone = onPhone();
   const isOpen = () => panel && !panel.classList.contains('osrs-character-collapsed');
   const isShown = (view) => view.enabled() && view.onScreen && view.canvas.clientWidth > 0 && !document.hidden;
   const anyShown = () => views.some(isShown);
@@ -265,8 +268,10 @@ export async function setup(ctx) {
     if (!posed) return;
     const ratio = window.devicePixelRatio || 1;
     for (const view of views.filter(isShown)) {
-      view.canvas.width = Math.round(view.canvas.clientWidth * ratio);
-      view.canvas.height = Math.round(view.height * ratio);
+      const width = Math.round(view.canvas.clientWidth * ratio);
+      const height = Math.round(view.height * ratio);
+      if (view.canvas.width !== width) view.canvas.width = width;
+      if (view.canvas.height !== height) view.canvas.height = height;
       const { ground, origin, scale, tilt, top } = view.renderer.draw(posed, { yaw: view.yaw(), reference });
       const pixels = (value) => `${Math.round(value / ratio)}px`;
       setStyleVariables(view.canvas.parentElement, {
@@ -299,8 +304,11 @@ export async function setup(ctx) {
     const { lengths } = base.poses[pose];
     posed = poseFrame(data, rest, pose, frame);
     queuePaint();
-    const delay = Math.max(1, lengths[frame % lengths.length]) * CLIENT_TICK_MS;
-    frame = (frame + 1) % lengths.length;
+    let delay = 0;
+    do {
+      delay += Math.max(1, lengths[frame % lengths.length]) * CLIENT_TICK_MS;
+      frame = (frame + 1) % lengths.length;
+    } while (phone && delay < PHONE_FRAME_MS && frame !== 0);
     schedule(delay);
   }
   function changeOutfit() {
@@ -470,7 +478,7 @@ export async function setup(ctx) {
   });
 
   const addPreview = (canvas, height, enabled) => {
-    const renderer = createRenderer(canvas);
+    const renderer = createRenderer(canvas, { antialias: !phone });
     if (!renderer) {
       canvas.replaceWith(Object.assign(document.createElement('p'), { className: 'font-size-sm text-combat-smoke m-2', textContent: 'The Character Preview needs WebGL, which this device does not support.' }));
       return;
@@ -498,7 +506,7 @@ export async function setup(ctx) {
     applyPlaces();
     if (!views.length) return;
     stageCanvas = createStage();
-    const stageRenderer = stageCanvas && createRenderer(stageCanvas);
+    const stageRenderer = stageCanvas && createRenderer(stageCanvas, { antialias: !phone });
     if (stageRenderer) {
       views.push({ canvas: stageCanvas, renderer: stageRenderer, height: STAGE_HEIGHT, yaw: () => STAGE_YAW, enabled: stageOn, onScreen: true });
       applyStage();
@@ -527,6 +535,12 @@ const numbered = (count) => Array.from({ length: count }, (_, index) => ({ value
 /** Melvor opens and closes the mobile sidebar on a sideways swipe; turning the character is one too. */
 function blockSidebarSwipe(blocked) {
   if (typeof disableSwipeEvents !== 'undefined') disableSwipeEvents = blocked;
+}
+
+/** Phones draw the character with fewer frames and no anti-aliasing to save battery. */
+function onPhone() {
+  if (typeof nativeManager !== 'undefined' && nativeManager.isMobile) return true;
+  return typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
 }
 
 function setStyleVariables(element, variables) {
