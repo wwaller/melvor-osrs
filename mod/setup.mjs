@@ -1,6 +1,8 @@
 const CHECK_MS = 1000;
+const IDLE_SUSPEND_MS = 5000;
 const FADE_MS = 1500;
 const MAX_SFX = 8;
+const MAX_DECODES = 4;
 const FADE_OUT_MS = 60;
 const DEBUG_LOG_SIZE = 200;
 const CLOCK_SAMPLE_MS = 500;
@@ -19,6 +21,7 @@ const RESTART_AFTER_SECONDS = 3;
 const HISTORY_SIZE = 50;
 const REPEAT_KEY = 'repeat-one';
 const SONG_KEY = 'songs';
+const VOLUME_KEY = 'volumes';
 const FREE_CONTEXTS = new Set(['charselect', 'idle']);
 const MEAN_WAIT_HOURS = [4, 20, 48, 72, 96];
 const DEFAULT_ACTION_MS = 3000;
@@ -53,6 +56,7 @@ const WEAPON_PATTERNS = [
 export async function setup(ctx) {
   ctx.loadStylesheet('style.css');
   const audio = await ctx.loadData('audio.json');
+  (await ctx.loadModule('overhaul.mjs')).offerOverhaul(ctx);
   const music = ctx.settings.section('Music');
   const effects = ctx.settings.section('Sound effects');
   const debugLog = [];
@@ -66,7 +70,10 @@ export async function setup(ctx) {
   };
 
   const musicSettings = [
-    { type: 'switch', name: 'enabled', label: 'Play OSRS music', hint: 'Each skill, combat area, dungeon and menu has its own tracks, streamed from the OSRS Wiki.', default: true, onChange: later('enabled', syncMusic) },
+    { type: 'switch', name: 'enabled', label: 'Play OSRS music', hint: 'Each skill, combat area, dungeon and menu has its own tracks, streamed from the OSRS Wiki.', default: true, onChange: later('enabled', () => {
+      applyVolume();
+      syncMusic();
+    }) },
     {
       type: 'dropdown',
       name: 'shuffle-mode',
@@ -102,7 +109,15 @@ export async function setup(ctx) {
     { type: 'button', name: 'danger-unlock-all', display: 'Unlock All Songs', color: 'danger', onClick: () => confirmUnlockAll() },
   ]);
 
-  const percent = (section, name) => Math.max(0, Math.min(100, Number(section.get(name)) || 0)) / 100;
+  const percent = (value) => Math.max(0, Math.min(100, Number(value) || 0)) / 100;
+
+  /** Melvor keeps mod settings in each save, so the main menu only has the defaults: it uses the ones last set on any character instead. */
+  function soundSettings() {
+    const current = [music.get('volume'), effects.get('effects-volume'), music.get('enabled')];
+    const remembered = characterLoaded ? null : ctx.accountStorage?.getItem(VOLUME_KEY);
+    return Array.isArray(remembered) ? current.map((value, i) => remembered[i] ?? value) : current;
+  }
+  const musicOn = () => soundSettings()[2] !== false;
   let engine;
   let masterGain;
   let musicGain;
@@ -110,10 +125,13 @@ export async function setup(ctx) {
   let analyser;
   let enginesBuilt = 0;
   const stats = {
-    trackLoads: 0, trackFailures: 0, lastTrackError: 'none', lastTrackLoadMs: null, lastTrackStarted: null,
+    trackLoads: 0, trackFailures: 0, lastTrackError: 'none', lastTrackLoadMs: null, lastTrackStarted: null, tracksAroundServiceWorker: 0, aroundServiceWorker: 'not needed',
     effectsPlayed: 0, lastEffect: 'none', effectsSkipped: {}, gestures: 0, lastGesture: null, clockStalls: 0, silentEpisodes: 0,
   };
+  let idleSince = null;
+  let idleSuspended = false;
   const resumeEngine = (reason) => {
+    idleSuspended = false;
     const target = engine;
     target.resume().then(() => note(`${reason}: resumed, now ${target.state}`)).catch((error) => note(`${reason}: resume failed: ${error}`));
   };
@@ -202,8 +220,11 @@ export async function setup(ctx) {
   }
 
   function applyVolume() {
-    rampTo(musicGain.gain, music.get('enabled') ? percent(music, 'volume') * duck : 0, 0.25);
-    rampTo(effectsGain.gain, percent(effects, 'effects-volume'), 0.05);
+    const settings = soundSettings();
+    const [musicVolume, effectsVolume, on] = settings;
+    rampTo(musicGain.gain, on !== false ? percent(musicVolume) * duck : 0, 0.25);
+    rampTo(effectsGain.gain, percent(effectsVolume), 0.05);
+    if (characterLoaded && ctx.accountStorage?.getItem(VOLUME_KEY)?.join() !== settings.join()) ctx.accountStorage?.setItem(VOLUME_KEY, settings);
   }
 
   function contextKey() {
@@ -229,7 +250,7 @@ export async function setup(ctx) {
     if (!tracks.has(url)) {
       const started = Date.now();
       stats.trackLoads++;
-      tracks.set(url, fetch(url).then(checkedBytes)
+      tracks.set(url, downloadTrack(url)
         .then((data) => engine.decodeAudioData(data))
         .then((buffer) => {
           stats.lastTrackLoadMs = Date.now() - started;
@@ -238,6 +259,26 @@ export async function setup(ctx) {
       while (tracks.size > MAX_TRACKS_IN_MEMORY) tracks.delete(tracks.keys().next().value);
     }
     return tracks.get(url);
+  }
+
+  let skipServiceWorker = false;
+
+  async function downloadTrack(url) {
+    if (!skipServiceWorker) {
+      const response = await fetch(url);
+      if (response.status !== 408 || !navigator.serviceWorker?.controller) return checkedBytes(response);
+    }
+    try {
+      const bytes = await fetchAroundServiceWorker(url);
+      if (!skipServiceWorker) note("the game's service worker answered 408, so songs now download around it");
+      skipServiceWorker = true;
+      stats.tracksAroundServiceWorker++;
+      stats.aroundServiceWorker = 'worked';
+      return bytes;
+    } catch (error) {
+      stats.aroundServiceWorker = describeError(error);
+      throw new Error(`the game's service worker answered 408 and downloading around it failed: ${describeError(error)}`);
+    }
   }
 
   function toMono(buffer) {
@@ -277,6 +318,7 @@ export async function setup(ctx) {
   }
 
   function startTrack(buffer, offset, path) {
+    wake();
     const source = engine.createBufferSource();
     const gain = engine.createGain();
     source.buffer = buffer;
@@ -360,6 +402,28 @@ export async function setup(ctx) {
   }
 
   const isMobile = typeof nativeManager !== 'undefined' && (nativeManager.isIOS || nativeManager.isAndroid);
+  const agent = typeof navigator !== 'undefined' ? navigator.userAgent ?? '' : '';
+  const appleTouch = (typeof nativeManager !== 'undefined' && nativeManager.isIOS) || /iPad|iPhone|iPod/.test(agent) || (/Macintosh/.test(agent) && navigator.maxTouchPoints > 1);
+  const pausesWhenIdle = !appleTouch;
+
+  /** A running audio engine keeps a phone's audio hardware awake even when silent, so it is paused once nothing has played for a few seconds. iOS can refuse to restart one without a tap, so it is left running there. */
+  function pauseWhenIdle() {
+    if (!pausesWhenIdle || engine.state !== 'running' || inBackground()) return;
+    if (nowPlaying || playing.size) {
+      idleSince = null;
+      return;
+    }
+    idleSince ??= Date.now();
+    if (Date.now() - idleSince < IDLE_SUSPEND_MS) return;
+    idleSuspended = true;
+    const target = engine;
+    target.suspend().then(() => note('nothing playing: audio engine paused to save battery'));
+  }
+
+  function wake() {
+    idleSince = null;
+    if (idleSuspended) resumeEngine('sound to play');
+  }
   let windowFocused = true;
   const inBackground = () => document.hidden || !windowFocused;
   const silencedInBackground = () => inBackground() && !music.get('background');
@@ -373,7 +437,7 @@ export async function setup(ctx) {
   }
 
   function syncMusic() {
-    if (!music.get('enabled')) {
+    if (!musicOn()) {
       if (nowPlaying) {
         request++;
         stopTrack(nowPlaying);
@@ -546,7 +610,16 @@ export async function setup(ctx) {
       if (typeof $ === 'function') $(button).dropdown('hide');
       showGuide();
     });
-    panel.append(help);
+    const cog = element('button', 'btn btn-sm btn-link osrs-music-settings');
+    cog.type = 'button';
+    cog.title = 'Music settings';
+    cog.setAttribute('aria-label', 'Music settings');
+    cog.append(element('i', 'fa fa-cog'));
+    cog.addEventListener('click', () => {
+      if (typeof $ === 'function') $(button).dropdown('hide');
+      openSettings();
+    });
+    panel.append(cog, help);
     const label = element('div', 'osrs-music-label');
     const title = element('div', 'osrs-music-title');
     const controls = element('div', 'osrs-music-controls');
@@ -606,6 +679,13 @@ export async function setup(ctx) {
   /** Like the OSRS music tab: unlocked songs in green at the top, locked ones in red below, each group alphabetical. */
   let guide = null;
   /** The mod's guide, laid out like Melvor's own Game Guide. */
+  /** Melvor's own Mod Settings entry in the sidebar opens this mod's settings, Music first. */
+  function openSettings() {
+    const entry = attempt(() => sidebar.category('Modding').item('Mod Settings').subitems().find((each) => each.id === ctx.name));
+    if (entry) entry.click();
+    else note('settings button: no Mod Settings entry for this mod in the sidebar');
+  }
+
   function showGuide() {
     if (typeof $ !== 'function' || typeof document.createElement !== 'function') return;
     if (typeof Swal !== 'undefined' && Swal.isVisible?.()) Swal.close();
@@ -701,7 +781,7 @@ export async function setup(ctx) {
   function renderPlayer() {
     if (!player.button) return;
     renderSongList();
-    const on = music.get('enabled') !== false;
+    const on = musicOn();
     const current = nowPlaying?.path ?? paused?.path;
     const playingNow = Boolean(on && nowPlaying);
     player.button.classList.toggle('is-playing', playingNow);
@@ -740,7 +820,7 @@ export async function setup(ctx) {
     applyVolume();
     fadeIn();
     try {
-      if (track && music.get('enabled')) startTrack(track.source.buffer, position, track.path);
+      if (track && musicOn()) startTrack(track.source.buffer, position, track.path);
     } catch (error) {
       note(`restarting the song failed: ${error}`);
     }
@@ -800,7 +880,7 @@ export async function setup(ctx) {
       watchClock(0);
       return;
     }
-    if (engine.state === 'running') return;
+    if (engine.state === 'running' || idleSuspended) return;
     resumeEngine(`${type} tap`);
     fadeIn();
   }, true));
@@ -833,7 +913,7 @@ export async function setup(ctx) {
     if (RELEVANT_ERROR.test(text)) note(`unhandled: ${text}`);
   });
 
-  const songAudible = () => Boolean(nowPlaying && music.get('enabled') && percent(music, 'volume') > 0
+  const songAudible = () => Boolean(nowPlaying && musicOn() && percent(soundSettings()[0]) > 0
     && engine.currentTime - nowPlaying.startedAt < nowPlaying.source.buffer.duration);
 
   let clockSample = null;
@@ -902,6 +982,7 @@ export async function setup(ctx) {
   }
 
   async function debugReport() {
+    wake();
     const lines = [];
     const add = (...rows) => lines.push(...rows);
     const heading = (title) => add('', `== ${title} ==`);
@@ -945,6 +1026,7 @@ export async function setup(ctx) {
     heading("Is the device playing the game's sound?");
     add(`audio engine ${enginesBuilt}: ${engine.state}, ${engine.sampleRate} Hz (asked for ${SAMPLE_RATE}), latency ${safe(() => engine.baseLatency?.toFixed(3), '-')}s, output latency ${safe(() => engine.outputLatency?.toFixed(3), '-')}s, output device ${safe(() => engine.sinkId || (engine.sinkId === '' ? 'default' : undefined))}`);
     add(`engine rebuilt ${enginesBuilt - 1} times, stuck clock flag ${clockStuck}, clock stops seen ${stats.clockStalls}, silent songs seen ${stats.silentEpisodes}`);
+    add(`pause while nothing plays: ${pausesWhenIdle ? (idleSuspended ? 'on, paused right now' : 'on') : 'off on this device'}`);
     const measured = await measureOutput();
     add(...measured.lines);
     add(`volumes: master ${gain(masterGain)}, music ${gain(musicGain)}, effects ${gain(effectsGain)}, jingle duck ${duck}`);
@@ -953,22 +1035,23 @@ export async function setup(ctx) {
     add(`verdict: ${measured.verdict}`);
 
     heading('Music');
-    add(`music ${music.get('enabled') ? 'on' : 'off'}, volume ${music.get('volume')}, shuffle ${music.get('shuffle-mode')}, repeat one ${repeatOne}`);
+    add(`music ${musicOn() ? 'on' : 'off'}, volume ${music.get('volume')}, shuffle ${music.get('shuffle-mode')}, repeat one ${repeatOne}`);
     add(safe(() => (nowPlaying
       ? `now playing: ${trackTitle(nowPlaying.path)} at ${positionOf(nowPlaying).toFixed(0)}s of ${nowPlaying.source.buffer.duration.toFixed(0)}s, song volume ${gain(nowPlaying.gain)}, ${nowPlaying.source.buffer.sampleRate} Hz`
       : paused ? `paused: ${trackTitle(paused.path)} at ${paused.position.toFixed(0)}s` : 'nothing playing')));
     add(`playing for: ${safe(contextKey)} (last chosen ${context})`);
     add(`playlist (${playlist.length}): ${playlist.map(trackTitle).join(', ') || 'empty'}`);
     add(`recently played: ${history.slice(-5).map(trackTitle).join(', ') || 'none'}`);
-    add(`songs downloaded ${stats.trackLoads}, failed ${stats.trackFailures}, last download took ${stats.lastTrackLoadMs ?? '-'} ms, last song started ${ago(stats.lastTrackStarted)}, kept in memory ${tracks.size}`);
+    add(`song downloads started ${stats.trackLoads}, failed ${stats.trackFailures}, last download took ${stats.lastTrackLoadMs ?? '-'} ms, last song started ${ago(stats.lastTrackStarted)}, kept in memory ${tracks.size}`);
     add(`last song error: ${stats.lastTrackError}`);
+    add(`game's service worker: ${safe(() => navigator.serviceWorker.controller?.scriptURL || 'none')}, songs downloaded around it ${stats.tracksAroundServiceWorker}, going around it: ${stats.aroundServiceWorker}`);
     add(`music button: ${player.button ? (player.root.isConnected === false ? 'made but missing from the page' : 'in the top bar') : 'not made'}`);
     add(`character loaded ${characterLoaded}, game ready ${ready}, offline progress running ${isOffline()}`);
 
     heading('Sound effects');
     const failedFiles = [...bufferStatus].filter(([, status]) => status !== 'ready' && status !== 'loading');
     const count = (status) => [...bufferStatus.values()].filter((each) => each === status).length;
-    add(`sound files: ${count('ready')} ready, ${count('loading')} loading, ${failedFiles.length} failed, of ${bufferStatus.size}`);
+    add(`sound files: ${count('ready')} ready, ${count('loading')} loading (${decodeQueue.length} waiting their turn), ${failedFiles.length} failed, of ${bufferStatus.size}`);
     failedFiles.slice(0, 10).forEach(([path, status]) => add(`  failed ${songStem(path)}: ${status}`));
     add(`sounds played ${stats.effectsPlayed}, last ${stats.lastEffect}, playing now ${playing.size}`);
     add(`sounds skipped: ${Object.entries(stats.effectsSkipped).map(([reason, times]) => `${reason} ${times}`).join(', ') || 'none'}`);
@@ -980,6 +1063,7 @@ export async function setup(ctx) {
         add(`${name} / ${config.label}: ${show(value)}${value === config.default ? '' : ` (changed, default ${show(config.default)})`}`);
       }
     }
+    add(`main menu uses (music volume, effects volume, music on; last set on any character): ${safe(() => ctx.accountStorage.getItem(VOLUME_KEY)?.join(', ') ?? 'none yet', 'not reported')}`);
 
     heading('Character');
     add(`game mode: ${safe(() => `${game.currentGamemode.name} (${game.currentGamemode.id})`, 'no character loaded')}`);
@@ -1102,25 +1186,47 @@ export async function setup(ctx) {
   setInterval(() => {
     syncMusic();
     watchHealth();
+    pauseWhenIdle();
   }, CHECK_MS);
 
   const buffers = new Map();
   const bufferStatus = new Map();
   const playing = new Set();
   const channels = new Map();
+  const decodeQueue = [];
+  let decoding = 0;
+
+  /** GeckoView on some phones fails every decode past the first 25 running at once. */
+  function whenDecoderFree(job) {
+    return new Promise((resolve, reject) => {
+      decodeQueue.push(() => job().then(resolve, reject));
+      nextDecode();
+    });
+  }
+
+  function nextDecode() {
+    while (decoding < MAX_DECODES && decodeQueue.length) {
+      decoding++;
+      decodeQueue.shift()().finally(() => {
+        decoding--;
+        nextDecode();
+      });
+    }
+  }
 
   function loadBuffer(path) {
     if (!buffers.has(path)) {
       bufferStatus.set(path, 'loading');
-      buffers.set(path, fetch(ctx.getResourceUrl(path))
+      buffers.set(path, whenDecoderFree(() => fetch(ctx.getResourceUrl(path))
         .then(checkedBytes)
-        .then((data) => engine.decodeAudioData(data))
+        .then((data) => engine.decodeAudioData(data)))
         .then((buffer) => {
           bufferStatus.set(path, 'ready');
           return buffer;
         })
         .catch((error) => {
           bufferStatus.set(path, describeError(error));
+          buffers.delete(path);
           return null;
         }));
     }
@@ -1143,6 +1249,7 @@ export async function setup(ctx) {
     if (!ready) return skipEffect('game still loading');
     if (!effects.get('effects-enabled') || !effects.get(category)) return skipEffect(`${category} turned off`);
     if (typeof game === 'undefined' || !game._isInOnlineLoop) return skipEffect('offline progress');
+    wake();
     loadBuffer(path).then((buffer) => {
       if (!buffer) {
         skipEffect('sound file failed to load');
@@ -1277,6 +1384,7 @@ export async function setup(ctx) {
 
   ctx.onCharacterLoaded(() => {
     characterLoaded = true;
+    applyVolume();
     unlocked = new Set(ctx.characterStorage.getItem(SONG_KEY) || []);
     game.skills.forEach((skill) => {
       if (typeof skill.on === 'function') {
@@ -1328,6 +1436,34 @@ export async function setup(ctx) {
 function describeError(error) {
   if (error && typeof error === 'object' && 'message' in error) return `${error.name || 'Error'}: ${error.message}`;
   return String(error);
+}
+
+const DIRECT_FETCH = `onmessage = async (event) => {
+  try {
+    const response = await fetch(event.data);
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const bytes = await response.arrayBuffer();
+    postMessage({ bytes }, [bytes]);
+  } catch (error) {
+    postMessage({ error: { name: error.name, message: error.message } });
+  }
+};`;
+
+/** Melvor's Android app puts a service worker in front of every request, and it answers 408 whenever its own request fails; a worker started from a data: URL has no service worker. */
+function fetchAroundServiceWorker(url) {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(`data:text/javascript,${encodeURIComponent(DIRECT_FETCH)}`);
+    worker.onmessage = ({ data }) => {
+      worker.terminate();
+      if (data.error) reject(Object.assign(new Error(data.error.message), { name: data.error.name }));
+      else resolve(data.bytes);
+    };
+    worker.onerror = (event) => {
+      worker.terminate();
+      reject(new Error(event.message || 'the worker did not start'));
+    };
+    worker.postMessage(url);
+  });
 }
 
 async function checkedBytes(response) {

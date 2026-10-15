@@ -30,6 +30,8 @@ const ctx = {
   patch: () => ({ after() {}, replace() {} }),
   onCharacterLoaded: (fn) => (hooks.character = fn),
   onInterfaceReady: (fn) => (hooks.ready = fn),
+  onCharacterSelectionLoaded: () => {},
+  loadModule: (path) => import(`/mod/${path}`),
 };
 const { setup } = await import('/mod/setup.mjs');
 await setup(ctx);

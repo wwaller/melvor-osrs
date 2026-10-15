@@ -75,7 +75,7 @@ function fakeElement(tag) {
   return element;
 }
 
-async function boot({ mobile = false, header = false } = {}) {
+async function boot({ mobile = false, header = false, account = {} } = {}) {
   const log = { started: [], stopped: [], engines: [], get state() { return this.engines.at(-1).state; } };
   const listeners = {};
   const intervals = [];
@@ -83,7 +83,7 @@ async function boot({ mobile = false, header = false } = {}) {
   const hooks = {};
   const fetched = [];
   const patches = {};
-  const stored = {};
+  const stored = { ...account };
   globalThis.window = { AudioContext: function AudioContext() { return fakeEngine(log); }, addEventListener: (t, fn) => (listeners[`window:${t}`] = fn) };
   const topBar = fakeElement('div');
   const potions = Object.assign(fakeElement('button'), { closest: (selector) => (selector === '.d-flex' ? topBar : null) });
@@ -115,6 +115,7 @@ async function boot({ mobile = false, header = false } = {}) {
     loadData: async () => audio,
     loadStylesheet() {},
     namespace: 'osrsSounds',
+    name: 'Old School Runescape Sounds',
     characterStorage: { getItem: (key) => characterStored[key], setItem: (key, value) => (characterStored[key] = value) },
     accountStorage: { getItem: (key) => stored[key], setItem: (key, value) => (stored[key] = value) },
     getResourceUrl: (path) => `blob:${path}`,
@@ -122,6 +123,8 @@ async function boot({ mobile = false, header = false } = {}) {
     patch: (target, method) => ({ after: (fn) => (patches[`${target.name}.${method}`] = fn), replace: (fn) => (patches[`${target.name}.${method}`] = fn) }),
     onCharacterLoaded: (fn) => (hooks.character = fn),
     onInterfaceReady: (fn) => (hooks.ready = fn),
+    onCharacterSelectionLoaded: (fn) => (hooks.select = fn),
+    loadModule: (path) => import(`../mod/${path}`),
   };
   const { setup } = await import(`../mod/setup.mjs?${Math.random()}`);
   await setup(ctx);
@@ -1069,6 +1072,7 @@ test('debug info reports the device, the output check, settings, game mode, unlo
   assert.match(report, /verdict: audio is suspended/);
   assert.match(report, /game mode: Hardcore \(melvorD:Hardcore\)/);
   assert.match(report, /Music \/ Shuffle: skill/);
+  assert.match(report, /main menu uses \(music volume, effects volume, music on; last set on any character\): 30, 40, true/);
   assert.match(report, /darkMode = false \(default true\)/);
   assert.match(report, /defaultPageOnLoad = 3 \(default 0\)/);
   assert.match(report, /left at default \(1\): autoCloudSave=true/);
@@ -1076,4 +1080,222 @@ test('debug info reports the device, the output check, settings, game mode, unlo
   assert.match(report, /unlocked: .*Scape Main/, 'free songs count as unlocked');
   assert.match(report, /last song error: .*HTTP 404 Not Found/);
   assert.match(report, /song failed: .*HTTP 404/, 'the failure is in the event log');
+});
+
+test("a song the game's service worker answers with 408 downloads around it, and later songs skip the service worker", async () => {
+  const { log, hooks, tick, fetched, configs } = await boot({ header: true });
+  const sentToWorker = [];
+  globalThis.Worker = class {
+    postMessage(url) {
+      sentToWorker.push(url);
+      queueMicrotask(() => this.onmessage({ data: { bytes: Object.assign(new ArrayBuffer(8), { url }) } }));
+    }
+    terminate() {}
+  };
+  const realNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  Object.defineProperty(globalThis, 'navigator', { value: { userAgent: 'test', serviceWorker: { controller: { scriptURL: 'https://android.melvoridle.com/offlineClientStage3/sw.js' } } }, configurable: true });
+  globalThis.fetch = async (url) => {
+    fetched.push(url);
+    return url.startsWith('http') ? { ok: false, status: 408 } : { ok: true, arrayBuffer: async () => Object.assign(new ArrayBuffer(8), { url }) };
+  };
+  try {
+    await tick();
+    assert.match(sentToWorker[0], /Scape_Main/, 'the 408 song is fetched again around the service worker');
+    assert.strictEqual(log.started.length, 1, 'and it plays');
+    const woodcutting = { id: 'melvorD:Woodcutting', on() {} };
+    globalThis.game = { activeAction: woodcutting, skills: [woodcutting], combat: { player: { on() {} }, on() {} }, farming: { on() {} }, on() {}, _isInOnlineLoop: true };
+    hooks.character();
+    const before = fetched.length;
+    await tick();
+    assert.ok(audio.music['melvorD:Woodcutting'].includes(sentToWorker.at(-1)), 'the next song goes straight around the service worker');
+    assert.strictEqual(fetched.slice(before).filter((url) => url.startsWith('http')).length, 0, 'without asking the service worker first');
+    assert.strictEqual(log.started.length, 2);
+    const report = await configs.debug.onClick();
+    assert.match(report, /game's service worker: https:\/\/android\.melvoridle\.com\/offlineClientStage3\/sw\.js, songs downloaded around it 2, going around it: worked/);
+  } finally {
+    Object.defineProperty(globalThis, 'navigator', realNavigator);
+    delete globalThis.Worker;
+  }
+});
+
+test('effect files decode a few at a time, and one that failed to decode is tried again the next time it plays', async () => {
+  const { log, hooks, tick, fetched } = await boot();
+  const skillListeners = {};
+  const cooking = { id: 'melvorD:Cooking', on: (type, fn) => (skillListeners[type] = fn) };
+  globalThis.game = { activeAction: undefined, skills: [cooking], combat: { player: { on() {} }, on() {} }, farming: { on() {} }, on() {}, _isInOnlineLoop: true, altMagic: {} };
+  const files = new Set(Object.values(audio.sfx).flatMap((group) => (typeof group === 'string' ? [group] : Object.values(group))));
+  const engine = log.engines.at(-1);
+  const decode = engine.decodeAudioData;
+  const cookingFile = `blob:${audio.sfx.skills['melvorD:Cooking']}`;
+  let decodes = 0;
+  let running = 0;
+  let most = 0;
+  let failCooking = true;
+  engine.decodeAudioData = async (data) => {
+    decodes++;
+    most = Math.max(most, ++running);
+    await new Promise((resolve) => setTimeout(resolve, 1));
+    running--;
+    if (data.url === cookingFile && failCooking) {
+      failCooking = false;
+      throw Object.assign(new Error('The buffer passed to decodeAudioData contains invalid content which cannot be decoded successfully.'), { name: 'EncodingError' });
+    }
+    return decode(data);
+  };
+  hooks.character();
+  hooks.ready();
+  while (decodes < files.size || running > 0) await new Promise((resolve) => setTimeout(resolve, 5));
+  assert.strictEqual(most, 4, 'never more than 4 decodes at once');
+  const cookingFetches = () => fetched.filter((url) => url === cookingFile).length;
+  assert.strictEqual(cookingFetches(), 1);
+  await tick();
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  const before = log.started.length;
+  skillListeners.action();
+  await tick();
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.strictEqual(cookingFetches(), 2, 'the failed file is loaded again');
+  assert.strictEqual(log.started.length, before + 1, 'and plays');
+});
+
+test('volumes saved with a character apply as soon as it loads, and the main menu uses the volumes last set', async () => {
+  const first = await boot();
+  await first.tick();
+  const [, musicGain, effectsGain] = first.log.engines.at(-1).gains;
+  assert.strictEqual(musicGain.gain.value, 0.3, 'a new player hears the default music volume at the main menu');
+  first.settings['Music:volume'] = 5;
+  first.settings['Sound effects:effects-volume'] = 0.5;
+  const woodcutting = { id: 'melvorD:Woodcutting', on() {} };
+  globalThis.game = { activeAction: woodcutting, skills: [woodcutting], combat: { player: { on() {} }, on() {} }, farming: { on() {} }, on() {}, _isInOnlineLoop: true };
+  first.hooks.character();
+  await first.tick();
+  assert.strictEqual(musicGain.gain.value, 0.05, 'Melvor restores saved settings without calling onChange, so loading the character applies them');
+  assert.strictEqual(effectsGain.gain.value, 0.005);
+  assert.deepStrictEqual(first.stored.volumes, [5, 0.5, true]);
+
+  const next = await boot({ account: { volumes: first.stored.volumes } });
+  await next.tick();
+  const [, menuMusic, menuEffects] = next.log.engines.at(-1).gains;
+  assert.strictEqual(menuMusic.gain.value, 0.05, 'the main menu plays at the volume last set, not the default 30');
+  assert.strictEqual(menuEffects.gain.value, 0.005);
+  globalThis.game = { activeAction: woodcutting, skills: [woodcutting], combat: { player: { on() {} }, on() {} }, farming: { on() {} }, on() {}, _isInOnlineLoop: true };
+  next.hooks.character();
+  await next.tick();
+  assert.strictEqual(menuMusic.gain.value, 0.3, 'a character left at the defaults gets the defaults');
+  assert.deepStrictEqual(next.stored.volumes, [30, 40, true]);
+});
+
+test('someone who turned music off hears no login music, and turning it back on plays at their volume', async () => {
+  const first = await boot();
+  await first.tick();
+  const [, musicGain] = first.log.engines.at(-1).gains;
+  const woodcutting = { id: 'melvorD:Woodcutting', on() {} };
+  const world = () => ({ activeAction: woodcutting, skills: [woodcutting], combat: { player: { on() {} }, on() {} }, farming: { on() {} }, on() {}, _isInOnlineLoop: true });
+  first.settings['Music:volume'] = 5;
+  first.settings['Music:enabled'] = false;
+  globalThis.game = world();
+  first.hooks.character();
+  await first.tick();
+  assert.strictEqual(musicGain.gain.value, 0, 'a character saved with music off loads silent');
+  assert.deepStrictEqual(first.stored.volumes, [5, 40, false]);
+  first.settings['Music:enabled'] = true;
+  first.configs.enabled.onChange(true);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await first.tick();
+  assert.strictEqual(musicGain.gain.value, 0.05, 'turning music back on brings its volume back, not just the song');
+  first.settings['Music:enabled'] = false;
+  first.configs.enabled.onChange(false);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.deepStrictEqual(first.stored.volumes, [5, 40, false], 'turning music off is remembered at once');
+
+  const next = await boot({ account: { volumes: first.stored.volumes } });
+  await next.tick();
+  assert.strictEqual(next.fetched.length, 0, 'no login music is even downloaded');
+  assert.strictEqual(next.log.started.length, 0);
+});
+
+test('a cog in the top left of the player closes it and opens this mod\'s settings', async () => {
+  const { hooks, tick, topBar } = await boot({ header: true });
+  const calls = [];
+  globalThis.$ = () => ({ dropdown: (command) => calls.push(['dropdown', command]) });
+  globalThis.sidebar = {
+    category: (category) => ({
+      item: (item) => ({
+        subitems: () => [
+          { id: 'Another Mod', click: () => calls.push(['opened', category, item, 'Another Mod']) },
+          { id: 'Old School Runescape Sounds', click: () => calls.push(['opened', category, item, 'Old School Runescape Sounds']) },
+        ],
+      }),
+    }),
+  };
+  try {
+    hooks.ready();
+    await tick();
+    const cog = topBar.children[0].find((child) => child.className?.includes('osrs-music-settings'));
+    assert.ok(cog, 'the player has a cog button');
+    assert.ok(cog.children.some((icon) => icon.className.includes('fa-cog')));
+    cog.click();
+    assert.deepStrictEqual(calls, [['dropdown', 'hide'], ['opened', 'Modding', 'Mod Settings', 'Old School Runescape Sounds']]);
+  } finally {
+    delete globalThis.$;
+    delete globalThis.sidebar;
+  }
+});
+
+test('with nothing playing for 5 seconds the audio engine pauses to save battery, the next sound wakes it, and a song keeps it running', async () => {
+  const realNow = Date.now;
+  let offset = 0;
+  Date.now = () => realNow() + offset;
+  try {
+    const { log, hooks, tick, settings, listeners } = await boot();
+    const skillListeners = {};
+    const cooking = { id: 'melvorD:Cooking', on: (type, fn) => (skillListeners[type] = fn) };
+    globalThis.game = { activeAction: undefined, skills: [cooking], combat: { player: { on() {} }, on() {} }, farming: { on() {} }, on() {}, _isInOnlineLoop: true, altMagic: {} };
+    settings['Music:enabled'] = false;
+    hooks.character();
+    hooks.ready();
+    listeners.pointerdown();
+    await tick();
+    assert.strictEqual(log.state, 'running');
+    offset += 6000;
+    await tick();
+    assert.strictEqual(log.state, 'suspended', 'paused after 5 quiet seconds');
+    listeners.pointerdown();
+    await tick();
+    assert.strictEqual(log.state, 'suspended', 'a tap alone does not wake it');
+    const before = log.started.length;
+    skillListeners.action();
+    await tick();
+    assert.strictEqual(log.state, 'running', 'a sound effect wakes it');
+    assert.strictEqual(log.started.length, before + 1, 'and plays');
+    settings['Music:enabled'] = true;
+    await tick();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    await tick();
+    offset += 60000;
+    await tick();
+    assert.strictEqual(log.state, 'running', 'never while a song plays');
+  } finally {
+    Date.now = realNow;
+  }
+});
+
+test('on iOS the audio engine is never paused for being quiet, since Safari may not restart it without a tap', async () => {
+  const realNow = Date.now;
+  let offset = 0;
+  Date.now = () => realNow() + offset;
+  try {
+    const { log, hooks, tick, settings, listeners } = await boot({ mobile: true });
+    globalThis.game = { activeAction: undefined, skills: [], combat: { player: { on() {} }, on() {} }, farming: { on() {} }, on() {}, _isInOnlineLoop: true, altMagic: {} };
+    settings['Music:enabled'] = false;
+    hooks.character();
+    hooks.ready();
+    listeners.pointerdown();
+    await tick();
+    offset += 60000;
+    await tick();
+    assert.strictEqual(log.state, 'running');
+  } finally {
+    Date.now = realNow;
+  }
 });
