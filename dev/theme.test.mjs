@@ -251,6 +251,32 @@ test('the debug report is split into readable sections and says how each font lo
   assert.ok(report.includes('font OSRS Bold 12 failed after'), 'the font failure is in the recent events');
 });
 
+test('the debug report shows a page chosen for Default page on load by its id, though the page links back to the game', async () => {
+  globalThis.SwalLocale = { fire: () => {} };
+  const { configs } = await boot();
+  await settle();
+  const page = { id: 'melvorD:Woodcutting' };
+  globalThis.game = { settings: { enableAccessibility: false, boolData: {}, choiceData: { defaultPageOnLoad: { currentValue: page, defaultValue: { id: 'melvorD:ActiveSkill' } } } } };
+  page.game = globalThis.game;
+  const report = await configs.debug.onClick();
+  delete globalThis.SwalLocale;
+  delete globalThis.game;
+  assert.match(report, /defaultPageOnLoad = melvorD:Woodcutting \(default melvorD:ActiveSkill\)/);
+  assert.ok(report.includes('== Recent events'), 'the report reaches the end');
+});
+
+test('a part of the debug report that breaks says so and the rest of the report still comes out', async () => {
+  globalThis.SwalLocale = { fire: () => {} };
+  const { configs, settings } = await boot();
+  await settle();
+  Object.defineProperty(settings, 'tooltips', { get() { throw new Error('boom'); } });
+  const report = await configs.debug.onClick();
+  delete globalThis.SwalLocale;
+  assert.match(report, /== Theme switches ==[\s\S]*\(this part stopped early: Error: boom\)/);
+  assert.ok(report.includes('== Mods loaded =='), 'later parts still run');
+  assert.ok(report.includes('== Recent events'), 'the event log is still there');
+});
+
 test('a font that cannot load is logged and the other fonts still load', async () => {
   const logged = [];
   const consoleError = console.error;
