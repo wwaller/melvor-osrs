@@ -17,6 +17,7 @@ const JINGLE_DUCK = 0.15;
 const CUT_MS = 80;
 const SAMPLE_RATE = 22050;
 const MAX_TRACKS_IN_MEMORY = 2;
+const DEBUG_PART_MS = 8000;
 const SONG_RETRY_FIRST_MS = 3000;
 const SONG_RETRY_MAX_MS = 10 * 60 * 1000;
 const SONG_RATE_LIMITED_MIN_MS = 60 * 1000;
@@ -1003,111 +1004,140 @@ export async function setup(ctx) {
     return { lines, verdict };
   }
 
-  async function debugReport() {
-    wake();
+  async function debugReport(progress = () => {}) {
     const lines = [];
-    const add = (...rows) => lines.push(...rows);
-    const heading = (title) => add('', `== ${title} ==`);
+    const add = (...rows) => {
+      lines.push(...rows);
+      progress(lines.join('\n'));
+    };
+    const part = async (title, read) => {
+      add('', `== ${title} ==`);
+      let timer;
+      try {
+        await Promise.race([read(), new Promise((_resolve, reject) => {
+          timer = setTimeout(() => reject(new Error(`gave up waiting after ${DEBUG_PART_MS / 1000}s`)), DEBUG_PART_MS);
+        })]);
+      } catch (error) {
+        add(`(this part stopped early: ${describeError(error)})`);
+      } finally {
+        clearTimeout(timer);
+      }
+    };
+    attempt(wake);
     const native = typeof nativeManager !== 'undefined' ? nativeManager : {};
     const flag = (name) => safe(() => native[name]);
     const agent = String(safe(() => navigator.userAgent, ''));
     const version = (pattern) => agent.match(pattern)?.[1]?.replace(/_/g, '.') ?? '-';
     const gain = (node) => safe(() => node.gain.value.toFixed(2));
-    const show = (value) => (value && typeof value === 'object' ? JSON.stringify(value) : String(value));
+    const show = (value) => {
+      if (!value || typeof value !== 'object') return String(value);
+      if (typeof value.id === 'string') return value.id;
+      return safe(() => JSON.stringify(value), Object.prototype.toString.call(value));
+    };
 
     add(`OSRS Sounds ${safe(() => ctx.version || undefined, '?')} on Melvor ${safe(() => gameVersion, '?')}, ${new Date().toString()}`);
 
-    heading('Device');
-    add(`user agent: ${agent}`);
-    add(`app engine: ${appEngine(agent)}`);
-    add(`versions: Android ${version(/Android ([\d.]+)/)}, iOS ${version(/OS (\d+[_\d]*) like Mac/)}, Chrome ${version(/Chrome\/([\d.]+)/)}, Firefox ${version(/Firefox\/([\d.]+)/)}, Safari ${version(/Version\/([\d.]+)/)}`);
-    add(`browser: ${safe(() => navigator.userAgentData.brands.map((brand) => `${brand.brand} ${brand.version}`).join(', '))}, platform ${safe(() => navigator.userAgentData?.platform || navigator.platform)}`);
-    add(`Melvor sees: iOS ${flag('isIOS')}, Android ${flag('isAndroid')}, GeckoView ${flag('isGeckoView')}, mobile ${flag('isMobile')}, phone app ${flag('isNativeApp')}, Steam ${flag('isSteam')}, Epic ${flag('isEpicGames')}`);
-    add(`site: ${safe(() => location.origin + location.pathname)}`);
-    add(`screen: ${safe(() => `${screen.width}x${screen.height}`)} at ${safe(() => devicePixelRatio)}x, window ${safe(() => `${innerWidth}x${innerHeight}`)}`);
-    add(`cores ${safe(() => navigator.hardwareConcurrency)}, memory ${safe(() => navigator.deviceMemory)} GB, language ${safe(() => navigator.language)}`);
-    add(`network: online ${safe(() => navigator.onLine)}, type ${safe(() => navigator.connection.effectiveType)}, data saver ${safe(() => navigator.connection.saveData)}`);
-    const battery = await settle(attempt(() => navigator.getBattery?.()));
-    add(`battery: ${battery ? `${Math.round(battery.level * 100)}%, ${battery.charging ? 'charging' : 'not charging'}` : 'not reported'}`);
-    add(`page: ${safe(() => document.visibilityState)}, hidden ${document.hidden}, focused ${safe(() => document.hasFocus())}, open for ${(performance.now() / 60000).toFixed(1)} min, reloaded after the phone dropped it ${safe(() => document.wasDiscarded)}`);
+    await part('Device', async () => {
+      add(`user agent: ${agent}`);
+      add(`app engine: ${appEngine(agent)}`);
+      add(`versions: Android ${version(/Android ([\d.]+)/)}, iOS ${version(/OS (\d+[_\d]*) like Mac/)}, Chrome ${version(/Chrome\/([\d.]+)/)}, Firefox ${version(/Firefox\/([\d.]+)/)}, Safari ${version(/Version\/([\d.]+)/)}`);
+      add(`browser: ${safe(() => navigator.userAgentData.brands.map((brand) => `${brand.brand} ${brand.version}`).join(', '))}, platform ${safe(() => navigator.userAgentData?.platform || navigator.platform)}`);
+      add(`Melvor sees: iOS ${flag('isIOS')}, Android ${flag('isAndroid')}, GeckoView ${flag('isGeckoView')}, mobile ${flag('isMobile')}, phone app ${flag('isNativeApp')}, Steam ${flag('isSteam')}, Epic ${flag('isEpicGames')}`);
+      add(`site: ${safe(() => location.origin + location.pathname)}`);
+      add(`screen: ${safe(() => `${screen.width}x${screen.height}`)} at ${safe(() => devicePixelRatio)}x, window ${safe(() => `${innerWidth}x${innerHeight}`)}`);
+      add(`cores ${safe(() => navigator.hardwareConcurrency)}, memory ${safe(() => navigator.deviceMemory)} GB, language ${safe(() => navigator.language)}`);
+      add(`network: online ${safe(() => navigator.onLine)}, type ${safe(() => navigator.connection.effectiveType)}, data saver ${safe(() => navigator.connection.saveData)}`);
+      const battery = await settle(attempt(() => navigator.getBattery?.()));
+      add(`battery: ${battery ? `${Math.round(battery.level * 100)}%, ${battery.charging ? 'charging' : 'not charging'}` : 'not reported'}`);
+      add(`page: ${safe(() => document.visibilityState)}, hidden ${document.hidden}, focused ${safe(() => document.hasFocus())}, open for ${(performance.now() / 60000).toFixed(1)} min, reloaded after the phone dropped it ${safe(() => document.wasDiscarded)}`);
+    });
 
-    heading('Permission to play sound');
-    add(`page touched or clicked yet: ${safe(() => navigator.userActivation.hasBeenActive)}, being touched now ${safe(() => navigator.userActivation.isActive)}`);
-    add(`taps and keys seen by this mod: ${stats.gestures}, last ${ago(stats.lastGesture)}`);
-    add(`autoplay policy (Firefox and GeckoView only): audio engine ${safe(() => navigator.getAutoplayPolicy?.('audiocontext'))}, audio players ${safe(() => navigator.getAutoplayPolicy?.('mediaelement'))}`);
-    add(`iOS audio session: ${safe(() => navigator.audioSession?.type)}, state ${safe(() => navigator.audioSession?.state)}`);
-    add(`media session: ${safe(() => navigator.mediaSession?.playbackState, 'none')}`);
-    const probe = attempt(() => document.createElement('audio'));
-    const can = (type) => {
-      const answer = safe(() => probe?.canPlayType?.(type));
-      return answer === '' ? 'no' : answer;
-    };
-    add(`formats: Ogg Vorbis ${can('audio/ogg; codecs="vorbis"')}, Ogg Opus ${can('audio/ogg; codecs="opus"')}, MP3 ${can('audio/mpeg')}, WAV ${can('audio/wav')}`);
-    add(`Web Audio: ${safe(() => (window.AudioContext ? 'AudioContext' : window.webkitAudioContext ? 'webkitAudioContext (old)' : 'missing'))}`);
+    await part('Permission to play sound', async () => {
+      add(`page touched or clicked yet: ${safe(() => navigator.userActivation.hasBeenActive)}, being touched now ${safe(() => navigator.userActivation.isActive)}`);
+      add(`taps and keys seen by this mod: ${stats.gestures}, last ${ago(stats.lastGesture)}`);
+      add(`autoplay policy (Firefox and GeckoView only): audio engine ${safe(() => navigator.getAutoplayPolicy?.('audiocontext'))}, audio players ${safe(() => navigator.getAutoplayPolicy?.('mediaelement'))}`);
+      add(`iOS audio session: ${safe(() => navigator.audioSession?.type)}, state ${safe(() => navigator.audioSession?.state)}`);
+      add(`media session: ${safe(() => navigator.mediaSession?.playbackState, 'none')}`);
+      const probe = attempt(() => document.createElement('audio'));
+      const can = (type) => {
+        const answer = safe(() => probe?.canPlayType?.(type));
+        return answer === '' ? 'no' : answer;
+      };
+      add(`formats: Ogg Vorbis ${can('audio/ogg; codecs="vorbis"')}, Ogg Opus ${can('audio/ogg; codecs="opus"')}, MP3 ${can('audio/mpeg')}, WAV ${can('audio/wav')}`);
+      add(`Web Audio: ${safe(() => (window.AudioContext ? 'AudioContext' : window.webkitAudioContext ? 'webkitAudioContext (old)' : 'missing'))}`);
+    });
 
-    heading("Is the device playing the game's sound?");
-    add(`audio engine ${enginesBuilt}: ${engine.state}, ${engine.sampleRate} Hz (asked for ${SAMPLE_RATE}), latency ${safe(() => engine.baseLatency?.toFixed(3), '-')}s, output latency ${safe(() => engine.outputLatency?.toFixed(3), '-')}s, output device ${safe(() => engine.sinkId || (engine.sinkId === '' ? 'default' : undefined))}`);
-    add(`engine rebuilt ${enginesBuilt - 1} times, stuck clock flag ${clockStuck}, clock stops seen ${stats.clockStalls}, silent songs seen ${stats.silentEpisodes}`);
-    add(`pause while nothing plays: ${pausesWhenIdle ? (idleSuspended ? 'on, paused right now' : 'on') : 'off on this device'}`);
-    const measured = await measureOutput();
-    add(...measured.lines);
-    add(`volumes: master ${gain(masterGain)}, music ${gain(musicGain)}, effects ${gain(effectsGain)}, jingle duck ${duck}`);
-    const devices = await settle(attempt(() => navigator.mediaDevices?.enumerateDevices()));
-    add(`audio outputs the browser can see: ${devices ? devices.filter((device) => device.kind === 'audiooutput').length : 'not reported'}`);
-    add(`verdict: ${measured.verdict}`);
+    await part("Is the device playing the game's sound?", async () => {
+      add(`audio engine ${enginesBuilt}: ${engine.state}, ${engine.sampleRate} Hz (asked for ${SAMPLE_RATE}), latency ${safe(() => engine.baseLatency?.toFixed(3), '-')}s, output latency ${safe(() => engine.outputLatency?.toFixed(3), '-')}s, output device ${safe(() => engine.sinkId || (engine.sinkId === '' ? 'default' : undefined))}`);
+      add(`engine rebuilt ${enginesBuilt - 1} times, stuck clock flag ${clockStuck}, clock stops seen ${stats.clockStalls}, silent songs seen ${stats.silentEpisodes}`);
+      add(`pause while nothing plays: ${pausesWhenIdle ? (idleSuspended ? 'on, paused right now' : 'on') : 'off on this device'}`);
+      const measured = await measureOutput();
+      add(...measured.lines);
+      add(`volumes: master ${gain(masterGain)}, music ${gain(musicGain)}, effects ${gain(effectsGain)}, jingle duck ${duck}`);
+      const devices = await settle(attempt(() => navigator.mediaDevices?.enumerateDevices()));
+      add(`audio outputs the browser can see: ${devices ? devices.filter((device) => device.kind === 'audiooutput').length : 'not reported'}`);
+      add(`verdict: ${measured.verdict}`);
+    });
 
-    heading('Music');
-    add(`music ${musicOn() ? 'on' : 'off'}, volume ${music.get('volume')}, shuffle ${music.get('shuffle-mode')}, repeat one ${repeatOne}`);
-    add(safe(() => (nowPlaying
-      ? `now playing: ${trackTitle(nowPlaying.path)} at ${positionOf(nowPlaying).toFixed(0)}s of ${nowPlaying.source.buffer.duration.toFixed(0)}s, song volume ${gain(nowPlaying.gain)}, ${nowPlaying.source.buffer.sampleRate} Hz`
-      : paused ? `paused: ${trackTitle(paused.path)} at ${paused.position.toFixed(0)}s` : 'nothing playing')));
-    add(`playing for: ${safe(contextKey)} (last chosen ${context})`);
-    add(`playlist (${playlist.length}): ${playlist.map(trackTitle).join(', ') || 'empty'}`);
-    add(`recently played: ${history.slice(-5).map(trackTitle).join(', ') || 'none'}`);
-    add(`song downloads started ${stats.trackLoads}, failed ${stats.trackFailures}, last download took ${stats.lastTrackLoadMs ?? '-'} ms, last song started ${ago(stats.lastTrackStarted)}, kept in memory ${tracks.size}`);
-    add(`last song error: ${stats.lastTrackError}`);
-    add(`song download failures in a row: ${songFailures}, next download allowed ${songRetryAt > Date.now() ? `in ${Math.ceil((songRetryAt - Date.now()) / 1000)}s` : 'now'}`);
-    add(`game's service worker: ${safe(() => navigator.serviceWorker.controller?.scriptURL || 'none')}, songs downloaded around it ${stats.tracksAroundServiceWorker}, going around it: ${stats.aroundServiceWorker}`);
-    add(`music button: ${player.button ? (player.root.isConnected === false ? 'made but missing from the page' : 'in the top bar') : 'not made'}`);
-    add(`character loaded ${characterLoaded}, game ready ${ready}, offline progress running ${isOffline()}`);
+    await part('Music', async () => {
+      add(`music ${musicOn() ? 'on' : 'off'}, volume ${music.get('volume')}, shuffle ${music.get('shuffle-mode')}, repeat one ${repeatOne}`);
+      add(safe(() => (nowPlaying
+        ? `now playing: ${trackTitle(nowPlaying.path)} at ${positionOf(nowPlaying).toFixed(0)}s of ${nowPlaying.source.buffer.duration.toFixed(0)}s, song volume ${gain(nowPlaying.gain)}, ${nowPlaying.source.buffer.sampleRate} Hz`
+        : paused ? `paused: ${trackTitle(paused.path)} at ${paused.position.toFixed(0)}s` : 'nothing playing')));
+      add(`playing for: ${safe(contextKey)} (last chosen ${context})`);
+      add(`playlist (${playlist.length}): ${playlist.map(trackTitle).join(', ') || 'empty'}`);
+      add(`recently played: ${history.slice(-5).map(trackTitle).join(', ') || 'none'}`);
+      add(`song downloads started ${stats.trackLoads}, failed ${stats.trackFailures}, last download took ${stats.lastTrackLoadMs ?? '-'} ms, last song started ${ago(stats.lastTrackStarted)}, kept in memory ${tracks.size}`);
+      add(`last song error: ${stats.lastTrackError}`);
+      add(`song download failures in a row: ${songFailures}, next download allowed ${songRetryAt > Date.now() ? `in ${Math.ceil((songRetryAt - Date.now()) / 1000)}s` : 'now'}`);
+      add(`game's service worker: ${safe(() => navigator.serviceWorker.controller?.scriptURL || 'none')}, songs downloaded around it ${stats.tracksAroundServiceWorker}, going around it: ${stats.aroundServiceWorker}`);
+      add(`music button: ${player.button ? (player.root.isConnected === false ? 'made but missing from the page' : 'in the top bar') : 'not made'}`);
+      add(`character loaded ${characterLoaded}, game ready ${ready}, offline progress running ${isOffline()}`);
+    });
 
-    heading('Sound effects');
-    const failedFiles = [...bufferStatus].filter(([, status]) => status !== 'ready' && status !== 'loading');
-    const count = (status) => [...bufferStatus.values()].filter((each) => each === status).length;
-    add(`sound files: ${count('ready')} ready, ${count('loading')} loading (${decodeQueue.length} waiting their turn), ${failedFiles.length} failed, of ${bufferStatus.size}`);
-    failedFiles.slice(0, 10).forEach(([path, status]) => add(`  failed ${songStem(path)}: ${status}`));
-    add(`sounds played ${stats.effectsPlayed}, last ${stats.lastEffect}, playing now ${playing.size}`);
-    add(`sounds skipped: ${Object.entries(stats.effectsSkipped).map(([reason, times]) => `${reason} ${times}`).join(', ') || 'none'}`);
+    await part('Sound effects', async () => {
+      const failedFiles = [...bufferStatus].filter(([, status]) => status !== 'ready' && status !== 'loading');
+      const count = (status) => [...bufferStatus.values()].filter((each) => each === status).length;
+      add(`sound files: ${count('ready')} ready, ${count('loading')} loading (${decodeQueue.length} waiting their turn), ${failedFiles.length} failed, of ${bufferStatus.size}`);
+      failedFiles.slice(0, 10).forEach(([path, status]) => add(`  failed ${songStem(path)}: ${status}`));
+      add(`sounds played ${stats.effectsPlayed}, last ${stats.lastEffect}, playing now ${playing.size}`);
+      add(`sounds skipped: ${Object.entries(stats.effectsSkipped).map(([reason, times]) => `${reason} ${times}`).join(', ') || 'none'}`);
+    });
 
-    heading('Mod settings');
-    for (const [name, section, list] of [['Music', music, musicSettings], ['Sound effects', effects, effectsSettings]]) {
-      for (const config of list.filter((each) => each.type !== 'button')) {
-        const value = section.get(config.name);
-        add(`${name} / ${config.label}: ${show(value)}${value === config.default ? '' : ` (changed, default ${show(config.default)})`}`);
+    await part('Mod settings', async () => {
+      for (const [name, section, list] of [['Music', music, musicSettings], ['Sound effects', effects, effectsSettings]]) {
+        for (const config of list.filter((each) => each.type !== 'button')) {
+          const value = section.get(config.name);
+          add(`${name} / ${config.label}: ${show(value)}${value === config.default ? '' : ` (changed, default ${show(config.default)})`}`);
+        }
       }
-    }
-    add(`main menu uses (music volume, effects volume, music on; last set on any character): ${safe(() => ctx.accountStorage.getItem(VOLUME_KEY)?.join(', ') ?? 'none yet', 'not reported')}`);
+      add(`main menu uses (music volume, effects volume, music on; last set on any character): ${safe(() => ctx.accountStorage.getItem(VOLUME_KEY)?.join(', ') ?? 'none yet', 'not reported')}`);
+    });
 
-    heading('Character');
-    add(`game mode: ${safe(() => `${game.currentGamemode.name} (${game.currentGamemode.id})`, 'no character loaded')}`);
-    add(`doing: ${safe(() => (game.combat.isActive ? `combat in ${game.combat.selectedArea?.name}` : game.activeAction?.name), 'nothing')}`);
-    const unlockedSongs = songList().filter(isUnlocked);
-    add(`songs unlocked: ${unlockedSongs.length} of ${songList().length} (${songList().filter((path) => freeSongs.has(songStem(path))).length} always free), saved for this character ${unlocked.size}`);
-    add(`unlocked: ${unlockedSongs.map(trackTitle).join(', ') || 'none'}`);
+    await part('Character', async () => {
+      add(`game mode: ${safe(() => `${game.currentGamemode.name} (${game.currentGamemode.id})`, 'no character loaded')}`);
+      add(`doing: ${safe(() => (game.combat.isActive ? `combat in ${game.combat.selectedArea?.name}` : game.activeAction?.name), 'nothing')}`);
+      const unlockedSongs = songList().filter(isUnlocked);
+      add(`songs unlocked: ${unlockedSongs.length} of ${songList().length} (${songList().filter((path) => freeSongs.has(songStem(path))).length} always free), saved for this character ${unlocked.size}`);
+      add(`unlocked: ${unlockedSongs.map(trackTitle).join(', ') || 'none'}`);
+    });
 
-    heading('Melvor settings');
-    const melvorSettings = attempt(() => [...Object.entries(game.settings.boolData ?? {}), ...Object.entries(game.settings.choiceData ?? {})]) ?? [];
-    const isChanged = ([, data]) => show(data?.currentValue) !== show(data?.defaultValue);
-    const changed = melvorSettings.filter(isChanged);
-    add(`changed from default (${changed.length}):`);
-    changed.forEach(([key, data]) => add(`  ${key} = ${show(data.currentValue)} (default ${show(data.defaultValue)})`));
-    add(`left at default (${melvorSettings.length - changed.length}): ${melvorSettings.filter((entry) => !isChanged(entry)).map(([key, data]) => `${key}=${show(data?.currentValue)}`).join(', ') || 'none'}`);
+    await part('Melvor settings', async () => {
+      const melvorSettings = attempt(() => [...Object.entries(game.settings.boolData ?? {}), ...Object.entries(game.settings.choiceData ?? {})]) ?? [];
+      const isChanged = ([, data]) => show(data?.currentValue) !== show(data?.defaultValue);
+      const changed = melvorSettings.filter(isChanged);
+      add(`changed from default (${changed.length}):`);
+      changed.forEach(([key, data]) => add(`  ${key} = ${show(data.currentValue)} (default ${show(data.defaultValue)})`));
+      add(`left at default (${melvorSettings.length - changed.length}): ${melvorSettings.filter((entry) => !isChanged(entry)).map(([key, data]) => `${key}=${show(data?.currentValue)}`).join(', ') || 'none'}`);
+    });
 
-    heading('Mods loaded');
-    add(safe(() => (typeof mod !== 'undefined' ? mod.manager.getLoadedModList().map((each) => (typeof each === 'string' ? each : each?.name ?? show(each))).join(', ') : undefined)));
+    await part('Mods loaded', async () => {
+      add(safe(() => (typeof mod !== 'undefined' ? mod.manager.getLoadedModList().map((each) => (typeof each === 'string' ? each : each?.name ?? show(each))).join(', ') : undefined)));
+    });
 
-    heading(`Recent events (last ${debugLog.length})`);
-    add(...debugLog);
+    await part(`Recent events (last ${debugLog.length})`, async () => {
+      add(...debugLog);
+    });
     return lines.join('\n');
   }
 
@@ -1200,7 +1230,11 @@ export async function setup(ctx) {
     buttons.append(copy, test);
     body.append(box, buttons);
     if (typeof SwalLocale !== 'undefined') SwalLocale.fire({ title: 'Sound debug info', html: body, width: '50rem' });
-    box.value = await debugReport();
+    try {
+      box.value = await debugReport((text) => (box.value = text));
+    } catch (error) {
+      box.value += `\n\nThe report stopped: ${describeError(error)}`;
+    }
     copyText(box);
     return box.value;
   }

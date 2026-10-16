@@ -1090,6 +1090,23 @@ test('the last settings section, DANGER, warns hard, defaults to cancel, and unl
   }
 });
 
+test('debug info still comes out when Default page on load holds a page that links back to the game', async () => {
+  const { hooks, configs } = await boot({ header: true });
+  const woodcutting = { id: 'melvorD:Woodcutting', name: 'Woodcutting', on() {} };
+  const page = (id) => ({ id, game: null });
+  globalThis.game = {
+    activeAction: woodcutting, skills: [woodcutting], combat: { isActive: false, player: { on() {} }, on() {} }, farming: { on() {} }, on() {}, _isInOnlineLoop: true,
+    settings: { boolData: {}, choiceData: { defaultPageOnLoad: { currentValue: page('melvorD:Woodcutting'), defaultValue: page('melvorD:ActiveSkill') } } },
+  };
+  globalThis.game.settings.choiceData.defaultPageOnLoad.currentValue.game = globalThis.game;
+  globalThis.game.minibar = { game: globalThis.game };
+  hooks.character();
+  hooks.ready();
+  const report = await configs.debug.onClick();
+  assert.match(report, /defaultPageOnLoad = melvorD:Woodcutting \(default melvorD:ActiveSkill\)/);
+  assert.ok(report.includes('== Recent events'), 'the report reaches the end');
+});
+
 test('debug info reports the device, the output check, settings, game mode, unlocked songs and song load errors', async () => {
   const { hooks, tick, configs, characterStored } = await boot({ header: true });
   const woodcutting = { id: 'melvorD:Woodcutting', name: 'Woodcutting', on() {} };
