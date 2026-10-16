@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { trackTitle } from '../mod/setup.mjs';
+import { parseRetryAfter, songRetryDelay, trackTitle } from '../mod/setup.mjs';
 
 const audio = JSON.parse(readFileSync(new URL('../mod/audio.json', import.meta.url)));
 
@@ -131,6 +131,50 @@ async function boot({ mobile = false, header = false, account = {} } = {}) {
   const tick = async () => { intervals.forEach((fn) => fn()); await new Promise((r) => setTimeout(r, 0)); };
   return { log, listeners, settings, hooks, fetched, patches, tick, topBar, stored, characterStored, toasts, configs, sections };
 }
+
+test('failed song downloads back off from 3s, doubling to a 10 minute cap, and a 429 or 503 waits at least its Retry-After', () => {
+  const offline = new TypeError('Failed to fetch');
+  assert.deepStrictEqual([1, 2, 3, 4].map((failures) => songRetryDelay(failures, offline)), [3000, 6000, 12000, 24000]);
+  assert.strictEqual(songRetryDelay(20, offline), 10 * 60 * 1000);
+  assert.strictEqual(songRetryDelay(1, { status: 429, retryAfterMs: 120000 }), 120000);
+  assert.strictEqual(songRetryDelay(1, { status: 429, retryAfterMs: null }), 60000, 'a hidden Retry-After still waits a minute');
+  assert.strictEqual(songRetryDelay(3, { status: 503, retryAfterMs: 1000 }), 12000, 'never shorter than the backoff');
+  assert.strictEqual(songRetryDelay(1, { status: 404, retryAfterMs: 999999 }), 3000, 'Retry-After only counts on 429 and 503');
+});
+
+test('Retry-After is read as seconds or as an HTTP date', () => {
+  const now = Date.UTC(2026, 9, 15, 12);
+  assert.strictEqual(parseRetryAfter('120', now), 120000);
+  assert.strictEqual(parseRetryAfter(new Date(now + 30000).toUTCString(), now), 30000);
+  assert.strictEqual(parseRetryAfter(new Date(now - 30000).toUTCString(), now), 0);
+  assert.strictEqual(parseRetryAfter(null, now), null);
+  assert.strictEqual(parseRetryAfter('soon', now), null);
+});
+
+test('after a 429 no other song downloads until its Retry-After is up, even when the music changes', async () => {
+  const { hooks, fetched, tick } = await boot();
+  globalThis.fetch = async (url) => {
+    fetched.push(url);
+    return { ok: false, status: 429, statusText: 'Too Many Requests', headers: { get: (name) => (name === 'Retry-After' ? '120' : null) } };
+  };
+  const waits = [];
+  const realSetTimeout = globalThis.setTimeout;
+  globalThis.setTimeout = (fn, ms) => (ms >= 1000 ? (waits.push(ms), 0) : realSetTimeout(fn, ms));
+  try {
+    await tick();
+    await tick();
+    assert.strictEqual(fetched.length, 1, 'the character select song was asked for once');
+    const woodcutting = { id: 'melvorD:Woodcutting', on() {} };
+    globalThis.game = { ...globalThis.game, activeAction: woodcutting, skills: [woodcutting], combat: { player: { on() {} }, on() {} }, farming: { on() {} }, on() {}, _isInOnlineLoop: true };
+    hooks.character();
+    await tick();
+    assert.strictEqual(fetched.length, 1, 'switching to Woodcutting waits instead of downloading');
+    assert.ok(waits.some((ms) => ms === 120000), 'the next try is 2 minutes out');
+    assert.ok(waits.some((ms) => ms > 119000 && ms <= 120000), 'the Woodcutting song waits out the same window');
+  } finally {
+    globalThis.setTimeout = realSetTimeout;
+  }
+});
 
 test('character select plays Scape Main, a skill crossfades to its own track, music off stops it', async () => {
   const { log, settings, hooks, fetched, tick } = await boot();
@@ -1079,7 +1123,8 @@ test('debug info reports the device, the output check, settings, game mode, unlo
   assert.match(report, new RegExp(`unlocked: .*${trackTitle(audio.music['melvorD:Woodcutting'][0])}`));
   assert.match(report, /unlocked: .*Scape Main/, 'free songs count as unlocked');
   assert.match(report, /last song error: .*HTTP 404 Not Found/);
-  assert.match(report, /song failed: .*HTTP 404/, 'the failure is in the event log');
+  assert.match(report, /song failed \(1 in a row\): .*HTTP 404 Not Found, next try in 3s/, 'the failure and the backoff are in the event log');
+  assert.match(report, /song download failures in a row: 1, next download allowed in \ds/);
 });
 
 test("a song the game's service worker answers with 408 downloads around it, and later songs skip the service worker", async () => {

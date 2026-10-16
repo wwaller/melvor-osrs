@@ -17,6 +17,9 @@ const JINGLE_DUCK = 0.15;
 const CUT_MS = 80;
 const SAMPLE_RATE = 22050;
 const MAX_TRACKS_IN_MEMORY = 2;
+const SONG_RETRY_FIRST_MS = 3000;
+const SONG_RETRY_MAX_MS = 10 * 60 * 1000;
+const SONG_RATE_LIMITED_MIN_MS = 60 * 1000;
 const RESTART_AFTER_SECONDS = 3;
 const HISTORY_SIZE = 50;
 const REPEAT_KEY = 'repeat-one';
@@ -262,6 +265,8 @@ export async function setup(ctx) {
   }
 
   let skipServiceWorker = false;
+  let songFailures = 0;
+  let songRetryAt = 0;
 
   async function downloadTrack(url) {
     if (!skipServiceWorker) {
@@ -306,14 +311,31 @@ export async function setup(ctx) {
       if (history.length > HISTORY_SIZE) history.shift();
     }
     if (playlist.includes(path)) trackIndex = playlist.indexOf(path);
+    const wait = tracks.has(url) ? 0 : songRetryAt - Date.now();
+    if (wait > 0) {
+      note(`waiting ${Math.ceil(wait / 1000)}s before downloading ${trackTitle(path)}`);
+      setTimeout(() => {
+        if (ticket === request) playSong(ticket, path, url);
+      }, wait);
+      return;
+    }
+    playSong(ticket, path, url);
+  }
+
+  function playSong(ticket, path, url) {
     loadTrack(url).then((buffer) => {
+      songFailures = 0;
+      songRetryAt = 0;
       if (ticket === request) startTrack(buffer, 0, path);
     }).catch((error) => {
       tracks.delete(url);
       stats.trackFailures++;
+      songFailures++;
+      const wait = songRetryDelay(songFailures, error);
+      songRetryAt = Date.now() + wait;
       stats.lastTrackError = `${trackTitle(path)}: ${describeError(error)}`;
-      note(`song failed: ${stats.lastTrackError}`);
-      if (ticket === request) setTimeout(playNext, 3000);
+      note(`song failed (${songFailures} in a row): ${stats.lastTrackError}, next try in ${Math.round(wait / 1000)}s`);
+      if (ticket === request) setTimeout(playNext, wait);
     });
   }
 
@@ -1044,6 +1066,7 @@ export async function setup(ctx) {
     add(`recently played: ${history.slice(-5).map(trackTitle).join(', ') || 'none'}`);
     add(`song downloads started ${stats.trackLoads}, failed ${stats.trackFailures}, last download took ${stats.lastTrackLoadMs ?? '-'} ms, last song started ${ago(stats.lastTrackStarted)}, kept in memory ${tracks.size}`);
     add(`last song error: ${stats.lastTrackError}`);
+    add(`song download failures in a row: ${songFailures}, next download allowed ${songRetryAt > Date.now() ? `in ${Math.ceil((songRetryAt - Date.now()) / 1000)}s` : 'now'}`);
     add(`game's service worker: ${safe(() => navigator.serviceWorker.controller?.scriptURL || 'none')}, songs downloaded around it ${stats.tracksAroundServiceWorker}, going around it: ${stats.aroundServiceWorker}`);
     add(`music button: ${player.button ? (player.root.isConnected === false ? 'made but missing from the page' : 'in the top bar') : 'not made'}`);
     add(`character loaded ${characterLoaded}, game ready ${ready}, offline progress running ${isOffline()}`);
@@ -1441,7 +1464,10 @@ function describeError(error) {
 const DIRECT_FETCH = `onmessage = async (event) => {
   try {
     const response = await fetch(event.data);
-    if (!response.ok) throw new Error('HTTP ' + response.status);
+    if (!response.ok) {
+      postMessage({ error: { name: 'Error', message: 'HTTP ' + response.status, status: response.status, retryAfter: response.headers.get('Retry-After') } });
+      return;
+    }
     const bytes = await response.arrayBuffer();
     postMessage({ bytes }, [bytes]);
   } catch (error) {
@@ -1455,7 +1481,8 @@ function fetchAroundServiceWorker(url) {
     const worker = new Worker(`data:text/javascript,${encodeURIComponent(DIRECT_FETCH)}`);
     worker.onmessage = ({ data }) => {
       worker.terminate();
-      if (data.error) reject(Object.assign(new Error(data.error.message), { name: data.error.name }));
+      if (data.error?.status) reject(httpError(data.error.status, '', data.error.retryAfter));
+      else if (data.error) reject(Object.assign(new Error(data.error.message), { name: data.error.name }));
       else resolve(data.bytes);
     };
     worker.onerror = (event) => {
@@ -1467,8 +1494,28 @@ function fetchAroundServiceWorker(url) {
 }
 
 async function checkedBytes(response) {
-  if (response.ok === false) throw new Error(`HTTP ${response.status}${response.statusText ? ` ${response.statusText}` : ''}`);
+  if (response.ok === false) throw httpError(response.status, response.statusText, safe(() => response.headers.get('Retry-After'), null));
   return response.arrayBuffer();
+}
+
+function httpError(status, statusText, retryAfter) {
+  return Object.assign(new Error(`HTTP ${status}${statusText ? ` ${statusText}` : ''}`), { status, retryAfterMs: parseRetryAfter(retryAfter) });
+}
+
+/** Retry-After is either seconds or an HTTP date. Cross-origin servers only let the page read it when they expose the header. */
+export function parseRetryAfter(value, now = Date.now()) {
+  if (value === null || value === undefined || value === '') return null;
+  const seconds = Number(value);
+  if (Number.isFinite(seconds)) return Math.max(0, seconds * 1000);
+  const date = Date.parse(value);
+  return Number.isNaN(date) ? null : Math.max(0, date - now);
+}
+
+/** Doubles from 3s up to 10 minutes per failure in a row; a 429 or 503 waits at least its Retry-After, or a minute when the server hides it. */
+export function songRetryDelay(failures, error) {
+  const backoff = Math.min(SONG_RETRY_MAX_MS, SONG_RETRY_FIRST_MS * 2 ** Math.max(0, failures - 1));
+  if (error?.status !== 429 && error?.status !== 503) return backoff;
+  return Math.max(backoff, error.retryAfterMs ?? SONG_RATE_LIMITED_MIN_MS);
 }
 
 function safe(read, fallback = 'not reported') {
