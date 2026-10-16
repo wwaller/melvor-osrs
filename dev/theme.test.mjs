@@ -23,12 +23,15 @@ function element(tag) {
   };
 }
 
-async function boot(values = {}) {
+async function boot(values = {}, { brokenFont } = {}) {
   const classes = new Set();
   const properties = {};
   const darkMode = element('settings-switch');
   darkMode.className = 'mb-2';
   darkMode.setAttribute('data-size', 'large');
+  darkMode.constructor = function SettingsSwitchElement() {
+    return element('settings-switch');
+  };
   const settings = { enabled: true, ...values };
   const configs = {};
   const sectionOf = {};
@@ -63,6 +66,7 @@ async function boot(values = {}) {
   const ctx = {
     loadStylesheet: (path) => (ctx.stylesheet = path),
     getResourceUrl: (path) => `blob:${path}`,
+    getResourceBlob: (path) => ({ arrayBuffer: async () => (brokenFont && path.includes(brokenFont) ? Promise.reject(new Error('blocked')) : `bytes:${path}`) }),
     loadData: async (path) => (path === 'img/backgrounds.json' ? [{ key: 'varlamore', label: 'Varlamore' }, { key: 'nex', label: 'Nex' }] : null),
     characterStorage: { getItem: (key) => stored.get(key), setItem: (key, value) => stored.set(key, value), removeItem: (key) => stored.delete(key) },
     loadModule: (path) => import(`../mod/${path}`),
@@ -222,11 +226,40 @@ test('character select shows the OSRS login scene with two animated braziers, go
   assert.ok(!document.body.children.includes(scene));
 });
 
-test('loads the three OSRS fonts from the mod', async () => {
+test('loads the three OSRS fonts from the font files\' bytes rather than a URL', async () => {
   const { fonts } = await boot();
   await settle();
   assert.deepStrictEqual(fonts.map((face) => face.family).sort(), ['OSRS Bold 12', 'OSRS Plain 11', 'OSRS Plain 12']);
-  assert.match(fonts[0].source, /url\("blob:fonts\/RuneScape-/);
+  assert.strictEqual(fonts.find((face) => face.family === 'OSRS Plain 11').source, 'bytes:fonts/RuneScape-Plain-11.ttf');
+});
+
+test('the debug report is split into readable sections and says how each font loaded', async () => {
+  const consoleError = console.error;
+  console.error = () => {};
+  globalThis.SwalLocale = { fire: () => {} };
+  const { configs } = await boot({ font: false }, { brokenFont: 'Bold-12' });
+  await settle();
+  const report = await configs.debug.onClick();
+  console.error = consoleError;
+  delete globalThis.SwalLocale;
+  for (const heading of ['Device', 'Fonts', 'Images', 'Theme switches', 'What the theme is doing on this page', 'Problems (1)', 'Mods loaded', 'Recent events']) {
+    assert.ok(report.includes(`== ${heading}`), `has a ${heading} section`);
+  }
+  assert.match(report, /OSRS Plain 11: loaded in \d+ ms/);
+  assert.match(report, /OSRS Bold 12: failed after \d+ ms: Error: blocked/);
+  assert.ok(report.includes('General / OSRS font: off (changed, default on)'));
+  assert.ok(report.includes('font OSRS Bold 12 failed after'), 'the font failure is in the recent events');
+});
+
+test('a font that cannot load is logged and the other fonts still load', async () => {
+  const logged = [];
+  const consoleError = console.error;
+  console.error = (...args) => logged.push(args.join(' '));
+  const { fonts } = await boot({}, { brokenFont: 'Bold-12' });
+  await settle();
+  console.error = consoleError;
+  assert.deepStrictEqual(fonts.map((face) => face.family).sort(), ['OSRS Plain 11', 'OSRS Plain 12']);
+  assert.ok(logged.some((line) => line.includes('font OSRS Bold 12')));
 });
 
 test('the attack interval bar matches the HP bar\'s thickness and lines up with it, even when they share a panel', async () => {
@@ -543,9 +576,11 @@ test('bigger bank icons are off by default and follow their switch', async () =>
 
 test('if the OSRS Theme switch next to Dark Mode cannot be built, switching settings still redraws the bank', async () => {
   const icon = { item: platebody.item, calls: 0, updateQuantity() { this.calls++; } };
-  const { hooks, configs, settings } = await boot({ 'bank-layout': true });
+  const { hooks, configs, settings, darkMode } = await boot({ 'bank-layout': true });
   globalThis.game = { bank: { items: new Map([[platebody.item, platebody]]) }, settings: { enableAccessibility: false } };
-  document.createElement = (tag) => (tag === 'settings-switch' ? { setAttribute() {} } : element(tag));
+  darkMode.constructor = function SettingsSwitchElement() {
+    return { setAttribute() {} };
+  };
   document.querySelectorAll = (selector) => (selector === 'bank-item-icon' ? [icon] : []);
   hooks.ready();
   const before = icon.calls;

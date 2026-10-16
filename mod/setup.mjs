@@ -18,6 +18,18 @@ const ACCESSIBILITY_DEFAULTS_KEY = 'accessibilityDefaults';
 const REMEMBERED_SUMMONING_TABS = new Set(['Mark', 'Tablet']);
 const SLAYER_MASTER_MAX_SHARE = 0.33;
 const SLAYER_MASTER_MIN_VIEW = 320;
+const DEBUG_LOG_SIZE = 150;
+const IMAGE_CHECK_MS = 3000;
+const MINIBAR_PARTS_SHOWN = 40;
+const FONT_SAMPLES = [
+  ['sidebar links', '.nav-main-link-name'],
+  ['sidebar headings', '.nav-main-heading'],
+  ['buttons', '.btn'],
+  ['headings', 'h5'],
+  ['small text', '.font-size-sm'],
+  ['tiny print', 'small'],
+  ['page text', 'body'],
+];
 const SLAYER_MASTERS = {
   'melvorF:Easy': 'Turael',
   'melvorF:Normal': 'Krystilia',
@@ -36,6 +48,36 @@ function fontSize(scale, ratio) {
   const step = FONT_BASE / ratio;
   const crisp = Math.max(1, Math.round(target / step)) * step;
   return Math.abs(crisp - target) / target <= CRISP_TOLERANCE ? crisp : exact;
+}
+
+function safe(read, fallback = '-') {
+  try {
+    const value = read();
+    return value === undefined || value === null ? fallback : value;
+  } catch {
+    return fallback;
+  }
+}
+
+function describeError(error) {
+  return `${error?.name ?? 'Error'}: ${error?.message ?? error}`;
+}
+
+function checkImage(url) {
+  if (typeof Image === 'undefined') return Promise.resolve('not checked');
+  return new Promise((resolve) => {
+    const image = new Image();
+    const timer = setTimeout(() => resolve(`no answer after ${IMAGE_CHECK_MS / 1000}s`), IMAGE_CHECK_MS);
+    image.onload = () => {
+      clearTimeout(timer);
+      resolve(`ok, ${image.naturalWidth}x${image.naturalHeight}`);
+    };
+    image.onerror = () => {
+      clearTimeout(timer);
+      resolve('failed to load');
+    };
+    image.src = url;
+  });
 }
 const FEATURES = [
   { name: 'font', label: 'OSRS font', hint: 'Titles, headings, the sidebar, buttons, tooltips, bank counts and hitsplats use the real OSRS fonts. Descriptions and stat tables stay in Melvor\'s font so they stay easy to read.' },
@@ -88,10 +130,33 @@ const ASSETS = {
 };
 
 export async function setup(ctx) {
+  const failures = [];
+  const events = [];
+  const fontStatus = {};
+  const note = (text) => {
+    events.push(`${new Date().toLocaleTimeString()} ${text}`);
+    if (events.length > DEBUG_LOG_SIZE) events.shift();
+  };
+  note('theme starting');
   ctx.loadStylesheet('theme.css');
   for (const [property, path] of Object.entries(ASSETS)) document.documentElement.style.setProperty(property, `url("${ctx.getResourceUrl(path)}")`);
   for (const [family, { path, sizeAdjust }] of Object.entries(FONTS)) {
-    new FontFace(family, `url("${ctx.getResourceUrl(path)}")`, sizeAdjust ? { sizeAdjust } : {}).load().then((face) => document.fonts.add(face)).catch(() => {});
+    loadFont(family, path, sizeAdjust ? { sizeAdjust } : {});
+  }
+
+  async function loadFont(family, path, descriptors) {
+    const started = performance.now();
+    const took = () => `${Math.round(performance.now() - started)} ms`;
+    try {
+      const data = await ctx.getResourceBlob(path).arrayBuffer();
+      document.fonts.add(await new FontFace(family, data, descriptors).load());
+      fontStatus[family] = `loaded in ${took()} (${data.byteLength} bytes)`;
+    } catch (error) {
+      fontStatus[family] = `failed after ${took()}: ${describeError(error)}`;
+      failures.push(`font ${family}: ${describeError(error)}`);
+      console.error(`[OSRS Theme] font ${family}`, error);
+    }
+    note(`font ${family} ${fontStatus[family]}`);
   }
   const sizeFont = () => {
     const ratio = window.devicePixelRatio || 1;
@@ -113,9 +178,21 @@ export async function setup(ctx) {
   const sections = { Accessibility: ctx.settings.section('Accessibility'), Advanced: ctx.settings.section('Advanced') };
   const { Accessibility: accessibility, Advanced: advanced } = sections;
   const sectionOf = (feature) => sections[feature.section] ?? section;
-  const featureSwitch = ({ section: _section, ...feature }) => ({ type: 'switch', default: true, ...feature, onChange: () => later(apply) });
+  const onOff = (value) => (value ? 'on' : 'off');
+  const featureSwitch = ({ section: _section, ...feature }) => ({
+    type: 'switch',
+    default: true,
+    ...feature,
+    onChange: (value) => {
+      note(`switched ${feature.label} ${onOff(value)}`);
+      later(apply);
+    },
+  });
   section.add([
-    { type: 'switch', name: 'enabled', label: 'OSRS Theme', hint: 'Old School RuneScape colours. Also in Settings, next to Dark Mode. Turning it off turns everything here, under Accessibility and under Advanced off too.', default: true, onChange: (value) => later(() => apply(value)) },
+    { type: 'switch', name: 'enabled', label: 'OSRS Theme', hint: 'Old School RuneScape colours. Also in Settings, next to Dark Mode. Turning it off turns everything here, under Accessibility and under Advanced off too.', default: true, onChange: (value) => {
+      note(`switched OSRS Theme ${onOff(value)}`);
+      later(() => apply(value));
+    } },
     ...FEATURES.filter((feature) => sectionOf(feature) === section).map(featureSwitch),
   ]);
   accessibility.add(FEATURES.filter((feature) => sectionOf(feature) === accessibility).map(featureSwitch));
@@ -185,38 +262,136 @@ export async function setup(ctx) {
     }
   }
 
-  function showDebugInfo() {
-    const root = document.getElementById('combat-footer-minibar');
-    const describe = (element) => {
+  async function debugReport() {
+    const lines = [];
+    const add = (...rows) => lines.push(...rows);
+    const heading = (title) => add('', `== ${title} ==`);
+    const yesNo = (value) => (value ? 'yes' : 'no');
+    const has = (name) => safe(() => document.body.classList.contains(name), false);
+    const count = (selector) => safe(() => document.querySelectorAll(selector).length, 0);
+    const show = (value) => (value && typeof value === 'object' ? JSON.stringify(value) : String(value));
+    const agent = String(safe(() => navigator.userAgent, ''));
+    const version = (pattern) => agent.match(pattern)?.[1]?.replace(/_/g, '.') ?? '-';
+    const native = typeof nativeManager !== 'undefined' ? nativeManager : {};
+
+    add(`OSRS Theme ${safe(() => ctx.version, '?')} on Melvor ${safe(() => gameVersion, '?')}, ${new Date().toString()}`);
+
+    heading('Device');
+    add(`user agent: ${agent || '-'}`);
+    add(`versions: Android ${version(/Android ([\d.]+)/)}, iOS ${version(/OS (\d+[_\d]*) like Mac/)}, Chrome ${version(/Chrome\/([\d.]+)/)}, Safari ${version(/Version\/([\d.]+)/)}, Firefox ${version(/Firefox\/([\d.]+)/)}`);
+    add(`Melvor sees: iOS ${safe(() => native.isIOS)}, Android ${safe(() => native.isAndroid)}, phone app ${safe(() => native.isNativeApp)}, mobile ${safe(() => native.isMobile)}, Steam ${safe(() => native.isSteam)}`);
+    add(`site: ${safe(() => location.origin + location.pathname)}`);
+    add(`screen ${safe(() => `${screen.width}x${screen.height}`)} at ${safe(() => window.devicePixelRatio)}x, window ${safe(() => `${window.innerWidth}x${window.innerHeight}`)}, language ${safe(() => navigator.language)}`);
+
+    heading('Fonts');
+    add(`OSRS font switches on the page: titles and buttons ${yesNo(has('osrs-font'))}, all text ${yesNo(has('osrs-font-all'))}`);
+    add(`font loading support: FontFace ${yesNo(typeof FontFace !== 'undefined')}, font list ${safe(() => document.fonts.status)}`);
+    for (const family of Object.keys(FONTS)) {
+      add(`${family}: ${fontStatus[family] ?? 'still loading'}, ready to draw text ${safe(() => yesNo(document.fonts.check(`16px "${family}"`)))}`);
+    }
+    add(`text size: base ${safe(() => document.documentElement.style.getPropertyValue('--osrs-font-size') || undefined)}, size adjust ${UI_FONT_SIZE_ADJUST}`);
+    add('what the text is drawn with right now:');
+    for (const [label, selector] of FONT_SAMPLES) {
+      const element = safe(() => [...document.querySelectorAll(selector)].find((each) => each.getClientRects().length > 0 && each.textContent.trim()), null);
+      add(`  ${label}: ${element ? safe(() => {
+        const style = window.getComputedStyle(element);
+        return `${style.fontFamily.split(',')[0]} at ${style.fontSize}`;
+      }) : 'none on screen'}`);
+    }
+
+    heading('Images');
+    const images = await Promise.all(Object.values(ASSETS).map(async (path) => [path, await safe(() => checkImage(ctx.getResourceUrl(path)), 'could not check')]));
+    const loaded = images.filter(([, result]) => String(result).startsWith('ok'));
+    add(`${loaded.length} of ${images.length} theme pictures load`);
+    images.filter(([, result]) => !String(result).startsWith('ok')).forEach(([path, result]) => add(`  ${path}: ${result}`));
+
+    heading('Stylesheet');
+    const sheet = safe(() => [...document.styleSheets].find((each) => safe(() => [...each.cssRules].some((rule) => rule.selectorText?.includes(`.${THEME_CLASS}`)), false)), null);
+    add(`theme.css: ${sheet ? `loaded, ${safe(() => sheet.cssRules.length)} rules` : 'not found on the page'}`);
+
+    heading('Theme switches');
+    add(`General / OSRS Theme: ${onOff(section.get('enabled'))}`);
+    for (const feature of FEATURES) {
+      const value = sectionOf(feature).get(feature.name);
+      const fallback = feature.default ?? true;
+      add(`${feature.section ?? 'General'} / ${feature.label}: ${onOff(value)}${value === fallback ? '' : ` (changed, default ${onOff(fallback)})`}`);
+    }
+
+    heading('What the theme is doing on this page');
+    add(`theme look: ${has(THEME_CLASS) ? 'on' : 'off'}`);
+    add(`theme classes: ${safe(() => [...document.body.classList].filter((name) => name.startsWith('osrs-')).join(' ') || undefined, 'none')}`);
+    add(`screen: ${has('osrs-character-select') ? 'character select' : safe(() => game.openPage.name ?? game.openPage.id, 'unknown')}`);
+    add(`login art: ${has('osrs-character-select') ? (has('osrs-login') ? 'showing' : 'switched off') : 'only shows on character select'}`);
+    const realm = safe(() => game.realms.getObjectByID(ABYSSAL_REALM), null);
+    add(`Abyssal Realm: ${realm ? (realm.isUnlocked ? 'unlocked' : 'locked') : 'not in this game'}, extras hidden ${yesNo(has(ABYSSAL_LOCKED_CLASS) && has('osrs-hide-abyssal-ui'))}`);
+    add(`OSRS Theme switch next to Dark Mode: ${settingsSwitch ? 'added' : 'not added'}`);
+    add(`skill headers ${count('skill-header')}, cooking menus ${count('cooking-menu')}`);
+    add(`bank: ${count('bank-item-icon')} items drawn, ${count('bank-item-icon.osrs-named')} with names, search ${bankSearch ? 'moved under the bank' : 'not moved yet'}, Melvor accessibility ${onOff(melvorAccessibilityOn())}`);
+    const master = safe(() => document.querySelector('.osrs-has-master:not(.osrs-master-narrow) > .osrs-slayer-master')?.alt, null);
+    add(`slayer master: ${master ?? (count('.osrs-has-master.osrs-master-narrow') ? `hidden, the task box is narrower than ${SLAYER_MASTER_MIN_VIEW}px` : 'no task with a master on screen')}`);
+    add(`background picture: ${safe(() => ctx.characterStorage.getItem('background'), 'Melvor default')}`);
+    add(`combat minibar: ${minibar ? 'found and recoloured' : 'not found yet'}`);
+
+    heading(`Problems (${failures.length})`);
+    add(...(failures.length ? failures : ['none']));
+
+    heading('Melvor settings');
+    const melvorSettings = safe(() => [...Object.entries(game.settings.boolData ?? {}), ...Object.entries(game.settings.choiceData ?? {})], []);
+    const isChanged = ([, data]) => show(data?.currentValue) !== show(data?.defaultValue);
+    const changed = melvorSettings.filter(isChanged);
+    add(`changed from default (${changed.length}):`);
+    changed.forEach(([key, data]) => add(`  ${key} = ${show(data.currentValue)} (default ${show(data.defaultValue)})`));
+    add(`left at default (${melvorSettings.length - changed.length}): ${melvorSettings.filter((entry) => !isChanged(entry)).map(([key, data]) => `${key}=${show(data?.currentValue)}`).join(', ') || 'none'}`);
+
+    heading('Mods loaded');
+    add(String(safe(() => mod.manager.getLoadedModList().map((each) => (typeof each === 'string' ? each : each?.name ?? show(each))).join(', '))));
+
+    const parts = minibar ? safe(() => [minibar, ...minibar.querySelectorAll('*')].slice(0, MINIBAR_PARTS_SHOWN), []) : [];
+    heading(`Combat minibar colours (${parts.length} parts)`);
+    parts.forEach((element) => add(safe(() => {
       const style = window.getComputedStyle(element);
-      return [element.tagName.toLowerCase(), element.id, String(element.className || ''), element.getAttribute('style') || '', style.backgroundColor, style.backgroundImage.slice(0, 60), style.borderTopColor].join(' | ');
-    };
-    const realm = typeof game !== 'undefined' ? game.realms?.getObjectByID(ABYSSAL_REALM) : undefined;
-    const lines = [
-      `body: ${document.body.className}`,
-      `abyssal realm: ${realm ? (realm.isUnlocked ? 'unlocked' : 'locked') : 'missing'}`,
-      `skill headers: ${document.querySelectorAll('skill-header').length}, cooking menus: ${document.querySelectorAll('cooking-menu').length}`,
-      `slayer master: ${document.querySelector('.osrs-has-master:not(.osrs-master-narrow) > .osrs-slayer-master')?.alt || 'none'}`,
-      `failures: ${failures.join('; ') || 'none'}`,
-      `bank: ${document.querySelectorAll('bank-item-icon').length} items, ${document.querySelectorAll('bank-item-icon.osrs-named').length} named, melvor accessibility ${melvorAccessibilityOn()}`,
-      `bank search: ${bankSearch ? 'placed' : 'missing'}`,
-      `minibar found: ${Boolean(root)}`,
-      ...(root ? [root, ...root.querySelectorAll('*')].slice(0, 80).map(describe) : []),
-    ];
-    const box = document.createElement('textarea');
-    box.className = 'form-control font-size-sm';
-    box.rows = 12;
-    box.value = lines.join('\n');
-    SwalLocale.fire({ title: 'Theme debug info', html: box, didOpen: () => box.select() });
-    if (navigator.clipboard) navigator.clipboard.writeText(box.value).catch(() => {});
+      const name = `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ''}${element.classList.length ? `.${[...element.classList].join('.')}` : ''}`;
+      const picture = style.backgroundImage === 'none' ? '' : `, picture ${style.backgroundImage.slice(0, 60)}`;
+      return `${name}: background ${style.backgroundColor}${picture}, border ${style.borderTopColor}, text ${style.color}`;
+    })));
+
+    heading(`Recent events (last ${events.length})`);
+    add(...events);
+    return lines.join('\n');
   }
 
-  const failures = [];
+  function copyText(box) {
+    box.select?.();
+    const fallback = () => safe(() => document.execCommand('copy'));
+    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(box.value).catch(fallback);
+    else fallback();
+  }
+
+  async function showDebugInfo() {
+    const box = document.createElement('textarea');
+    box.className = 'form-control font-size-sm';
+    box.rows = 18;
+    box.readOnly = true;
+    box.value = 'Collecting theme info...';
+    const copy = document.createElement('button');
+    copy.type = 'button';
+    copy.className = 'btn btn-sm btn-secondary m-1';
+    copy.textContent = 'Copy';
+    copy.addEventListener('click', () => copyText(box));
+    const body = document.createElement('div');
+    body.append(box, copy);
+    if (typeof SwalLocale !== 'undefined') SwalLocale.fire({ title: 'Theme debug info', html: body, width: '50rem' });
+    box.value = await debugReport();
+    copyText(box);
+    return box.value;
+  }
+
   function attempt(name, fn) {
     try {
       fn();
     } catch (error) {
-      failures.push(`${name}: ${error?.message ?? error}`);
+      failures.push(`${name}: ${describeError(error)}`);
+      note(`problem with ${name}: ${describeError(error)}`);
       console.error(`[OSRS Theme] ${name}`, error);
     }
   }
@@ -464,7 +639,7 @@ export async function setup(ctx) {
   function addToGameSettings() {
     const darkMode = document.querySelector('[data-setting-id="darkMode"]');
     if (!darkMode || typeof darkMode.initialize !== 'function') return;
-    const toggle = document.createElement(darkMode.tagName.toLowerCase());
+    const toggle = new darkMode.constructor();
     toggle.className = darkMode.className;
     toggle.setAttribute('data-size', darkMode.getAttribute('data-size') || 'small');
     toggle.initialize({ currentValue: section.get('enabled'), name: 'OSRS Theme' }, () => {
@@ -474,6 +649,7 @@ export async function setup(ctx) {
     });
     darkMode.after(toggle);
     settingsSwitch = toggle;
+    note('added the OSRS Theme switch next to Dark Mode');
   }
 
   function markLoginLayers() {
@@ -532,12 +708,14 @@ export async function setup(ctx) {
   });
 
   ctx.onCharacterSelectionLoaded(() => {
+    note('character select loaded');
     const options = typeof game !== 'undefined' ? game.settings.choiceData[BACKGROUND_SETTING].options : [];
     if (!options.includes(backgrounds[0])) options.push(...backgrounds);
     [0, 500, 2000].forEach((delay) => setTimeout(markLoginLayers, delay));
     window.addEventListener('resize', onLoginResize);
   });
   ctx.onCharacterLoaded(() => {
+    note('character loaded');
     attempt('abyssal lock', markAbyssalLock);
     showBackground(storedBackground());
     document.body.classList.remove('osrs-character-select');
@@ -545,6 +723,7 @@ export async function setup(ctx) {
     loginScene.hide();
   });
   ctx.onInterfaceReady(() => {
+    note('game screen ready');
     attempt('background', () => {
       const background = storedBackground();
       if (background) showChoice(background);
