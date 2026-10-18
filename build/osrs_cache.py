@@ -77,7 +77,6 @@ class Cache:
         return decompress(_fetch(url, self.cache_dir / str(self.cache_id) / str(archive) / f"{group}.dat"))
 
     def sprites(self, sprite_id):
-        """Every frame of a sprite group as an RGBA image on its full canvas."""
         data = self.group(SPRITE_INDEX, sprite_id)
         reader = Reader(data)
         reader.offset = len(data) - 2

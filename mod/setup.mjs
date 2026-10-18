@@ -18,10 +18,12 @@ const ACCESSIBILITY_DEFAULTS_KEY = 'accessibilityDefaults';
 const REMEMBERED_SUMMONING_TABS = new Set(['Mark', 'Tablet']);
 const SLAYER_MASTER_MAX_SHARE = 0.33;
 const SLAYER_MASTER_MIN_VIEW = 320;
+const FOLLOWS_MELVOR_ACCESSIBILITY = ['bank-big-icons', 'bank-names'];
 const DEBUG_LOG_SIZE = 150;
 const IMAGE_CHECK_MS = 3000;
 const MINIBAR_PARTS_SHOWN = 40;
 const DEBUG_PART_MS = 5000;
+const PROGRESS_ATTRIBUTE = 'data-osrs-progress';
 const FONT_SAMPLES = [
   ['sidebar links', '.nav-main-link-name'],
   ['sidebar headings', '.nav-main-heading'],
@@ -41,7 +43,7 @@ const SLAYER_MASTERS = {
   'melvorTotH:Mythical': 'Mortimer',
 };
 
-/** The OSRS fonts are pixel-exact at multiples of 16 device pixels: use one when it is close to the wanted size, else the wanted size. */
+// OSRS fonts are only pixel-exact at multiples of 16 device pixels
 function fontSize(scale, ratio) {
   const target = FONT_BASE * scale;
   const exact = Math.round(target * ratio) / ratio;
@@ -88,6 +90,7 @@ const FEATURES = [
   { name: 'stacks', label: 'OSRS bank stack colours', hint: 'Yellow under 100K, white with a K up to 10M, green with an M after that.' },
   { name: 'bank-layout', label: 'OSRS bank tabs and items', hint: 'Bank tabs become OSRS folder tabs, and items sit bare on the bank with the stack count in the top left, a white box around the selected item and a padlock on locked ones. Search Bank becomes a Search button in a bar under the items.' },
   { name: 'tooltips', label: 'OSRS-style tooltips', hint: 'Translucent brown hover boxes with a thin border, like RuneLite.' },
+  { name: 'level-progress', label: 'Level progress in the sidebar', hint: 'A yellow (48%) to the left of each skill\'s level in the sidebar shows how far you are to the next level, and goes away at the level cap. Works alongside Sidebar Progress Bars.' },
   { name: 'slayer-masters', label: 'OSRS Slayer Masters', hint: 'The Slayer Task box shows the OSRS Slayer Master for the task\'s tier beside the monster: Turael for Easy, then Krystilia, Mazchna, Vannaka, Nieve, Duradel, and Mortimer for Mythical. Abyssal tasks have none.' },
   { section: 'Advanced', name: 'shadows', label: 'Black text shadow', hint: 'OSRS draws all interface text with a 1px black shadow.' },
   { section: 'Advanced', name: 'bevels', label: 'Bevelled stone borders', hint: 'Panels, buttons and tabs get a light top-left edge and a dark bottom-right edge.' },
@@ -106,6 +109,7 @@ const FEATURES = [
   { section: 'Advanced', name: 'sell-locked', label: 'Sell locked items down to 1', hint: 'Locked bank items can be sold from the selected item\'s Sell box, always keeping one. A copy equipped in any equipment set counts as the one kept, so All but 1 sells every copy in the bank. Sell Mode and selling a whole tab still skip locked items.', default: false },
   { section: 'Accessibility', name: 'bank-big-icons', label: 'Bigger bank icons', hint: 'With OSRS bank tabs and items on, bank items are drawn bigger: 5 to a row on a phone instead of 6. Turned on for you when Melvor\'s Minor Accessibility Features setting is on, and you can turn it off again here.', default: false },
   { section: 'Accessibility', name: 'bank-names', label: 'Item names under bank items', hint: 'With OSRS bank tabs and items on, each bank item has its name written under it and the stack count stays in the top left. Melvor\'s Minor Accessibility Features setting shows the names the same way.', default: false },
+  { section: 'Accessibility', name: 'crisp-text', label: 'Crisp pixel text', hint: 'With the OSRS font on, text is drawn at the OSRS fonts\' own pixel size so every letter is sharp: 16 pixels for most text, the smaller OSRS font for small print, and 32 for the biggest headings. Some pages get a little taller.', default: false },
 ];
 const FONTS = {
   'OSRS Plain 11': { path: 'fonts/RuneScape-Plain-11.ttf' },
@@ -150,8 +154,11 @@ export async function setup(ctx) {
     const took = () => `${Math.round(performance.now() - started)} ms`;
     try {
       const data = await ctx.getResourceBlob(path).arrayBuffer();
-      document.fonts.add(await new FontFace(family, data, descriptors).load());
-      fontStatus[family] = `loaded in ${took()} (${data.byteLength} bytes)`;
+      const face = new FontFace(family, data.slice(0), descriptors);
+      // Firefox (Android's GeckoView app) rejects a bare name with a number in it; Chrome keeps quotes as part of the name.
+      const usable = face.status === 'error' ? new FontFace(`"${family}"`, data.slice(0), descriptors) : face;
+      document.fonts.add(await usable.load());
+      fontStatus[family] = `loaded in ${took()} (${data.byteLength} bytes${usable === face ? '' : ', quoted name'})`;
     } catch (error) {
       fontStatus[family] = `failed after ${took()}: ${describeError(error)}`;
       failures.push(`font ${family}: ${describeError(error)}`);
@@ -239,7 +246,7 @@ export async function setup(ctx) {
   const melvorAccessibilityOn = () => typeof game !== 'undefined' && Boolean(game.settings?.enableAccessibility);
 
   function turnOnAccessibility() {
-    for (const feature of FEATURES) if (sectionOf(feature) === accessibility) accessibility.set(feature.name, true);
+    for (const name of FOLLOWS_MELVOR_ACCESSIBILITY) accessibility.set(name, true);
   }
 
   function followMelvorAccessibility() {
@@ -308,7 +315,7 @@ export async function setup(ctx) {
       add(`OSRS font switches on the page: titles and buttons ${yesNo(has('osrs-font'))}, all text ${yesNo(has('osrs-font-all'))}`);
       add(`font loading support: FontFace ${yesNo(typeof FontFace !== 'undefined')}, font list ${safe(() => document.fonts.status)}`);
       for (const family of Object.keys(FONTS)) {
-        add(`${family}: ${fontStatus[family] ?? 'still loading'}, ready to draw text ${safe(() => yesNo(document.fonts.check(`16px "${family}"`)))}`);
+        add(`${family}: ${fontStatus[family] ?? 'still loading'}, in the page's font list ${safe(() => yesNo([...document.fonts].some((face) => face.family.replace(/"/g, '') === family && face.status === 'loaded')))}`);
       }
       add(`text size: base ${safe(() => document.documentElement.style.getPropertyValue('--osrs-font-size') || undefined)}, size adjust ${UI_FONT_SIZE_ADJUST}`);
       add('what the text is drawn with right now:');
@@ -671,6 +678,33 @@ export async function setup(ctx) {
     });
   }
 
+  function showLevelProgress(skill) {
+    const standard = levelProgress(skill.level, skill.currentLevelCap, skill.nextLevelProgress);
+    const abyssal = levelProgress(skill.abyssalLevel, skill.currentAbyssalLevelCap, skill.nextAbyssalLevelProgress);
+    for (const { aside } of skillNav.getNavs(skill)) {
+      markProgress(aside.level, standard);
+      markProgress(aside.abyssalLevel, abyssal);
+    }
+  }
+
+  function markProgress(element, text) {
+    if (element.getAttribute(PROGRESS_ATTRIBUTE) === text) return;
+    if (text === null) element.removeAttribute(PROGRESS_ATTRIBUTE);
+    else element.setAttribute(PROGRESS_ATTRIBUTE, text);
+  }
+
+  if (typeof SkillNav !== 'undefined') {
+    ctx.patch(Skill, 'renderXP').before(function () {
+      if (this.renderQueue.xp) attempt('level progress', () => showLevelProgress(this));
+    });
+    ctx.patch(Skill, 'renderAbyssalXP').before(function () {
+      if (this.renderQueue.abyssalXP) attempt('level progress', () => showLevelProgress(this));
+    });
+    for (const method of ['updateSkillLevel', 'updateAbyssalSkillLevel']) {
+      ctx.patch(SkillNav, method).after((_result, skill) => attempt('level progress', () => showLevelProgress(skill)));
+    }
+  }
+
   function addToGameSettings() {
     const darkMode = document.querySelector('[data-setting-id="darkMode"]');
     if (!darkMode || typeof darkMode.initialize !== 'function') return;
@@ -769,12 +803,12 @@ export async function setup(ctx) {
     attempt('summoning tab', restoreSummoningTab);
     attempt('minibar', watchMinibar);
     attempt('combat bars', watchCombatBars);
+    attempt('level progress', () => game.skills.forEach(showLevelProgress));
     attempt('accessibility defaults', followMelvorAccessibility);
     apply();
   });
 }
 
-/** Clicking the offline recap closes it the way its OK button does, except on its own controls, like Better Offline Recap's foldable section headers. */
 export function closeRecapOnClick(target, swal) {
   if (!swal.isVisible()) return false;
   const popup = swal.getPopup();
@@ -787,7 +821,6 @@ export function closeRecapOnClick(target, swal) {
   return true;
 }
 
-/** Puts the offline recap's skill icon inline before its title, in place of the large picture above it. */
 export function compactRecapHeader(swal) {
   const popup = swal.getPopup();
   const image = swal.getImage();
@@ -801,7 +834,6 @@ export function compactRecapHeader(swal) {
   return true;
 }
 
-/** Puts a popup's warning ! inline before its title, in place of the large circle above it. */
 export function compactWarningIcon(swal) {
   const icon = swal.getIcon();
   const title = swal.getTitle();
@@ -814,7 +846,6 @@ export function compactWarningIcon(swal) {
   return true;
 }
 
-/** Drops "You gained", "You used" and the like from the start of each offline recap line, and the "You" from lines like "You killed". */
 export function shortenRecapLines(container) {
   for (const line of container.querySelectorAll('h5')) {
     const text = line.firstChild;
@@ -824,7 +855,6 @@ export function shortenRecapLines(container) {
   }
 }
 
-/** A red line under the offline recap's OK button saying a click anywhere closes it too. */
 export function addRecapNote(swal, doc) {
   const popup = swal.getPopup();
   const actions = swal.getActions();
@@ -836,7 +866,7 @@ export function addRecapNote(swal, doc) {
   return true;
 }
 
-/** The Slayer Master fills the task view's height, so its width follows the view's height: the text beside it wraps to make room, up to a share of the box. A box narrower than on an average phone has no room for one. */
+// The master fills the view's height, so its width follows; capped to a share of the box
 export function fitSlayerMaster(view, image) {
   if (view.clientWidth) view.classList.toggle('osrs-master-narrow', view.clientWidth < SLAYER_MASTER_MIN_VIEW);
   if (!image.naturalHeight || !view.clientHeight) return;
@@ -848,6 +878,10 @@ export function watchSlayerMaster(view, image, win) {
   const fit = () => win.requestAnimationFrame(() => fitSlayerMaster(view, image));
   image.addEventListener('load', fit);
   if (typeof win.ResizeObserver !== 'undefined') new win.ResizeObserver(fit).observe(view);
+}
+
+export function levelProgress(level, levelCap, progress) {
+  return level < levelCap ? `(${Math.floor(progress)}%)` : null;
 }
 
 export function osrsStack(quantity) {

@@ -82,6 +82,16 @@ html:root body.osrs-theme.osrs-font-all :is(h3, .h3, h4, .h4) { font-family: "OS
 html:root body.osrs-theme.osrs-font-all :is(h5, .h5, h6, .h6, .btn-lg) { font-family: "OSRS Bold 12", Inter, sans-serif !important; font-weight: 400 !important; }
 html:root body.osrs-theme.osrs-font-all :is(.form-control, input, select, textarea) { font-family: "OSRS Plain 12", Inter, sans-serif !important; }
 
+html:root body.osrs-theme.osrs-crisp-text.osrs-font :is(.block-title, .nav-main-heading, .btn, .nav-main-link-name, .tippy-content, .swal2-title) { font-size: calc(var(--osrs-font-size, 16px) * 0.8) !important; }
+html:root body.osrs-theme.osrs-crisp-text.osrs-font #combat-enemy-name { font-size: calc(var(--osrs-font-size, 16px) * 0.8) !important; }
+html:root body.osrs-theme.osrs-crisp-text.osrs-font-all { font-size: calc(var(--osrs-font-size, 16px) * 0.8) !important; }
+html:root body.osrs-theme.osrs-crisp-text.osrs-font-all *:not(i, svg, svg *, .fa, .fas, .far, .fab, [class*="fa-"], .swal2-icon, .swal2-icon *, [data-osrs-stack], .splash-animation, .splash-animation *) { font-size: inherit !important; }
+html:root body.osrs-theme.osrs-crisp-text.osrs-font-all :is(small, .small, .font-size-sm, .font-size-xs) { font-family: "OSRS Plain 11", Inter, sans-serif !important; font-size: var(--osrs-font-size, 16px) !important; line-height: 1.25; }
+html:root body.osrs-theme.osrs-crisp-text.osrs-font-all :is(small, .small, .font-size-sm, .font-size-xs) :is(b, strong, th, .btn, .font-w600, .font-w700, .font-w-bold) { font-size: calc(var(--osrs-font-size, 16px) * 0.8) !important; }
+html:root body.osrs-theme.osrs-crisp-text.osrs-font-all :is(small, .small, .font-size-sm, .font-size-xs):is(b, strong, th, .btn, .font-w600, .font-w700, .font-w-bold) { font-family: "OSRS Bold 12", Inter, sans-serif !important; font-size: calc(var(--osrs-font-size, 16px) * 0.8) !important; }
+html:root body.osrs-theme.osrs-crisp-text.osrs-font-all :is(h1, .h1, h2, .h2) { font-size: calc(var(--osrs-font-size, 16px) * 1.6) !important; }
+html:root body.osrs-theme.osrs-crisp-text.osrs-font.osrs-bank-layout.osrs-bank-big-icons #bank-container .bank-item div.in-bank small[data-osrs-stack] { font-size: calc(var(--osrs-font-size, 16px) * 0.8) !important; }
+
 html:root body.osrs-theme character-display .btn-group > .btn > .col-12 { padding-right: 0 !important; }
 
 html:root body.osrs-theme.darkMode :is(#page-header, #page-header > .content-header) { background-color: #2f2922 !important; }
@@ -126,6 +136,8 @@ html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked skill-header 
 html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked skill-header > .block > .progress + .progress { display: none !important; }
 html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked skill-header .skill-header-container > .justify-horizontal-center:nth-child(3) { display: none !important; }
 html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked skill-header .skill-header-container > .justify-horizontal-center:nth-child(4) { display: none !important; }
+html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked mastery-pool-display .media-body > .justify-vertical-center > .progress:nth-child(2) { display: none !important; }
+html:root body.osrs-theme.osrs-hide-abyssal-ui.osrs-abyssal-locked mastery-pool-display .media-body > .justify-horizontal-left > small:nth-child(2) { display: none !important; }
 .osrs-slayer-master { display: none; }
 html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master:not(.osrs-master-narrow) { --osrs-slayer-master-width: clamp(32px, 16vw, 80px); position: relative; padding-right: calc(var(--osrs-slayer-master-width) + 4px); }
 html:root body.osrs-theme.osrs-slayer-masters .osrs-has-master:not(.osrs-master-narrow) > .osrs-slayer-master { display: block; position: absolute; top: 0; right: 0; bottom: 0; width: var(--osrs-slayer-master-width); height: 100%; object-fit: contain; object-position: center bottom; }
@@ -181,3 +193,4 @@ html:root body.osrs-theme.osrs-bank-layout .osrs-bank-footer.osrs-searching > .i
 html:root body.osrs-theme.osrs-bank-layout .osrs-bank-footer .input-group-append { display: none; }
 html:root body.osrs-theme.osrs-bank-layout .osrs-bank-search { flex: none; min-width: 88px; margin: 0; }
 html:root body.osrs-theme.osrs-bank-layout #main-bank-options .row > .col-md-6:not(:has(button, input)) { display: none; }
+html:root body.osrs-theme.osrs-level-progress skill-sidebar-aside > [data-osrs-progress]::before { content: attr(data-osrs-progress); margin-right: 4px; color: #ffff00; }

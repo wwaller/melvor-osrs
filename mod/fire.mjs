@@ -31,7 +31,6 @@ function buildPalette() {
   return palette;
 }
 
-/** One frame of the fire: soft hot spots flicker along the bowl, and each pixel above averages the ones beneath it, flickering and cooling as it rises. */
 export function stepFire(heat, random = Math.random) {
   const center = (FIRE_WIDTH - 1) / 2;
   const at = (y, x) => heat[y * FIRE_WIDTH + Math.min(FIRE_WIDTH - 1, Math.max(0, x))];
@@ -51,7 +50,6 @@ export function stepFire(heat, random = Math.random) {
   }
 }
 
-/** The OSRS login art with animated fire in both braziers, kept in place as the window resizes. */
 export function createLoginScene(document, window) {
   const scene = document.createElement('div');
   scene.id = 'osrs-login-scene';

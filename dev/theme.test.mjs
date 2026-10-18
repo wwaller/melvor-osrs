@@ -23,7 +23,7 @@ function element(tag) {
   };
 }
 
-async function boot(values = {}, { brokenFont } = {}) {
+async function boot(values = {}, { brokenFont, strictFontNames } = {}) {
   const classes = new Set();
   const properties = {};
   const darkMode = element('settings-switch');
@@ -46,6 +46,8 @@ async function boot(values = {}, { brokenFont } = {}) {
   globalThis.Settings = class Settings { changeChoiceSetting() {} };
   globalThis.saveData = () => {};
   globalThis.RealmManager = class RealmManager { onRealmRequirementMet() {} };
+  globalThis.Skill = class Skill { renderXP() {} renderAbyssalXP() {} };
+  globalThis.SkillNav = class SkillNav { updateSkillLevel() {} updateAbyssalSkillLevel() {} };
   const stored = new Map();
   globalThis.document = {
     body: { tagName: 'BODY', children: [], style: { setProperty: (name, value) => (properties[`body ${name}`] = value) }, prepend(child) { this.children.unshift(child); child.isConnected = true; child.remove = () => { this.children = this.children.filter((c) => c !== child); child.isConnected = false; }; }, querySelectorAll: () => globalThis.pageElements || [], getBoundingClientRect: () => ({ width: 1000, height: 800 }), setAttribute(name, value) { this[name] = value; }, classList: { toggle: (name, on) => (on ? classes.add(name) : classes.delete(name)), add: (name) => classes.add(name), remove: (name) => classes.delete(name), contains: (name) => classes.has(name) } },
@@ -61,7 +63,10 @@ async function boot(values = {}, { brokenFont } = {}) {
   delete globalThis.game;
   globalThis.window = { innerWidth: 1000, innerHeight: 800, frames: 0, requestAnimationFrame() { this.frames++; return 1; }, cancelAnimationFrame() {}, addEventListener() {}, removeEventListener() {}, getComputedStyle: () => ({ backgroundImage: 'none', getPropertyValue: () => '' }) };
   globalThis.MutationObserver = class { observe() {} };
-  globalThis.FontFace = class { constructor(family, source) { Object.assign(this, { family, source }); } load() { return Promise.resolve(this); } };
+  globalThis.FontFace = class {
+    constructor(family, source) { Object.assign(this, { family, source, status: strictFontNames && !family.startsWith('"') ? 'error' : 'unloaded' }); }
+    load() { return this.status === 'error' ? Promise.reject(new Error('An invalid or illegal string was specified')) : Promise.resolve(this); }
+  };
   const fonts = [];
   const ctx = {
     loadStylesheet: (path) => (ctx.stylesheet = path),
@@ -70,7 +75,7 @@ async function boot(values = {}, { brokenFont } = {}) {
     loadData: async (path) => (path === 'img/backgrounds.json' ? [{ key: 'varlamore', label: 'Varlamore' }, { key: 'nex', label: 'Nex' }] : null),
     characterStorage: { getItem: (key) => stored.get(key), setItem: (key, value) => stored.set(key, value), removeItem: (key) => stored.delete(key) },
     loadModule: (path) => import(`../mod/${path}`),
-    patch: (target, method) => ({ after: (fn) => (patches[`${target.name}.${method}`] = fn), replace: (fn) => (patches[`${target.name}.${method}`] = fn) }),
+    patch: (target, method) => ({ before: (fn) => (patches[`${target.name}.${method}`] = fn), after: (fn) => (patches[`${target.name}.${method}`] = fn), replace: (fn) => (patches[`${target.name}.${method}`] = fn) }),
     settings: { section: (sectionName) => (sectionOrder.includes(sectionName) || sectionOrder.push(sectionName), { add: (list) => list.forEach((c) => { configs[c.name] = c; sectionOf[c.name] = sectionName; }), get: (key) => settings[key] ?? configs[key]?.default, set: (key, value) => (settings[key] = value) }) },
     onCharacterLoaded: (fn) => (hooks.character = fn),
     onCharacterSelectionLoaded: (fn) => (hooks.select = fn),
@@ -120,6 +125,26 @@ test('the login background only shows until a character is loaded', async () => 
   assert.ok(classes.has('osrs-character-select'));
   hooks.character();
   assert.ok(!classes.has('osrs-character-select'));
+});
+
+test('the sidebar shows progress to the next level beside each level, until the level cap', async () => {
+  const { module, patches } = await boot();
+  assert.strictEqual(module.levelProgress(74, 99, 48.756), '(48%)');
+  assert.strictEqual(module.levelProgress(98, 99, 99.9), '(99%)');
+  assert.strictEqual(module.levelProgress(99, 99, 100), null);
+  const span = () => ({ attributes: {}, getAttribute(name) { return this.attributes[name] ?? null; }, setAttribute(name, value) { this.attributes[name] = value; }, removeAttribute(name) { delete this.attributes[name]; } });
+  const aside = { level: span(), abyssalLevel: span() };
+  globalThis.skillNav = { getNavs: () => [{ aside }] };
+  const skill = { level: 74, currentLevelCap: 99, nextLevelProgress: 48.7, abyssalLevel: 60, currentAbyssalLevelCap: 60, nextAbyssalLevelProgress: 100, renderQueue: { xp: true } };
+  patches['Skill.renderXP'].call(skill);
+  assert.strictEqual(aside.level.attributes['data-osrs-progress'], '(48%)');
+  assert.ok(!('data-osrs-progress' in aside.abyssalLevel.attributes));
+  Object.assign(skill, { level: 99, renderQueue: { xp: false } });
+  patches['Skill.renderXP'].call(skill);
+  assert.strictEqual(aside.level.attributes['data-osrs-progress'], '(48%)', 'nothing to redraw, so left alone');
+  patches['SkillNav.updateSkillLevel'](undefined, skill);
+  assert.ok(!('data-osrs-progress' in aside.level.attributes), 'gone at the level cap');
+  delete globalThis.skillNav;
 });
 
 test('bank stacks follow the OSRS rules', async () => {
@@ -277,6 +302,15 @@ test('a part of the debug report that breaks says so and the rest of the report 
   assert.ok(report.includes('== Recent events'), 'the event log is still there');
 });
 
+test('Firefox, which refuses a bare font name with a number in it, gets the quoted name; Chrome keeps the bare one', async () => {
+  const strict = await boot({}, { strictFontNames: true });
+  await settle();
+  assert.deepStrictEqual(strict.fonts.map((face) => face.family).sort(), ['"OSRS Bold 12"', '"OSRS Plain 11"', '"OSRS Plain 12"']);
+  const lenient = await boot();
+  await settle();
+  assert.deepStrictEqual(lenient.fonts.map((face) => face.family).sort(), ['OSRS Bold 12', 'OSRS Plain 11', 'OSRS Plain 12']);
+});
+
 test('a font that cannot load is logged and the other fonts still load', async () => {
   const logged = [];
   const consoleError = console.error;
@@ -421,8 +455,8 @@ test('General keeps the main switches, Accessibility comes second, and everythin
   const { sectionOf, sectionOrder } = await boot();
   assert.deepStrictEqual(sectionOrder, ['General', 'Accessibility', 'Advanced']);
   const inSection = (name) => Object.keys(sectionOf).filter((key) => sectionOf[key] === name).sort();
-  assert.deepStrictEqual(inSection('General'), ['bank-layout', 'enabled', 'font', 'font-all', 'hitsplats', 'login', 'slayer-masters', 'stacks', 'tooltips']);
-  assert.deepStrictEqual(inSection('Accessibility'), ['bank-big-icons', 'bank-names']);
+  assert.deepStrictEqual(inSection('General'), ['bank-layout', 'enabled', 'font', 'font-all', 'hitsplats', 'level-progress', 'login', 'slayer-masters', 'stacks', 'tooltips']);
+  assert.deepStrictEqual(inSection('Accessibility'), ['bank-big-icons', 'bank-names', 'crisp-text']);
   assert.deepStrictEqual(inSection('Advanced'), ['bank-hide-upgrades', 'bank-options-below', 'bevels', 'buttons', 'cards', 'click-recap', 'compact-headers', 'debug', 'hide-abyssal-ui', 'hide-dlc', 'hp-bars', 'sell-locked', 'shadows', 'short-recap', 'sidebar', 'texture']);
 });
 
@@ -563,13 +597,14 @@ test('the OSRS bank with no names leaves items unnamed', async () => {
   assert.ok(!icon.classList.contains('osrs-named'));
 });
 
-test('Melvor\'s Minor Accessibility Features setting turns every Accessibility switch on, once per character and again when switched on, and each can still be turned off', async () => {
+test('Melvor\'s Minor Accessibility Features setting turns the bank Accessibility switches on, once per character and again when switched on, and each can still be turned off', async () => {
   const { classes, hooks, settings, configs, stored } = await boot({ 'bank-layout': true });
   const toggle = { listeners: [], addEventListener(type, fn) { this.listeners.push([type, fn]); } };
   document.querySelectorAll = (selector) => (selector === '[data-setting-id="enableAccessibility"]' ? [toggle] : []);
   globalThis.game = { settings: { enableAccessibility: true } };
   hooks.ready();
   assert.ok(classes.has('osrs-bank-big-icons') && classes.has('osrs-bank-names'), 'on at first load');
+  assert.ok(!classes.has('osrs-crisp-text'), 'crisp text stays opt-in');
   settings['bank-names'] = false;
   configs['bank-names'].onChange(false);
   await settle();
@@ -591,6 +626,14 @@ test('a character without Melvor\'s accessibility setting keeps the Accessibilit
   hooks.ready();
   assert.ok(!classes.has('osrs-bank-big-icons') && !classes.has('osrs-bank-names'));
   delete globalThis.game;
+});
+
+test('crisp pixel text is off by default and follows its switch', async () => {
+  const { classes, configs, sectionOf } = await boot();
+  assert.strictEqual(sectionOf['crisp-text'], 'Accessibility');
+  assert.strictEqual(configs['crisp-text'].default, false);
+  assert.ok(!classes.has('osrs-crisp-text'));
+  assert.ok((await boot({ 'crisp-text': true })).classes.has('osrs-crisp-text'));
 });
 
 test('bigger bank icons are off by default and follow their switch', async () => {

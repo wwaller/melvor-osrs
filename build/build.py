@@ -1,9 +1,4 @@
-"""Build the OSRS Theme mod: recolour Melvor's stylesheets into an OSRS palette and zip mod/.
-
-Every colour in Melvor's CSS is mapped to an OSRS equivalent of the same lightness: the blue-grey
-neutrals become interface browns (white becomes parchment), and each accent hue becomes its OSRS
-counterpart. The output repeats only the colour declarations, under `html body.osrs-theme`.
-"""
+"""Build the OSRS Theme mod: recolour Melvor's stylesheets into an OSRS palette and zip mod/."""
 import colorsys
 import io
 import json
@@ -226,7 +221,6 @@ def wiki_image(title):
 
 
 def stone_texture():
-    """A seamless speckled stone tile: coarse blotches (blurred with wraparound) plus fine grain, as light and dark alpha."""
     coarse = Image.effect_noise((STONE_SIZE, STONE_SIZE), 70).convert("L")
     tiled = Image.new("L", (STONE_SIZE * 3, STONE_SIZE * 3))
     for x in range(3):
@@ -271,7 +265,7 @@ def draw_logo(icon, titlebox):
 
 
 def fill_void(art, sky):
-    """OSRS draws nothing past the view distance, so screenshots have black sky and gaps; paint a sky into every black area too big to be an outline."""
+    # OSRS screenshots have black sky and gaps past the view distance; paint sky into black areas too big to be outlines
     black = art.convert("L").point(lambda value: 255 if value < VOID_LIGHTNESS else 0)
     mask = black.filter(ImageFilter.MinFilter(VOID_MIN_SIZE)).filter(ImageFilter.MaxFilter(VOID_MIN_SIZE)).filter(ImageFilter.GaussianBlur(0.8))
     top, horizon = SKIES[sky]
@@ -283,7 +277,6 @@ def fill_void(art, sky):
 
 
 def write_game_backgrounds(images):
-    """In-game OSRS places for Melvor's background setting, with a thumbnail for its dropdown."""
     folder = images / "backgrounds"
     shutil.rmtree(folder, ignore_errors=True)
     folder.mkdir()
@@ -298,7 +291,6 @@ def write_game_backgrounds(images):
 
 
 def write_slayer_masters(images):
-    """Full-body OSRS Slayer Masters for the Slayer Task box, standing right of the task and facing left towards it as the wiki renders do."""
     folder = images / "slayer"
     shutil.rmtree(folder, ignore_errors=True)
     folder.mkdir()

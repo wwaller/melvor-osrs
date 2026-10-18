@@ -70,12 +70,12 @@ def page(themed):
     adjust = {"Plain 11": "", "Plain 12": ";size-adjust:125%", "Bold 12": ";size-adjust:125%"}
     links += "<style>" + "".join(f'@font-face{{font-family:"OSRS {name}";src:url("{uri}"){adjust[name]}}}' for name, uri in faces.items()) + "</style>"
     images = ROOT / "mod" / "img"
-    variables = ";".join(f"--osrs-{name}:url('{(images / f'{file}').as_uri()}')" for name, file in
+    variables = ";".join(f"--osrs-{name}:url('{(images / file).as_uri()}')" for name, file in
                          [("stone", "stone.png")] + [(f"hitsplat-{h}", f"hitsplat-{h}.png") for h in ("damage", "max-hit", "zero", "poison", "heal")])
     splashes = "".join(f'<div class="splash-animation {cls}{extra}" style="position:absolute;left:{i * 70}px;animation:none">{n}</div>'
                        for i, (cls, extra, n) in enumerate([("text-splash-attack", "", 14), ("text-crit", "", 32), ("text-splash-attack", " osrs-zero", 0), ("text-poison", "", 6), ("text-success", "", 20)]))
     stacks = "".join(f'<span class="btn btn-light mr-1" style="position:relative;width:60px;height:48px"><small data-osrs-stack="{colour}" style="position:absolute;left:4px;top:2px">{text}</small></span>'
-                     for text, colour in [("65535", "yellow"), ("2500K", "white"), ("12M", "green")] if themed) if themed else ""
+                     for text, colour in [("65535", "yellow"), ("2500K", "white"), ("12M", "green")]) if themed else ""
     body = MARKUP.format(skills=skills, splashes=splashes, stacks=stacks)
     return f'<!doctype html><html style="{variables};--osrs-font-size:16px;--osrs-font-size-large:24px;--osrs-font-size-huge:32px"><head><meta charset="utf-8">{links}</head><body class="darkMode{features}">{body}</body></html>'
 

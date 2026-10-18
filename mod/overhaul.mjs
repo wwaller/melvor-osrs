@@ -9,7 +9,7 @@ const POPUP_WAIT_MS = 500;
 const UNKNOWN = Symbol('unknown');
 const ICON = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADoAAAA6CAYAAADhu0ooAAADvUlEQVR4nO2bTUhUURTHz9y5zZgmzjTKKGZfEk4RZkaBIElGRBs3RZtyUbQIVyFZBK7ChdWmIlr2QbZokYTUQkTMlVZiLiRKzawJdBp0RMZ05M0YnHOf9V7OODn3DcGdH8i/+56d83h/zj3v3vcESDu2ZfpJ9rgcGCiCLY2p0K0bTWdxdPVWm+HspcJNqLenwuLIstRrY6AItnQ52fmgGUfHz7eYHKPzw33dONpbddR0Xg4MFIGnK1FP/3DC86HAd0vzM1AEnq5E+3zbURvqT6Lef/Lc0DNHRkdRS4AO+1d6qpxaZaAI3LrQ5MjDijIcDX74ghoOz6K2XL6I6nbloganQ9ZdCmQclYcGMdTKoRHUb0cOoC4sTqOOj9Nsm+cqAithoAjc6gTDGmmptoQa6HyHGo2R0/MaaVZsCNVX4Eb1B6mWZcFAEbjVCdwzk6gT+cWoniVy1oyTb0D15uXRgYyj/42jNuyfTeW7cRStFA4NUp+MiNrM5saqmXZkodbUbUVta/0q9aoYKAK3OsHcAPVLnfHwPGp1Ps2uYU0zOG1n1iyRGSgCtzqBndG9LImRczw7y+Ckn4lLEI6+aadVjGwYKAKXPdteq6DZtkg8CU3ojgkKHNQv0w0DReCyA26JkZNLSSbUa/g3VKuyYaAI3OoEdnEv9dXKT6G5nK/6e8VAs3GVm3bu+0JhKXtHDBSBy5pt6wpdOIqKEpsQ99Auak6L47B+q+fEqsb7V83KgYEi8NRDUO10TM2iswtROtol1pON5WXGRKZbGxE7DNWnfagzcwuojsdBkAkDReCyavRYgcvg5KPmE6jvX4wlTKivWuqvv4I/4zhMs3KqMFAELivQTo8nqb2eiJhsnSxxnI+BAMiEgSJwqwKbn2F1J/WadK7RL31eL2pvSP+mITUYKAJPdba94CvFkWifKwy0j6ye0HRr7ZAeGCgCtyqwQ+wsfPpBO/VFm92GZ93OIO3zbtNna0HUIqcZKAJPNcBonH43NElOnjp3EDX0kp6QJk17SPHi7RKzriwYKAJPddXSu7IDQLTu2YHaLWqQrdEvvbFIQmdrxE5Db4o7DQwUgacewvhNn72W3obBs9C63qXEfxLK7BklhU1CCHTyXmMtjvo7PqO2jdH7Tf09qUdbNMy6Ofupf250UsfMyXagNt7tEXEzX3euC5vEUKt+D9/acJj+8dpvcPTOcLy3ZnKd1MnMuv+O2Qly2MGpBrtEX9X3d6+cOYR68+nbOP9fLgwUwZaGFGv8LYu1ToJAGUd/AeK1GdnEUe23AAAAAElFTkSuQmCC';
 
-/** Every OSRS mod ships this same file. Between them they count each app open once, and on the third one show the offer once ever, unless OSRS Overhaul is loaded. */
+// Every OSRS mod ships this same file; the shared global makes them count each app open once
 export function offerOverhaul(ctx) {
   const shared = (globalThis.osrsOverhaulOffer ??= { storages: [], counted: false });
   shared.storages.push(ctx.accountStorage);
@@ -20,10 +20,7 @@ export function offerOverhaul(ctx) {
   });
 }
 
-/**
- * The offer is remembered in the app's own storage on this device and in every OSRS mod's account storage, and only shows when all of them can be read,
- * none has seen it, and all of them confirm they now have. Having OSRS Overhaul loaded counts as seeing it, so it never shows once Overhaul is uninstalled.
- */
+// Overhaul being loaded counts as seen, so the offer never appears after it is uninstalled
 export function countOpen(storages, overhaul, show, local) {
   const stores = [appStorage(local), ...storages];
   const values = (key) => stores.map((store) => peek(() => store.getItem(key)));
@@ -59,7 +56,6 @@ function appStorage(local) {
   };
 }
 
-/** True if any sign of OSRS Overhaul is found, false only if every check ran and found none, otherwise unknown. */
 export function overhaulState() {
   const signs = [
     peek(() => game.registeredNamespaces.hasNamespace(OVERHAUL_NAMESPACE)),

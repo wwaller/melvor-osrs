@@ -27,7 +27,6 @@ function hlsToRgb(hue, lightness, saturation) {
   return [hueToRgb(low, high, hue + 1 / 3), hueToRgb(low, high, hue), hueToRgb(low, high, hue - 1 / 3)];
 }
 
-/** The theme's OSRS brown for a grey or blue-grey colour of the same lightness, or null for an accent colour. */
 export function osrsNeutral(red, green, blue) {
   const [hue, lightness, saturation] = rgbToHls(red / 255, green / 255, blue / 255);
   if (saturation >= 0.3 && lightness >= 0.06 && lightness <= 0.98) return null;
@@ -36,7 +35,6 @@ export function osrsNeutral(red, green, blue) {
   return hlsToRgb(NEUTRAL_HUE / 360, 0.04 + lightness * 0.95, targetSaturation).map((value) => Math.round(value * 255));
 }
 
-/** Recolours greys painted directly on elements (inline styles no stylesheet can reach) in a part of the page. */
 export function createRecolorer(window) {
   const applied = new Map();
   return {
