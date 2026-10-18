@@ -13,8 +13,8 @@ const HIDE_FOOD_CLASS = 'mobile-combat-hide-food-on';
 const FOOD_SECTION_CLASS = 'mobile-combat-food-section';
 const CORNER_MENUS = [
   { tab: 0, label: 'Equipment', element: 'combat-menu-0', media: 'assets/media/bank/armour_helmet_bronze.png' },
-  { tab: 1, label: 'Spellbook', element: 'combat-menu-1', media: 'assets/media/skills/combat/spellbook.png' },
-  { tab: 2, label: 'Prayer', element: 'combat-menu-2', media: 'assets/media/skills/prayer/prayer.png' },
+  { tab: 1, label: 'Spellbook', element: 'combat-menu-1', media: 'assets/media/skills/combat/spellbook.png', skill: 'altMagic', active: (player) => (player.attackType === 'magic' ? player.spellSelection.attack : undefined) },
+  { tab: 2, label: 'Prayer', element: 'combat-menu-2', media: 'assets/media/skills/prayer/prayer.png', skill: 'prayer', active: (player) => player.activePrayers.values().next().value, count: (player) => player.prayerPoints },
   { tab: 5, label: 'Slayer', element: 'combat-slayer-task-menu', media: 'assets/media/skills/slayer/slayer.png' },
 ];
 const OPEN_CARD_CLASS = 'mobile-combat-area-open';
@@ -22,7 +22,6 @@ const UNMET_CARD_CLASS = 'mobile-combat-area-unmet';
 const AREA_TITLE_CLASS = 'mobile-combat-area-title';
 const AREA_DETAILS_CLASS = 'mobile-combat-area-details';
 
-/** A skill with one target at a time, started the way clicking its card starts it. */
 const oneTarget = (current, startMethod) => ({
   remember: (skill) => [current(skill)?.id],
   recall: (skill, [id]) => {
@@ -31,7 +30,6 @@ const oneTarget = (current, startMethod) => ({
   },
 });
 
-/** A skill picked from a recipe list and started with one button, like Smithing: on its page, the button to start the last recipe sits under the skill header. */
 const recipeSkill = (id, page, selected, select, start) => ({
   id,
   page,
@@ -49,7 +47,6 @@ const recipeSkill = (id, page, selected, select, start) => ({
   },
 });
 
-/** Where each skill keeps its cards (the Start Last Target button goes ahead of them, or under the skill header on a recipe skill's page) and how to remember and restart the last target. The card registries are the game's own globals. */
 const SKILLS = [
   {
     id: 'melvorD:Woodcutting',
@@ -121,7 +118,6 @@ function registry(spec) {
   }
 }
 
-/** A big button (green unless given another Bootstrap style) reading the title, then the target's icon, with the target's name under it. */
 function launcher(title, style = 'btn-success') {
   const button = document.createElement('button');
   button.type = 'button';
@@ -143,7 +139,6 @@ function launcher(title, style = 'btn-success') {
   };
 }
 
-/** What the player is fighting, as ids to save: a dungeon, depth or stronghold (with its tier) as a whole, otherwise the monster and its area. */
 function fightOf(combat) {
   const area = combat.selectedArea;
   if (!area || combat.activeEvent !== undefined) return undefined;
@@ -152,7 +147,6 @@ function fightOf(combat) {
   return combat.selectedMonster && [area.id, combat.selectedMonster.id];
 }
 
-/** A saved fight back as something to start the way its Fight or Start button would. */
 function recallFight([areaID, detail]) {
   const area = game.combatAreas.getObjectByID(areaID);
   if (!area) return undefined;
@@ -163,7 +157,6 @@ function recallFight([areaID, detail]) {
   return monster && { name: monster.name, media: monster.media, start: () => game.combat.selectMonster(monster, area) };
 }
 
-/** One skill's Start Last Target button, ahead of its cards (or under the skill header on a recipe skill's page), shown while the skill is idle. */
 function starter(spec) {
   let section;
   let start;
@@ -216,7 +209,7 @@ export function setup(ctx) {
     { type: 'switch', name: 'jump-to-last', label: 'Jump To Last section', hint: 'On the combat page, a section above your Player panel with a button to fight the last enemy again once a fight ends.', default: true, onChange: switches['jump-to-last'] },
     { type: 'switch', name: 'compact-area-select', label: 'Compact Area Select', hint: 'Made for mobile. Shows the area types as a 2x2 grid in place of the Select Combat Area dropdown (the open one in red, pressed again to hide its areas), and each area as just its art and name, two to a row and dimmed if you cannot enter it yet. An opened area shows its full card and enemies across the whole width.', default: true, onChange: switches['compact-area-select'] },
     { type: 'switch', name: 'attack-styles-under-enemy', label: 'Attack Styles above the enemy stats', hint: 'Made for mobile. Moves the Attack Style section to just above the Offensive Stats of the enemy, so you can switch without scrolling back up. It is the same section, moved, so buttons other mods add to it come along.', default: false, onChange: switches['attack-styles-under-enemy'] },
-    { type: 'switch', name: 'combat-menu-buttons', label: 'Combat buttons in the corner', hint: 'On the combat page, adds Equipment, Spellbook, Prayer and Slayer buttons in the bottom right, above the Skill Switcher buttons if you have that mod. Each switches to that menu, unfolds your side of the page if it is folded away, and scrolls to it. While you fight on a narrow screen, a button with the enemy on top scrolls down to the fight.', default: true, onChange: switches['combat-menu-buttons'] },
+    { type: 'switch', name: 'combat-menu-buttons', label: 'Combat buttons in the corner', hint: 'On the combat page, adds Equipment, Spellbook, Prayer and Slayer buttons in the bottom right, above the Skill Switcher buttons if you have that mod. Each switches to that menu, unfolds your side of the page if it is folded away, and scrolls to it. Prayer and Spellbook show the prayer you have on and the spell you are casting, with your prayer points under Prayer. While you fight on a narrow screen, a button with the enemy on top scrolls down to the fight.', default: true, onChange: switches['combat-menu-buttons'] },
     { type: 'switch', name: 'scroll-on-area-fight', label: 'Scroll to Combat after picking an enemy', hint: 'When you start a fight from an area card (a monster, dungeon or stronghold), scrolls down to the fight.', default: true, onChange: switches['scroll-on-area-fight'] },
     { type: 'switch', name: 'hide-hp-bars', label: 'Hide the HP bars and attack intervals on the combat page', hint: 'Hides your HP bar, the enemy HP and barrier bars, and both attack interval timers (your familiar one too) on the combat page, since the combat minibar already shows them. The HP numbers stay.', default: false, onChange: switches['hide-hp-bars'] },
     { type: 'switch', name: 'hide-food', label: 'Hide the Food section on the combat page', hint: 'Hides the Food section on the combat page, since the combat minibar already has your food.', default: false, onChange: switches['hide-food'] },
@@ -231,6 +224,8 @@ export function setup(ctx) {
   let corner;
   let cornerFloat;
   let cornerFight;
+  let cornerMenus;
+  let prayerPoints;
   let hpBarsTagged = false;
   let foodTagged = false;
   let fightKey;
@@ -264,6 +259,7 @@ export function setup(ctx) {
     if (game.combat) {
       showJump(game.combat);
       closeAreasOnFight(game.combat);
+      showPrayerPoints();
     }
     showCompactAreas();
     moveAttackStyles();
@@ -315,7 +311,7 @@ export function setup(ctx) {
 
   let switcher = null;
   let switcherLookedAt = -Infinity;
-  /** Finding Quick Skill Switcher's button searches the whole page, so until it turns up that is done at most once a second, not on every render. */
+  // Page-wide query, so throttled until the button turns up.
   const skillSwitcher = () => {
     if (switcher?.isConnected) return switcher;
     const now = performance.now();
@@ -323,6 +319,22 @@ export function setup(ctx) {
     switcherLookedAt = now;
     switcher = document.querySelector('.skill-switcher-button');
     return switcher;
+  };
+
+  const menuIcon = (menu) => document.getElementById(`combat-menu-item-${menu.tab}`)?.src || (typeof assets === 'undefined' ? menu.media : assets.getURI(menu.media));
+  const fighter = () => (game.isGolbinRaid ? game.golbinRaid : game.combat).player;
+  const setText = (element, text) => {
+    if (element.textContent !== text) element.textContent = text;
+  };
+
+  const showPrayerPoints = () => {
+    if (!prayerPoints?.isConnected) {
+      const heading = document.querySelector('#combat-prayer-book-menu h5');
+      if (!heading) return;
+      prayerPoints = Object.assign(document.createElement('small'), { className: 'ml-1 text-success' });
+      heading.append(prayerPoints);
+    }
+    setText(prayerPoints, numberWithCommas(fighter().prayerPoints));
   };
 
   const showCorner = () => {
@@ -338,17 +350,21 @@ export function setup(ctx) {
       cornerFight.append(Object.assign(document.createElement('img'), { className: 'skill-icon-xs m-0' }));
       cornerFight.addEventListener('click', scrollToCombat);
       corner.append(cornerFight);
-      for (const menu of CORNER_MENUS) {
+      cornerMenus = CORNER_MENUS.map((menu) => {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'btn btn-sm btn-light mobile-combat-corner-button';
         button.title = menu.label;
         button.setAttribute('aria-label', menu.label);
-        const tab = document.getElementById(`combat-menu-item-${menu.tab}`);
-        button.append(Object.assign(document.createElement('img'), { className: 'skill-icon-xs m-0', src: tab?.src || (typeof assets === 'undefined' ? menu.media : assets.getURI(menu.media)) }));
+        const icon = Object.assign(document.createElement('img'), { className: 'skill-icon-xs m-0', src: menuIcon(menu) });
+        button.append(icon);
+        const count = menu.count && Object.assign(document.createElement('span'), { className: 'mobile-combat-corner-count' });
+        if (count) button.append(count);
+        button.classList.toggle('mobile-combat-corner-counted', Boolean(count));
         button.addEventListener('click', () => openCombatMenu(menu));
         corner.append(button);
-      }
+        return { menu, button, icon, count };
+      });
       cornerFloat = document.createElement('div');
       cornerFloat.className = 'sidemenu bg-white rounded mobile-combat-corner-float d-none';
       (document.getElementById('page-container') ?? document.body).append(cornerFloat);
@@ -372,6 +388,18 @@ export function setup(ctx) {
     if (corner.parentElement !== parent || corner.nextElementSibling !== before) parent.insertBefore(corner, before);
     corner.classList.remove('d-none');
     cornerFloat.classList.toggle('d-none', parent !== cornerFloat);
+    const player = fighter();
+    for (const { menu, button, icon, count } of cornerMenus) {
+      if (menu.skill) button.classList.toggle('d-none', !game[menu.skill].isUnlocked && !game.isGolbinRaid);
+      if (menu.active) {
+        const media = menu.active(player)?.media ?? menuIcon(menu);
+        if (icon.dataset.media !== media) {
+          icon.dataset.media = media;
+          icon.src = media;
+        }
+      }
+      if (count) setText(count, formatNumber(menu.count(player)));
+    }
     const enemyMedia = game.combat?.isActive && !game.golbinRaid?.isActive ? game.combat.selectedMonster?.media : undefined;
     cornerFight.classList.toggle('d-none', !enemyMedia);
     const enemyIcon = cornerFight.firstElementChild;
@@ -481,5 +509,6 @@ export function setup(ctx) {
   ctx.onInterfaceReady(() => {
     sync();
     ctx.patch(Game, 'render').after(sync);
+    ctx.loadModule('conflicts.mjs').then(({ warnAboutConflicts }) => warnAboutConflicts(ctx, 'Better Mobile Combat UI'));
   });
 }

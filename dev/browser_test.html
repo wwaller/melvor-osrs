@@ -15,7 +15,7 @@
 </div>
 <div id="combat-menu-0">Equipment</div>
 <div class="d-none" id="combat-menu-1">Spellbook menu</div>
-<div class="d-none" id="combat-menu-2">Prayer menu</div>
+<div class="d-none" id="combat-menu-2"><prayer-book-menu id="combat-prayer-book-menu"><div class="row"><div class="col-6"><h5>Prayer</h5></div><div class="col-6"><h5><small>Click to Activate</small></h5></div></div></prayer-book-menu></div>
 <div class="d-none" id="combat-menu-5"><div id="combat-slayer-task-menu">Slayer task: 10 Chickens</div></div>
 </div></div><div class="block-content" id="desktop-combat-menus">Player stats<div class="block block-rounded-double bg-combat-inner-dark text-center mb-2 p-0-mobile" id="combat-attack-styles">
   <div class="block-header block-header-default bg-dark-bank-block-header px-3 py-1 mb-1"><h5 class="font-size-sm font-w600 mb-0 w-100 text-center">Attack Style</h5></div>
@@ -418,9 +418,14 @@ const farmlands = { id: 'melvorD:Farmlands', name: 'Farmlands', media: '/mod/ico
 const coop = { id: 'melvorD:Chicken_Coop', name: 'Chicken Coop', media: '/mod/icon.png?coop' };
 const depth = { id: 'melvorItA:Shattered_Depths', name: 'Shattered Depths', media: '/mod/icon.png?depth' };
 const fortress = { id: 'melvorF:Bandit_Base', name: 'Bandit Base', media: '/mod/icon.png?fort', getTierName: (tier) => `${tier} Bandit Base` };
+const windStrike = { id: 'melvorD:WindStrike', media: '/mod/icon.png?wind-strike' };
+const fireStrike = { id: 'melvorD:FireStrike', media: '/mod/icon.png?fire-strike' };
+const thickSkin = { id: 'melvorD:Thick_Skin', media: '/mod/icon.png?thick-skin' };
+const protectFromMelee = { id: 'melvorF:Protect_from_Melee', media: '/mod/icon.png?protect-from-melee' };
 const fights = [];
 const combat = {
   isActive: false, selectedArea: undefined, selectedMonster: undefined, strongholdTier: 'Standard', activeEvent: undefined,
+  player: { attackType: 'melee', spellSelection: { attack: windStrike }, activePrayers: new Set(), prayerPoints: 3860 },
   selectMonster: (monster, area) => fights.push(`monster ${monster.id} in ${area.id}`),
   selectDungeon: (area) => fights.push(`dungeon ${area.id}`),
   selectAbyssDepth: (area) => fights.push(`depth ${area.id}`),
@@ -461,7 +466,12 @@ Object.assign(window.game, {
   dungeons: registryOf([coop]),
   abyssDepths: registryOf([depth]),
   strongholds: registryOf([fortress]),
+  prayer: { isUnlocked: true },
+  altMagic: { isUnlocked: true },
+  isGolbinRaid: false,
 });
+window.numberWithCommas = (number) => number.toLocaleString('en-US');
+window.formatNumber = (number) => (number >= 1e6 ? `${numberWithCommas(Math.floor(number / 1000))}K` : numberWithCommas(number));
 const stored = {};
 const settingConfigs = {};
 const settingValues = {};
@@ -474,6 +484,9 @@ const ctx = {
   patch: (target, method) => ({ after: (fn) => (render = fn) }),
   onCharacterLoaded: (fn) => (hooks.character = fn),
   onInterfaceReady: (fn) => (hooks.ready = fn),
+  loadModule: (path) => import(`/mod/${path}`),
+  accountStorage: { getItem: () => undefined, setItem() {} },
+  getResourceUrl: (path) => `/mod/${path}`,
 };
 const onByDefault = ['compact-area-select', 'combat-menu-buttons', 'scroll-on-area-fight'];
 for (const name of onByDefault) settingValues[name] = false;
@@ -882,6 +895,54 @@ check('back on their own once Skill Switcher is gone', cornerStack().parentEleme
 for (let i = 0; i < 5; i++) render();
 check('only one set of buttons, ever', document.querySelectorAll('.mobile-combat-corner').length === 1 && document.querySelectorAll('.mobile-combat-corner-float').length === 1);
 
+const cornerIcon = (title) => cornerButton(title).querySelector('img').getAttribute('src').split('?')[1];
+const cornerCount = () => cornerButton('Prayer').querySelector('.mobile-combat-corner-count');
+const prayerHeading = () => document.querySelector('#combat-prayer-book-menu h5');
+check('with no prayer on and a spell picked but not cast, Prayer and Spellbook keep Melvor\'s icons', cornerIcon('Prayer') === 'prayer' && cornerIcon('Spellbook') === 'spellbook');
+combat.player.activePrayers.add(thickSkin);
+render();
+check('turning a prayer on puts that prayer on the Prayer button', cornerIcon('Prayer') === 'thick-skin');
+combat.player.activePrayers.add(protectFromMelee);
+render();
+check('with two on, it keeps the first one turned on', cornerIcon('Prayer') === 'thick-skin');
+combat.player.activePrayers.clear();
+render();
+check('and turning them off brings Melvor\'s icon back', cornerIcon('Prayer') === 'prayer');
+combat.player.attackType = 'magic';
+render();
+check('casting with magic puts the attack spell on the Spellbook button', cornerIcon('Spellbook') === 'wind-strike');
+combat.player.spellSelection.attack = fireStrike;
+render();
+check('and it follows a new spell', cornerIcon('Spellbook') === 'fire-strike');
+combat.player.attackType = 'ranged';
+render();
+check('switching away from magic brings Melvor\'s icon back', cornerIcon('Spellbook') === 'spellbook');
+check('the Prayer button shows your prayer points along its bottom edge, over the icon', cornerCount()?.textContent === '3,860' && shown(cornerCount()) && Math.abs(box(cornerCount()).bottom - box(cornerButton('Prayer')).bottom) < 3 && box(cornerCount()).width <= box(cornerButton('Prayer')).width, `${cornerCount()?.textContent} ${JSON.stringify(box(cornerCount()))}`);
+check('the Prayer menu heading shows them too, the way Melvor\'s sidebar does', prayerHeading().textContent === 'Prayer3,860' && prayerHeading().querySelector('small').className === 'ml-1 text-success' && document.querySelectorAll('#combat-prayer-book-menu small.text-success').length === 1, prayerHeading().textContent);
+combat.player.prayerPoints = 1234567;
+render();
+check('a big total stays short on the button and in full in the heading', cornerCount().textContent === '1,234K' && prayerHeading().textContent === 'Prayer1,234,567', `${cornerCount().textContent} ${prayerHeading().textContent}`);
+const raid = { isActive: true, player: { attackType: 'magic', spellSelection: { attack: windStrike }, activePrayers: new Set([protectFromMelee]), prayerPoints: 12 } };
+Object.assign(window.game, { isGolbinRaid: true, golbinRaid: raid });
+render();
+check('in a Golbin Raid they show the raid\'s own prayer, spell and prayer points', cornerIcon('Prayer') === 'protect-from-melee' && cornerIcon('Spellbook') === 'wind-strike' && cornerCount().textContent === '12' && prayerHeading().textContent === 'Prayer12');
+window.game.isGolbinRaid = false;
+delete window.game.golbinRaid;
+combat.player.prayerPoints = 3860;
+window.game.prayer.isUnlocked = false;
+window.game.altMagic.isUnlocked = false;
+render();
+check('with Prayer and Magic still locked, their buttons are not on the shelf', !cornerButton('Prayer') && !cornerButton('Spellbook') && cornerButtons().length === 2);
+Object.assign(window.game, { isGolbinRaid: true, golbinRaid: raid });
+render();
+check('except in a Golbin Raid, where Melvor opens those menus anyway', Boolean(cornerButton('Prayer')) && Boolean(cornerButton('Spellbook')));
+window.game.isGolbinRaid = false;
+delete window.game.golbinRaid;
+window.game.prayer.isUnlocked = true;
+window.game.altMagic.isUnlocked = true;
+render();
+check('and they come back once unlocked', cornerButtons().length === 4);
+
 const playerContainer = document.getElementById('combat-player-container');
 playerContainer.classList.add('d-mobile-none');
 window.scrollTo(0, 0);
@@ -919,11 +980,11 @@ check('with the desktop layout, where Melvor shows the task outside the tabs, Sl
 document.getElementById('combat-menu-5').append(slayerTask);
 changeCombatMenu(1);
 window.scrollTo(0, 0);
-lockedMenus.add(2);
+lockedMenus.add(5);
 const scrollsBefore = cornerScrolls.length;
-cornerButton('Prayer').click();
+cornerButton('Slayer').click();
 await new Promise((resolve) => setTimeout(resolve, 100));
-check('with Prayer still locked, Melvor shows its own locked message and nothing scrolls', JSON.stringify(lockedAlerts) === '[2]' && cornerScrolls.length === scrollsBefore && !document.getElementById('combat-menu-1').classList.contains('d-none'));
+check('with Slayer still locked, Melvor shows its own locked message and nothing scrolls', JSON.stringify(lockedAlerts) === '[5]' && cornerScrolls.length === scrollsBefore && !document.getElementById('combat-menu-1').classList.contains('d-none'));
 lockedMenus.clear();
 check('no Scroll to Combat button on the shelf while not fighting', !shown(cornerFightButton()));
 fightTo(farmlands, chicken);

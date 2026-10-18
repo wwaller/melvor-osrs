@@ -26,7 +26,9 @@ body:not(.mobile-combat-jump-on) .mobile-combat-jump { display: none !important;
 .mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) > .block > .media > .media-body:not(.mobile-combat-area-details) { font-size: 0.8rem; }
 .mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open).mobile-combat-area-unmet > .block > .media { opacity: 0.5; }
 body:not(.mobile-combat-styles-on) .mobile-combat-styles-section { display: none !important; }
-.mobile-combat-corner-button { width: 42px; height: 34px; padding: 0; }
+.mobile-combat-corner-button { position: relative; width: 42px; height: 34px; padding: 0; }
+.mobile-combat-corner-counted img { transform: translateY(-5px); }
+.mobile-combat-corner-count { position: absolute; left: 0; right: 0; bottom: 1px; font-size: 10px; font-weight: 700; line-height: 1; color: #fff; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; pointer-events: none; }
 body:not(.mobile-combat-corner-on) :is(.mobile-combat-corner, .mobile-combat-corner-float) { display: none !important; }
 @media (min-width: 768px) {
   .mobile-combat-corner-fight { display: none !important; }
