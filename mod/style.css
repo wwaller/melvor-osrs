@@ -7,3 +7,6 @@
 .dropdown-menu[aria-labelledby^="osrsCharacter:"] { max-height: min(320px, 60vh); overflow-y: auto; overscroll-behavior: contain; }
 .osrs-character-settings { position: absolute; right: 12px; bottom: 12px; padding: 4px; font-size: 16px; color: rgba(255, 255, 255, 0.55); cursor: pointer; }
 .osrs-character-settings:hover { color: #fff; }
+#osrs-character-combat-stage { position: relative; }
+#osrs-character-combat-stage > canvas.d-none ~ .osrs-character-overhead { display: none; }
+.osrs-character-overhead { position: absolute; width: 50px; height: 50px; left: calc(var(--osrs-character-crown-x, 25%) - 25px); top: max(0px, calc(var(--osrs-character-crown, 56px) - 56px)); image-rendering: pixelated; pointer-events: none; }

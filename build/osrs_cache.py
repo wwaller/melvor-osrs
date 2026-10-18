@@ -86,7 +86,6 @@ def _fetch(url, path):
 
 
 def _reference_table(data):
-    """Group id -> list of file ids, from an index's reference table."""
     reader = Reader(data)
     protocol = reader.u8()
     if protocol >= 6:
@@ -116,7 +115,6 @@ def _reference_table(data):
 
 
 def split_group(data, file_ids):
-    """The contents of each file in a multi-file group, keyed by file id."""
     if len(file_ids) == 1:
         return {file_ids[0]: data}
     chunks = data[-1]

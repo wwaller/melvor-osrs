@@ -4,6 +4,8 @@ const CANVAS_HEIGHT = 320;
 const DEFAULT_YAW = 128;
 const STAGE_YAW = 1664;
 const STAGE_HEIGHT = 260;
+const OVERHEAD_ROOM = 30;
+const OVERHEAD_PRAYERS = ['Protect_from_Melee', 'Protect_from_Ranged', 'Protect_from_Magic', 'Redemption', 'Retribution'];
 const SHADOW_WIDTH = 90;
 const DRAG_TURN = 4;
 const COLLAPSED_KEY = 'collapsed';
@@ -69,6 +71,7 @@ export async function setup(ctx) {
   let panel = null;
   let sidebarCategory = null;
   let stageCanvas = null;
+  let overhead = null;
   const views = [];
   let data = null;
   let rest = null;
@@ -227,7 +230,6 @@ export async function setup(ctx) {
     if (game.thieving?.isActive) return game.thieving.stunState === THIEVING_STUNNED ? STUNNED_POSE : PICKPOCKET_POSE;
     return STAND_POSE;
   };
-  /** The animation to show and a key that changes whenever it should start over: the player's latest attack, else the active skill. */
   const activePose = () => {
     if (attack && performance.now() < attack.until) return { pose: attack.pose, key: `attack-${attack.serial}` };
     const pose = base.poses[skillPose()] ? skillPose() : STAND_POSE;
@@ -272,7 +274,7 @@ export async function setup(ctx) {
       const height = Math.round(view.height * ratio);
       if (view.canvas.width !== width) view.canvas.width = width;
       if (view.canvas.height !== height) view.canvas.height = height;
-      const { ground, origin, scale, tilt, top } = view.renderer.draw(posed, { yaw: view.yaw(), reference });
+      const { ground, origin, scale, tilt, top, head } = view.renderer.draw(posed, { yaw: view.yaw(), headroom: (view.headroom ?? 0) * ratio, reference });
       const pixels = (value) => `${Math.round(value / ratio)}px`;
       setStyleVariables(view.canvas.parentElement, {
         '--osrs-character-ground': pixels(view.canvas.height - ground),
@@ -280,6 +282,8 @@ export async function setup(ctx) {
         '--osrs-character-shadow-width': pixels(SHADOW_WIDTH * scale),
         '--osrs-character-shadow-height': pixels(SHADOW_WIDTH * scale * tilt),
         '--osrs-character-head': pixels(top),
+        '--osrs-character-crown': pixels(head.y),
+        '--osrs-character-crown-x': `${Math.round(view.canvas.offsetLeft + head.x / ratio)}px`,
       });
     }
   };
@@ -290,7 +294,6 @@ export async function setup(ctx) {
     clearTimeout(stepTimer);
     stepTimer = setTimeout(step, delay);
   };
-  /** Shows the current animation frame, holds it for its length in client ticks, then moves on, following the active skill. */
   function step() {
     if (activePose().key !== poseKey) {
       rebuild();
@@ -377,7 +380,6 @@ export async function setup(ctx) {
     holder.append(gear);
   };
 
-  /** A Character category right below Shop and Bank; its one item holds the canvas instead of a link. */
   const createSidebar = () => {
     const order = sidebar.categories().map((category) => category.id);
     const next = order.includes(TOP_CATEGORY) ? order[order.indexOf(TOP_CATEGORY) + 1] : undefined;
@@ -422,9 +424,22 @@ export async function setup(ctx) {
     enemyImage.before(stage);
     const element = document.createElement('canvas');
     element.style.cssText = `flex:1 1 50%;min-width:0;height:${STAGE_HEIGHT}px`;
-    stage.append(element, enemyImage);
+    overhead = document.createElement('img');
+    overhead.className = 'osrs-character-overhead d-none';
+    overhead.alt = '';
+    stage.append(element, enemyImage, overhead);
     Object.assign(enemyImage.style, { flex: '1 1 50%', minWidth: '0' });
     return element;
+  };
+  const showOverhead = () => {
+    if (!overhead) return;
+    const active = [...game.combat.player.activePrayers];
+    const prayer = OVERHEAD_PRAYERS.find((id) => active.some((each) => each.localID === id));
+    overhead.classList.toggle('d-none', !prayer);
+    if (prayer && overhead.dataset.prayer !== prayer) {
+      overhead.dataset.prayer = prayer;
+      overhead.src = ctx.getResourceUrl(`overheads/${prayer}.png`);
+    }
   };
   function applyStage() {
     if (stageCanvas) stageCanvas.classList.toggle('d-none', !stageOn());
@@ -471,6 +486,13 @@ export async function setup(ctx) {
     });
   }
 
+  ctx.patch(Player, 'renderPrayerSelection').replace(function (original, ...args) {
+    const changed = this.renderQueue.prayerSelection;
+    const result = original(...args);
+    if (changed && this === game.combat.player) showOverhead();
+    return result;
+  });
+
   ctx.patch(Player, 'attack').replace(function (originalAttack, ...args) {
     const result = originalAttack(...args);
     if (this === game.combat.player) onPlayerAttack(this);
@@ -508,8 +530,9 @@ export async function setup(ctx) {
     stageCanvas = createStage();
     const stageRenderer = stageCanvas && createRenderer(stageCanvas, { antialias: !phone });
     if (stageRenderer) {
-      views.push({ canvas: stageCanvas, renderer: stageRenderer, height: STAGE_HEIGHT, yaw: () => STAGE_YAW, enabled: stageOn, onScreen: true });
+      views.push({ canvas: stageCanvas, renderer: stageRenderer, height: STAGE_HEIGHT, headroom: OVERHEAD_ROOM, yaw: () => STAGE_YAW, enabled: stageOn, onScreen: true });
       applyStage();
+      showOverhead();
     } else {
       stageCanvas?.remove();
       stageCanvas = null;
@@ -532,12 +555,11 @@ export async function setup(ctx) {
 
 const numbered = (count) => Array.from({ length: count }, (_, index) => ({ value: index, display: String(index + 1) }));
 
-/** Melvor opens and closes the mobile sidebar on a sideways swipe; turning the character is one too. */
+// Melvor toggles the mobile sidebar on a sideways swipe, which dragging the character also triggers.
 function blockSidebarSwipe(blocked) {
   if (typeof disableSwipeEvents !== 'undefined') disableSwipeEvents = blocked;
 }
 
-/** Phones draw the character with fewer frames and no anti-aliasing to save battery. */
 function onPhone() {
   if (typeof nativeManager !== 'undefined' && nativeManager.isMobile) return true;
   return typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;

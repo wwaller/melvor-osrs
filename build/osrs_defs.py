@@ -113,7 +113,7 @@ def kit(data):
 
 
 def sequence(data):
-    """A frame-based animation: frame ids ((frame archive << 16) | frame file), their lengths in client ticks, and any items it puts in the hands."""
+    # frames are (frame archive << 16) | frame file
     reader = Reader(data)
     definition = {"frames": [], "lengths": [], "left_hand": -1, "right_hand": -1}
     while (opcode := reader.u8()) != 0:
@@ -163,7 +163,6 @@ def frame_skeleton_id(data):
 
 
 def frame(data, skeleton_definition):
-    """The transforms of one animation frame: (skeleton entry, dx, dy, dz) in order."""
     types = skeleton_definition["types"]
     flags = Reader(data, 3)
     length = data[2]

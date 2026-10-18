@@ -24,7 +24,6 @@ BRIGHTNESS = 0.6
 
 
 def _hsl_to_rgb(hsl):
-    """The renderer's palette: OSRS 16-bit HSL to RGB with its brightness curve."""
     hue = (hsl >> 10 & 63) / 64 + 0.5 / 64
     saturation = (hsl >> 7 & 7) / 8 + 0.5 / 8
     luminance = (hsl & 127) / 128
@@ -52,7 +51,6 @@ PALETTE = [_hsl_to_rgb(hsl) for hsl in range(65536)]
 
 
 def _flat_light():
-    """How bright the renderer lights a face that looks straight out of the cape's back."""
     ambient, contrast, x, y, z = PLAYER_LIGHT
     scale = (math.trunc(math.sqrt(x * x + y * y + z * z)) * contrast) >> 8
     return math.trunc(z * -256 / scale) + ambient
@@ -72,7 +70,6 @@ for _hsl in range(65536):
 
 @functools.cache
 def to_hsl(rgb):
-    """The OSRS colour that shows as this RGB on the cape's back once the renderer has lit it."""
     shown = min(SHOWN, key=lambda code: sum((a - b) ** 2 for a, b in zip(PALETTE[code], rgb)))
     return SHOWN[shown]
 
@@ -82,14 +79,12 @@ def _hex(color):
 
 
 def shades(color):
-    """Light, mid and dark tones of one colour, spaced like the Agility cape's own three blues."""
     h, l, s = colorsys.rgb_to_hls(*(v / 255 for v in _hex(color)))
     tone = lambda dl, ds: tuple(round(v * 255) for v in colorsys.hls_to_rgb(h, min(1, l + dl), max(0, s - ds)))
     return tuple(to_hsl(rgb) for rgb in (tone(0.12, 0.2), tone(0.04, 0.1), tone(0, 0)))
 
 
 def _emblem_pixels(icon, cape_color):
-    """The icon's opaque pixels, scaled to fill where the Agility emblem was and lifted when it would vanish into a dark cape; a shrunk painted icon is also cut to a few flat colours like an OSRS emblem."""
     icon = icon.convert("RGBA")
     icon = icon.crop(icon.getbbox())
     scale = min(EMBLEM_BOX[0] / icon.width, EMBLEM_BOX[1] / icon.height)
@@ -108,7 +103,6 @@ def _emblem_pixels(icon, cape_color):
 
 
 def _faces_out(model, faces):
-    """Winding sign of the faces that look out of the cape's back, so new faces light the same way."""
     vx, vy = model["vx"], model["vy"]
     f = faces[0]
     a, b, c = model["fa"][f], model["fb"][f], model["fc"][f]
@@ -116,7 +110,6 @@ def _faces_out(model, faces):
 
 
 def build(model, color, accent, emblem, superior):
-    """A copy of the decoded Agility cape mesh with its colours swapped and the emblem rebuilt from the icon."""
     body = shades(color)
     trim = shades(GOLD) if superior else body
     swap = {**dict(zip(BODY, body)), **dict(zip(TRIM, trim)), **dict(zip(ACCENT, accent))}

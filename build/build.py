@@ -32,6 +32,13 @@ MODELS = 7
 WIKI_API = "https://oldschool.runescape.wiki/api.php"
 USER_AGENT = "melvor-osrs-character/0.1 (personal Melvor Idle mod build)"
 ICON = "File:Worn Equipment.png"
+OVERHEAD_PRAYERS = {
+    "Protect_from_Melee": "File:Protect from Melee overhead.png",
+    "Protect_from_Ranged": "File:Protect from Missiles overhead.png",
+    "Protect_from_Magic": "File:Protect from Magic overhead.png",
+    "Redemption": "File:Redemption overhead.png",
+    "Retribution": "File:Retribution overhead.png",
+}
 MALE_KITS = [3, 14, 18, 26, 33, 36, 42]
 FEMALE_KITS = [126, 296, 56, 64, 68, 70, 80]
 HAIR_PARTS = {"male": 0, "female": 7}
@@ -100,7 +107,6 @@ def compact_model(model):
 
 
 def pose(cache, sequence, skeletons):
-    """Every frame of an animation, with its length in client ticks, the skeleton it moves, and the items it puts in the hands."""
     frames = []
     skeleton_ids = set()
     for frame_id in sequence["frames"]:
@@ -138,7 +144,6 @@ def slug(name):
 
 
 def worn_items(cache):
-    """OSRS items with a worn model, by sprite-file slug of their name and by id."""
     by_slug = defaultdict(list)
     by_id = {}
     for item_id, data in sorted(cache.files(osrs_defs.CONFIGS, osrs_defs.ITEM_GROUP).items()):
@@ -150,7 +155,6 @@ def worn_items(cache):
 
 
 def plain_sprite(entry):
-    """The sprite the OSRS Sprites mod shows for an entry with its numerals, stars and badges switched off."""
     variants = entry.get("v", [])
     if variants == ["composites"]:
         return None
@@ -158,7 +162,6 @@ def plain_sprite(entry):
 
 
 def match(equipment, sprite_entries, by_slug, by_id):
-    """Melvor id -> OSRS item id, for equipment whose OSRS sprite is an item drawn on the player model; gear whose sprite OSRS players cannot wear gets a lookalike."""
     matches = {}
     for entry in equipment:
         slot = MELVOR_SLOTS.get(entry.slot)
@@ -183,7 +186,7 @@ def match(equipment, sprite_entries, by_slug, by_id):
 
 
 def worn_parts(osrs_id, definition):
-    """Fit a worn OSRS item to the Melvor item it stands in for: drop parts the icon does not show (the Desert disguise's fake beard), or recolour (the Bruma torch's green flame to fire)."""
+    # Drops parts the Melvor icon omits (Desert disguise beard) and recolours the Bruma torch flame.
     if osrs_id in WORN_RECOLORS:
         definition = {**definition, "recolor": definition["recolor"] + WORN_RECOLORS[osrs_id]}
     parts = WORN_PARTS.get(osrs_id)
@@ -203,7 +206,6 @@ def item_file(cache, definition, model_cache):
 
 
 def custom_skillcapes(cache):
-    """Melvor id -> item file for the skillcapes OSRS lacks, each built from the Agility cape in its OSRS Sprites colour and emblem, with a shoulder accent."""
     overrides = json.loads(SPRITES_OVERRIDES.read_text())["item"]
     base = osrs_defs.item(cache.files(osrs_defs.CONFIGS, osrs_defs.ITEM_GROUP)[skillcape.BASE_CAPE])
     meshes = {gender: osrs_model.decode(cache.group(MODELS, base[gender][0])) for gender in ("male", "female")}
@@ -265,7 +267,7 @@ def write_report(equipment, matches, by_id, custom):
 
 
 def square(image):
-    """Melvor draws mod icons in a square box: centre the art on a transparent square so it is not stretched."""
+    # Melvor stretches non-square mod icons to a square box.
     side = max(image.size)
     canvas = Image.new("RGBA", (side, side))
     canvas.paste(image, ((side - image.width) // 2, (side - image.height) // 2))
@@ -296,6 +298,10 @@ def main():
     write_report(equipment, matches, by_id, custom)
     icon = wiki_image(ICON)
     square(icon.resize((icon.width * 2, icon.height * 2), Image.NEAREST)).save(MOD_DIR / "icon.png")
+    overheads = MOD_DIR / "overheads"
+    overheads.mkdir(exist_ok=True)
+    for prayer, title in OVERHEAD_PRAYERS.items():
+        wiki_image(title).save(overheads / f"{prayer}.png")
     DIST_DIR.mkdir(exist_ok=True)
     archive = DIST_DIR / "melvor-osrs-character.zip"
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as bundle:

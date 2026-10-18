@@ -52,7 +52,6 @@ def _new_model(face_count, priority):
 
 
 def _face_attributes(model, data, count, colors_at, types_at, priorities_at, alphas_at, textures_at, packed_textures):
-    """Colours, render types, priorities, transparencies and textures of each face."""
     colors = Reader(data, colors_at)
     types = Reader(data, types_at) if types_at is not None else None
     priorities = Reader(data, priorities_at) if model["priorities"] is not None else None
@@ -151,7 +150,7 @@ def _decode_type2(data):
 
 
 def _decode_textured(data, header_length):
-    """Types 1 and 3, which store a texture-mapping table up front and textures per face."""
+    # model types 1 and 3 (header_length 26 and 23)
     header = Reader(data, len(data) - header_length)
     vertices, faces, texture_faces = header.u16(), header.u16(), header.u8()
     has_types, priority, has_alphas, has_alpha_groups, has_textures, has_groups = (header.u8() for _ in range(6))

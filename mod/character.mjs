@@ -22,6 +22,7 @@ const PLAYER_LIGHT = [64, 850, -30, -50, -30];
 const HAND_ITEM_OFFSET = 512;
 const WEAPON_SLOT = 3;
 const SHIELD_SLOT = 5;
+const HEAD_GROUP = 1;
 export const STAND_POSE = 808;
 const BRIGHTNESS = 0.6;
 
@@ -118,7 +119,6 @@ function wornModel(data, item, female) {
   return model;
 }
 
-/** The OSRS player model wearing the given items, merged slot by slot the way the game client does. Kits replace the default kit for their body part, and an animation's hand items replace the weapon and shield. */
 export function playerModel(data, itemIds, { female = false, kits = [], colors = DEFAULT_COLORS, hands = { left: -1, right: -1 } } = {}) {
   const slots = new Array(12).fill(null);
   for (const kitId of [...data.defaults[female ? 'female' : 'male'], ...kits]) {
@@ -146,7 +146,6 @@ function shade(color, light) {
   return (color & 0xff80) + Math.min(126, Math.max(2, ((color & 127) * light) >> 7));
 }
 
-/** Bakes lighting into per-vertex face colours at the rest pose, as the client does before animating. */
 export function light(model, [ambient, contrast, x, y, z] = PLAYER_LIGHT) {
   const vertexCount = model.vx.length;
   const faceCount = model.colors.length;
@@ -207,8 +206,6 @@ export function light(model, [ambient, contrast, x, y, z] = PLAYER_LIGHT) {
   return { ...model, vx: model.vx.slice(), vy: model.vy.slice(), vz: model.vz.slice(), colors1, colors2, colors3 };
 }
 
-/** Moves the model's vertices into one frame of an animation, using the skeleton's vertex groups. */
-/** A copy of the model moved into one animation frame, using the skeleton's vertex groups. */
 export function animate(model, skeleton, transforms) {
   const groups = [];
   model.groups.forEach((group, vertex) => {
@@ -274,7 +271,7 @@ export function animate(model, skeleton, transforms) {
   return { ...model, vx, vy, vz };
 }
 
-/** Face draw order, back to front, with the client's interleaving of priority 10 and 11 faces. */
+// Matches the client's interleaving of priority 10 and 11 faces.
 function drawOrder(model, depth, radius, visible) {
   const faceCount = model.colors.length;
   const buckets = Array.from({ length: radius * 2 + 1 }, () => []);
@@ -332,6 +329,19 @@ function lowestPoint(model, yawSin, yawCos, pitchSin, pitchCos) {
     lowest = Math.max(lowest, (model.vy[v] * pitchCos - z1 * pitchSin) >> 16);
   }
   return lowest;
+}
+
+function headPoint(model, yawSin, yawCos, pitchSin, pitchCos) {
+  let minX = Infinity, maxX = -Infinity, top = Infinity;
+  for (let v = 0; v < model.vx.length; v++) {
+    if (model.groups[v] !== HEAD_GROUP) continue;
+    const x = (model.vz[v] * yawSin + model.vx[v] * yawCos) >> 16;
+    const z1 = (model.vz[v] * yawCos - model.vx[v] * yawSin) >> 16;
+    minX = Math.min(minX, x);
+    maxX = Math.max(maxX, x);
+    top = Math.min(top, (model.vy[v] * pitchCos - z1 * pitchSin) >> 16);
+  }
+  return top === Infinity ? null : { x: (minX + maxX) / 2, y: top };
 }
 
 function cylinderBounds(model, pitchSin, pitchCos) {
@@ -414,7 +424,6 @@ function compile(gl, type, source) {
   return shader;
 }
 
-/** Draws lit, posed player models onto a canvas the way the OSRS client rasterises them, back to front. */
 export function createRenderer(canvas, { antialias = true } = {}) {
   const gl = canvas.getContext('webgl', { antialias, premultipliedAlpha: false });
   if (!gl) return null;
@@ -437,13 +446,8 @@ export function createRenderer(canvas, { antialias = true } = {}) {
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
   return {
-    /**
-     * yaw and pitch are in OSRS angle units (2048 per turn). With a reference model, the view fits that model's
-     * upright bounding cylinder instead of the drawn model, so the framing holds still through an animation and while turning.
-     * Returns the canvas rows of the model's lowest point, of the ground under its centre and of the top of the framing,
-     * the pixels per model unit, and how much the camera's pitch flattens a circle on the ground.
-     */
-    draw(model, { yaw = 0, pitch = 96, padding = 0.06, reference = null } = {}) {
+    // yaw and pitch are in OSRS angle units (2048 per turn).
+    draw(model, { yaw = 0, pitch = 96, padding = 0.06, headroom = 0, reference = null } = {}) {
       const vertexCount = model.vx.length;
       const screenX = new Float64Array(vertexCount), screenY = new Float64Array(vertexCount), depth = new Int32Array(vertexCount);
       const yawSin = SINE[yaw & 2047], yawCos = COSINE[yaw & 2047], pitchSin = SINE[pitch & 2047], pitchCos = COSINE[pitch & 2047];
@@ -475,10 +479,11 @@ export function createRenderer(canvas, { antialias = true } = {}) {
         }
       }
       const lowest = reference ? lowestPoint(reference, yawSin, yawCos, pitchSin, pitchCos) : maxY;
+      const head = headPoint(reference ?? model, yawSin, yawCos, pitchSin, pitchCos) ?? { x: 0, y: minY };
       if (reference) ({ minX, maxX, minY, maxY } = cylinderBounds(reference, pitchSin, pitchCos));
       const width = canvas.width, height = canvas.height;
-      const fit = Math.min((width * (1 - 2 * padding)) / (maxX - minX), (height * (1 - 2 * padding)) / (maxY - minY));
-      const offsetX = width / 2 - ((minX + maxX) / 2) * fit, offsetY = height / 2 - ((minY + maxY) / 2) * fit;
+      const fit = Math.min((width * (1 - 2 * padding)) / (maxX - minX), (height * (1 - 2 * padding) - headroom) / (maxY - minY));
+      const offsetX = width / 2 - ((minX + maxX) / 2) * fit, offsetY = (height + headroom) / 2 - ((minY + maxY) / 2) * fit;
       const order = drawOrder(model, depth, radius, visible);
       const vertices = new Float32Array(order.length * 3 * 4);
       let at = 0;
@@ -502,25 +507,21 @@ export function createRenderer(canvas, { antialias = true } = {}) {
         gl.vertexAttribPointer(attributes[i], components, gl.FLOAT, false, 16, [0, 8, 12][i]);
       });
       gl.drawArrays(gl.TRIANGLES, 0, order.length * 3);
-      return { ground: lowest * fit + offsetY, origin: offsetY, scale: fit, tilt: pitchSin / 65536, top: minY * fit + offsetY };
+      return { ground: lowest * fit + offsetY, origin: offsetY, scale: fit, tilt: pitchSin / 65536, top: minY * fit + offsetY, head: { x: head.x * fit + offsetX, y: head.y * fit + offsetY } };
     },
   };
 }
 
-/** A posed, lit player model ready to draw. */
-/** A lit player model at rest, wearing the given items and holding whatever the animation puts in the hands. */
 export function litPlayer(data, itemIds, { pose = STAND_POSE, ...options } = {}) {
   const { left, right } = data.poses[pose];
   return light(playerModel(data, itemIds, { ...options, hands: { left, right } }));
 }
 
-/** The lit player model moved into one frame of an animation. */
 export function poseFrame(data, model, pose, frame) {
   const { skeleton, frames } = data.poses[pose];
   return animate(model, data.skeletons[skeleton], frames[frame % frames.length]);
 }
 
-/** A posed, lit player model ready to draw. */
 export function posedPlayer(data, itemIds, options = {}) {
   return poseFrame(data, litPlayer(data, itemIds, options), options.pose ?? STAND_POSE, options.frame ?? 0);
 }
