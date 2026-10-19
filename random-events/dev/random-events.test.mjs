@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { test } from 'node:test';
+import { all, element, one } from '../../core/test/fake-dom.mjs';
 
 const HOUR_MS = 60 * 60 * 1000;
 const realSetTimeout = setTimeout;
@@ -9,50 +10,6 @@ const settle = () => new Promise((r) => realSetTimeout(r, 0));
 const START = 1_800_000_000_000;
 const COSTUME = ['Frog_Mask', 'Royal_Frog_Tunic', 'Royal_Frog_Leggings', 'Royal_Frog_Blouse', 'Royal_Frog_Skirt', 'Camo_Top', 'Camo_Helmet', 'Camo_Bottoms'];
 
-function element(tag) {
-  const names = new Set();
-  const listeners = {};
-  const node = {
-    tagName: tag.toUpperCase(),
-    children: [],
-    style: {},
-    attributes: {},
-    hidden: false,
-    disabled: false,
-    get className() { return [...names].join(' '); },
-    set className(value) { names.clear(); value.split(' ').filter(Boolean).forEach((name) => names.add(name)); },
-    classList: {
-      add: (name) => names.add(name),
-      remove: (name) => names.delete(name),
-      contains: (name) => names.has(name),
-      toggle: (name, on = !names.has(name)) => (on ? names.add(name) : names.delete(name), on),
-    },
-    get textContent() { return node.children.map((child) => (typeof child === 'string' ? child : child.textContent)).join(''); },
-    set textContent(value) { node.children = [String(value)]; },
-    append(...children) {
-      children.forEach((child) => { if (typeof child !== 'string') child.parent = node; });
-      node.children.push(...children);
-    },
-    replaceChildren(...children) {
-      node.children = [];
-      node.append(...children);
-    },
-    remove() {
-      if (node.parent) node.parent.children = node.parent.children.filter((child) => child !== node);
-    },
-    setAttribute(name, value) { node.attributes[name] = value; },
-    addEventListener(type, fn) { listeners[type] = fn; },
-    click() { if (!node.disabled && listeners.click) listeners.click(); },
-  };
-  return node;
-}
-
-function all(root, className) {
-  if (typeof root === 'string') return [];
-  return [...(root.classList.contains(className) ? [root] : []), ...root.children.flatMap((child) => all(child, className))];
-}
-
-const one = (root, className) => all(root, className)[0];
 const labelled = (root, className, label) => all(root, className).find((node) => node.attributes['aria-label'] === label);
 
 class FoodItem {
@@ -126,7 +83,7 @@ function installGlobals() {
 const load = (path) => import(`../mod/${path}?${Math.random()}`);
 
 async function helpers() {
-  const [dialog, lamp, loot, outfits] = await Promise.all(['dialog.mjs', 'lamp.mjs', 'loot.mjs', 'outfits.mjs'].map(load));
+  const [dialog, lamp, loot, outfits] = await Promise.all(['core/dialog.mjs', 'lamp.mjs', 'loot.mjs', 'outfits.mjs'].map(load));
   return { dialog, lamp, loot, outfits };
 }
 
@@ -139,7 +96,7 @@ async function showEvent(path, { game = makeGame(), preview = false, random } = 
   return { ...globals, game, event, kit, root: globals.popup.html };
 }
 
-async function boot({ stored, game = makeGame() } = {}) {
+async function boot({ stored, game = makeGame(), beforeModsLoaded = () => {} } = {}) {
   const globals = installGlobals();
   let clock = START;
   Date.now = () => clock;
@@ -153,6 +110,8 @@ async function boot({ stored, game = makeGame() } = {}) {
   const buttons = [];
   let characterLoaded;
   let interfaceReady;
+  let modsLoaded;
+  let published;
   const ctx = {
     loadStylesheet() {},
     loadModule: load,
@@ -165,9 +124,13 @@ async function boot({ stored, game = makeGame() } = {}) {
     onCharacterSelectionLoaded() {},
     onCharacterLoaded: (fn) => (characterLoaded = fn),
     onInterfaceReady: (fn) => (interfaceReady = fn),
+    onModsLoaded: (fn) => (modsLoaded = fn),
+    api: (endpoints) => (published = endpoints),
   };
   const { setup } = await load('setup.mjs');
   await setup(ctx);
+  beforeModsLoaded(published);
+  modsLoaded();
   characterLoaded();
   interfaceReady();
   const tick = async (ms = 60 * 1000) => {
@@ -175,7 +138,7 @@ async function boot({ stored, game = makeGame() } = {}) {
     intervals.forEach((fn) => fn());
     await settle();
   };
-  return { ...globals, storage, buttons, timers, registered, tick, game };
+  return { ...globals, storage, buttons, timers, registered, tick, game, published };
 }
 
 const wantedFood = (root) => root.textContent.match(/have a (.+?) on me/)[1];
@@ -202,6 +165,22 @@ test('an event that came due while away waits 1 to 5 minutes after the game open
   assert.strictEqual(popup.html, null, 'not straight away');
   await tick(5 * 60 * 1000);
   assert.ok(popup.html, 'shown within a few minutes');
+});
+
+test('another mod can add its own event, which gets a preview button and can come up', async () => {
+  const shown = [];
+  const event = { id: 'otherMod:mime', title: 'the Mime', weight: 1000, available: () => true, show: (kit) => shown.push(kit.preview) };
+  const { buttons, tick, published } = await boot({ stored: START - HOUR_MS, beforeModsLoaded: (api) => api.registerEvent(event) });
+  assert.strictEqual(published.version, 1);
+  assert.ok(published.events().some((each) => each.id === 'otherMod:mime' && each.weight === 1000));
+  assert.ok(buttons.some((button) => button.name === 'preview-otherMod-mime' && button.display === 'Preview the Mime in 10 seconds'));
+  assert.ok(buttons.some((button) => button.name === 'preview-genie'), 'built-in previews keep their setting names');
+  await tick(10 * 60 * 1000);
+  assert.deepStrictEqual(shown, [false], 'a heavily weighted event is the one that comes up, for real');
+  published.trigger('otherMod:mime');
+  assert.deepStrictEqual(shown, [false, true], 'trigger shows a preview by default');
+  assert.throws(() => published.registerEvent({ id: 'otherMod:broken', title: 'Broken', available: () => true }), /show should be function/);
+  assert.throws(() => published.registerEvent({ ...event, id: 'nonamespace' }), /yourNamespace:name/);
 });
 
 test('a new character gets its first event a day or so later, not on install', async () => {
@@ -311,7 +290,7 @@ test('closing without choosing says Maybe later; closing after choosing does not
   assert.deepStrictEqual(first.toasts.map((toast) => toast.message), ['Maybe later.']);
   const second = await showEvent('sandwich-lady.mjs');
   all(second.root, 'osrs-re-food')[0].click();
-  one(second.root, 'osrs-re-continue').click();
+  one(second.root, 'osrs-dialog-continue').click();
   await settle();
   assert.strictEqual(second.toasts.length, 0);
 });
@@ -329,8 +308,8 @@ test('the Genie gives 5 mastery tokens for the chosen skill, even with a full ba
   all(root, 'osrs-re-skill')[1].click();
   confirm.click();
   assert.deepStrictEqual(game.added, [[{ id: 'Cooking token' }, 5, false, true, true]]);
-  assert.strictEqual(all(root, 'osrs-re-puff').length, 7);
-  assert.ok(one(root, 'osrs-re-head').classList.contains('osrs-re-gone'));
+  assert.strictEqual(all(root, 'osrs-dialog-puff').length, 7);
+  assert.ok(one(root, 'osrs-dialog-head').classList.contains('osrs-dialog-gone'));
   assert.match(root.textContent, /I hope you're happy with your wish/);
 });
 
@@ -346,7 +325,7 @@ test('Kiss the frog: plain frogs cheer, the crowned frog asks for help, and a ki
   assert.match(root.textContent, /Hurrah for the frog prince!/);
   labelled(root, 'osrs-re-frog', 'Frog prince').click();
   assert.match(root.textContent, /sadly frog-obsessed old wizard/);
-  all(root, 'osrs-re-choice')[0].click();
+  all(root, 'osrs-dialog-choice')[0].click();
   assert.deepStrictEqual(game.added, [[{ id: 'Frog_Mask', name: 'Frog_Mask', media: 'Frog_Mask.png', type: 'Armour', golbinRaidExclusive: false }, 1, false, true, true]]);
   assert.match(root.textContent, /Thank you so much, Garu Garu. I must return to my fairytale kingdom./);
 });
@@ -355,14 +334,14 @@ test('Kiss the frog only gives pieces you do not already have in the bank or in 
   const owned = ['Frog_Mask', 'Royal_Frog_Tunic'];
   const { root, game } = await showEvent('frog.mjs', { game: makeGame({ owned, equipped: ['Royal_Frog_Leggings'] }), random: () => 0 });
   labelled(root, 'osrs-re-frog', 'Frog prince').click();
-  all(root, 'osrs-re-choice')[0].click();
+  all(root, 'osrs-dialog-choice')[0].click();
   assert.strictEqual(game.added[0][0].id, 'Royal_Frog_Blouse');
 });
 
 test('with the whole frog costume, the frog royal hands over a lamp instead', async () => {
   const { root, game } = await showEvent('frog.mjs', { game: makeGame({ owned: COSTUME }), random: () => 0 });
   labelled(root, 'osrs-re-frog', 'Frog prince').click();
-  all(root, 'osrs-re-choice')[0].click();
+  all(root, 'osrs-dialog-choice')[0].click();
   assert.strictEqual(game.added.length, 0);
   all(root, 'osrs-re-skill')[0].click();
   one(root, 'osrs-re-confirm').click();
@@ -372,7 +351,7 @@ test('with the whole frog costume, the frog royal hands over a lamp instead', as
 test('turning the frog down gives nothing', async () => {
   const { root, game, toasts } = await showEvent('frog.mjs', { random: () => 0 });
   labelled(root, 'osrs-re-frog', 'Frog prince').click();
-  all(root, 'osrs-re-choice')[1].click();
+  all(root, 'osrs-dialog-choice')[1].click();
   Swal.close();
   await settle();
   assert.strictEqual(game.added.length, 0);
@@ -383,12 +362,12 @@ test('turning the frog down gives nothing', async () => {
 test('a Certer gives a present for naming the item, and nothing for a wrong name', async () => {
   const right = await showEvent('certer.mjs');
   const answer = one(right.root, 'osrs-re-certer-item').src.replace('.png', '');
-  all(right.root, 'osrs-re-choice').find((choice) => choice.textContent === answer).click();
+  all(right.root, 'osrs-dialog-choice').find((choice) => choice.textContent === answer).click();
   assert.strictEqual(right.game.added.length + right.game.earned.length, 1);
   assert.match(right.root.textContent, /Thank you, I hope you like your present/);
   const wrong = await showEvent('certer.mjs');
   const shown = one(wrong.root, 'osrs-re-certer-item').src.replace('.png', '');
-  all(wrong.root, 'osrs-re-choice').find((choice) => choice.textContent !== shown).click();
+  all(wrong.root, 'osrs-dialog-choice').find((choice) => choice.textContent !== shown).click();
   assert.strictEqual(wrong.game.added.length + wrong.game.earned.length, 0);
   assert.match(wrong.root.textContent, /Sorry, that's just not the right answer!/);
 });
@@ -420,12 +399,12 @@ test('Pinball: ten pokes of the flashing pillar win gems, and a wrong poke start
 test('Drill Demon: four right exercises in a row win the camo top first, and a wrong one starts over', async () => {
   const { root, game } = await showEvent('drill-demon.mjs');
   const mats = () => all(root, 'osrs-re-mat');
-  const ordered = () => mats().find((mat) => one(root, 'osrs-re-words').textContent.endsWith(mat.exercise.order));
+  const ordered = () => mats().find((mat) => one(root, 'osrs-dialog-words').textContent.endsWith(mat.exercise.order));
   ordered().click();
   ordered().click();
   mats().find((mat) => mat !== ordered()).click();
   assert.match(root.textContent, /Wrong exercise, worm!/);
-  assert.strictEqual(all(root, 'osrs-re-pip-on').length, 0);
+  assert.strictEqual(all(root, 'osrs-dialog-pip-on').length, 0);
   for (let i = 0; i < 4; i++) ordered().click();
   assert.strictEqual(game.added[0][0].id, 'Camo_Top');
   assert.match(root.textContent, /you actually did it, Private/);
@@ -440,10 +419,10 @@ test('Quiz Master: four odd-ones-out in a row, then the prize of your choice', a
   };
   odd().click();
   all(root, 'osrs-re-food').find((button) => button !== odd()).click();
-  assert.strictEqual(all(root, 'osrs-re-pip-on').length, 0, 'a wrong answer starts the streak over');
+  assert.strictEqual(all(root, 'osrs-dialog-pip-on').length, 0, 'a wrong answer starts the streak over');
   for (let i = 0; i < 4; i++) odd().click();
   assert.match(root.textContent, /Please choose your PRIZE!/);
-  all(root, 'osrs-re-choice')[0].click();
+  all(root, 'osrs-dialog-choice')[0].click();
   assert.deepStrictEqual(game.earned, [10000]);
 });
 
@@ -473,7 +452,7 @@ test('Pillory: the right key three times escapes with a present, a wrong key add
 test('previews never give rewards', async () => {
   const frog = await showEvent('frog.mjs', { preview: true, random: () => 0 });
   labelled(frog.root, 'osrs-re-frog', 'Frog prince').click();
-  all(frog.root, 'osrs-re-choice')[0].click();
+  all(frog.root, 'osrs-dialog-choice')[0].click();
   const pinball = await showEvent('pinball.mjs', { preview: true });
   for (let i = 0; i < 10; i++) all(pinball.root, 'osrs-re-pillar').find((pillar) => pillar.classList.contains('osrs-re-lit')).click();
   for (const { game } of [frog, pinball]) assert.strictEqual(game.added.length + game.earned.length, 0);

@@ -2,12 +2,16 @@
 import io
 import json
 import math
+import sys
+import zipfile
 import urllib.parse
 import urllib.request
 import zipfile
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
+import core  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 MOD_DIR = ROOT / "mod"
@@ -137,6 +141,7 @@ def main():
             (fonts / f"{name}.ttf").write_bytes(bundle.read(f"ttf/{name}.ttf"))
     DIST_DIR.mkdir(exist_ok=True)
     draw_logo(wiki_image(LOGO_ART)).convert("RGB").save(DIST_DIR / "logo.png", optimize=True)
+    core.bundle(ROOT)
     archive = DIST_DIR / "melvor-osrs-random-events.zip"
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as bundle:
         for path in sorted(MOD_DIR.rglob("*")):

@@ -1,115 +1,3 @@
-.swal2-popup.osrs-re-popup {
-  width: min(34em, 96vw);
-  padding: 3em 0.75em 0.75em;
-}
-
-.osrs-re-popup .swal2-close {
-  position: absolute;
-  top: 0;
-  right: 0;
-}
-
-.osrs-re-popup .swal2-html-container {
-  margin: 0;
-  padding: 0;
-  overflow: visible;
-}
-
-.osrs-re-event {
-  font-family: RandomEventsPlain, 'Trebuchet MS', sans-serif;
-  font-size: 16px;
-  line-height: 1.25;
-  text-align: center;
-}
-
-.osrs-re-event button {
-  font: inherit;
-  cursor: pointer;
-}
-
-.osrs-re-chat {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 116px;
-  padding: 8px 12px;
-  background: #cdbf98;
-  border: 3px solid #4d4232;
-  box-shadow: inset 0 0 0 2px #e3d8b8;
-  color: #000;
-}
-
-.osrs-re-head {
-  position: relative;
-  flex: 0 0 84px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 96px;
-}
-
-.osrs-re-head img {
-  max-height: 110px;
-  transition: opacity 0.25s 0.15s;
-}
-
-.osrs-re-gone img {
-  opacity: 0;
-}
-
-.osrs-re-text {
-  flex: 1;
-}
-
-.osrs-re-name {
-  font-family: RandomEventsBold, 'Trebuchet MS', sans-serif;
-  color: #800000;
-  margin-bottom: 4px;
-}
-
-.osrs-re-continue {
-  margin-top: 6px;
-  padding: 0;
-  background: none;
-  border: 0;
-  color: #0000ff;
-}
-
-.osrs-re-continue:hover,
-.osrs-re-continue:focus-visible {
-  color: #fff;
-}
-
-.osrs-re-puff {
-  --x: 0px;
-  --y: 0px;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 46px;
-  height: 46px;
-  margin: -23px 0 0 -23px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #fafafa 0 28%, #c8c8c8 52%, rgba(150, 150, 150, 0) 72%);
-  opacity: 0;
-  pointer-events: none;
-  animation: osrs-re-puff 0.9s ease-out forwards;
-}
-
-.osrs-re-puff:nth-of-type(1) { --x: 0px; --y: -4px; width: 60px; height: 60px; margin: -30px 0 0 -30px; }
-.osrs-re-puff:nth-of-type(2) { --x: -26px; --y: -24px; animation-delay: 0.05s; }
-.osrs-re-puff:nth-of-type(3) { --x: 24px; --y: -28px; animation-delay: 0.1s; }
-.osrs-re-puff:nth-of-type(4) { --x: -30px; --y: 14px; animation-delay: 0.08s; }
-.osrs-re-puff:nth-of-type(5) { --x: 28px; --y: 18px; animation-delay: 0.04s; }
-.osrs-re-puff:nth-of-type(6) { --x: -4px; --y: 34px; animation-delay: 0.12s; }
-.osrs-re-puff:nth-of-type(7) { --x: 2px; --y: -40px; animation-delay: 0.16s; }
-
-@keyframes osrs-re-puff {
-  0% { opacity: 0; transform: translate(0, 0) scale(0.2); }
-  20% { opacity: 0.95; }
-  100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(1.6); }
-}
-
 .osrs-re-tray {
   margin-top: 12px;
   padding: 14px 10px 8px;
@@ -252,15 +140,6 @@
   cursor: default;
 }
 
-.osrs-re-preview {
-  margin-top: 8px;
-  color: #9a9a9a;
-}
-
-.osrs-re-head img {
-  max-width: 100%;
-}
-
 .osrs-re-panel {
   margin-top: 12px;
   padding: 12px 10px 10px;
@@ -276,54 +155,8 @@
   text-shadow: 1px 1px 0 #000;
 }
 
-.osrs-re-choices {
-  margin-top: 12px;
-  padding: 8px 12px;
-  background: #cdbf98;
-  border: 3px solid #4d4232;
-  box-shadow: inset 0 0 0 2px #e3d8b8;
-}
-
-.osrs-re-panel .osrs-re-choices {
+.osrs-re-panel .osrs-dialog-choices {
   margin-top: 10px;
-}
-
-.osrs-re-choices-title {
-  color: #800000;
-  margin-bottom: 4px;
-}
-
-.osrs-re-choice {
-  display: block;
-  width: 100%;
-  padding: 3px 0;
-  background: none;
-  border: 0;
-  color: #000;
-}
-
-.osrs-re-choice:hover,
-.osrs-re-choice:focus-visible {
-  color: #fff;
-}
-
-.osrs-re-pips {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.osrs-re-pip {
-  width: 14px;
-  height: 14px;
-  background: #1d1914;
-  border: 2px solid #5a4d3c;
-  border-radius: 3px;
-}
-
-.osrs-re-pip-on {
-  background: #ff981f;
 }
 
 .osrs-re-pond {
@@ -590,7 +423,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .osrs-re-food img,
-  .osrs-re-puff,
   .osrs-re-frog,
   .osrs-re-pillar img,
   .osrs-re-pkey {
