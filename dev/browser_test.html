@@ -41,15 +41,26 @@ window.changePage = (...args) => pageChanges.push(args);
 window.Minibar = class Minibar { setSkill() {} };
 window.Game = class Game { renderActiveSkills() {} };
 const configs = {};
+const values = {};
+const choose = (name, value) => {
+  const result = configs[name].onChange?.(value, name in values ? values[name] : configs[name].default);
+  values[name] = value;
+  return result;
+};
 const patches = {};
+const stored = {};
 let ready;
 const ctx = {
   loadStylesheet: (path) => document.head.insertAdjacentHTML('beforeend', `<link rel="stylesheet" href="/mod/${path}">`),
-  settings: { section: () => ({ add: (config) => [config].flat().forEach((each) => (configs[each.name] = each)), get: (name) => configs[name]?.default }) },
+  settings: { section: () => ({ add: (config) => [config].flat().forEach((each) => (configs[each.name] = each)), get: (name) => (name in values ? values[name] : configs[name]?.default) }) },
   patch: (target, method) => ({ after: (fn) => (patches[`${target.name}.${method}`] = fn), replace: (fn) => (patches[`${target.name}.${method}`] = fn) }),
   onInterfaceReady: (fn) => (ready = fn),
+  accountStorage: { getItem: (key) => stored[key], setItem: (key, value) => (stored[key] = value) },
 };
 const { setup } = await import('/mod/setup.mjs');
+const tipTimers = [];
+const realSetTimeout = window.setTimeout.bind(window);
+window.setTimeout = (fn, ms, ...rest) => (ms >= 60000 ? (tipTimers.push({ fn, ms }), 0) : realSetTimeout(fn, ms, ...rest));
 setup(ctx);
 ready();
 await wait(100);
@@ -142,6 +153,86 @@ await openSidebar();
 check('with the over-the-sidebar setting on, it shows on top of the open phone sidebar too', topAt(topButton).closest('.skill-switcher-top') === topButton, topAt(topButton).className);
 One.layout('sidebar_close');
 await wait(600);
+
+const flyoutOpen = () => Boolean(document.querySelector('.skill-switcher-tile'));
+const tips = () => [...document.querySelectorAll('.skill-switcher-tip')];
+const press = async (ms) => {
+  switcher.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+  await wait(ms);
+  switcher.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+  switcher.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  await wait(50);
+};
+const training = (on) => {
+  woodcuttingPage.action.isActive = on;
+  patches['Game.renderActiveSkills'].call({ renderQueue: { activeSkills: true } }, () => {});
+};
+const fireTip = async () => {
+  tipTimers.shift()?.fn();
+  await wait(20);
+};
+check('the long press tip waits a random 2 to 10 minutes after the game loads', tipTimers.length === 1 && tipTimers[0].ms >= 120000 && tipTimers[0].ms <= 600000, tipTimers.map((timer) => timer.ms));
+training(false);
+await fireTip();
+check('if nothing is being trained when it comes up, it waits another random while instead', tips().length === 0 && tipTimers.length === 1 && !stored['long-press-tip-shown']);
+training(true);
+await press(50);
+await fireTip();
+check('nor while the switcher is open', tips().length === 0 && tipTimers.length === 1 && flyoutOpen(), `${tips().length} tips, ${tipTimers.length} timers, open ${flyoutOpen()}, state ${JSON.stringify(switcher._tippy?.state)}`);
+tippy.hideAll();
+await wait(50);
+await fireTip();
+const tip = tips()[0];
+const tipBox = tip?.getBoundingClientRect();
+const switcherBox = switcher.getBoundingClientRect();
+check('with a skill going and the switcher closed, yellow text says Try long pressing instead! just left of the switcher', tip && tip.textContent === 'Try long pressing instead!' && getComputedStyle(tip).color === 'rgb(255, 255, 0)' && Math.abs((tipBox.top + tipBox.bottom) / 2 - (switcherBox.top + switcherBox.bottom) / 2) < 2 && tipBox.right <= switcherBox.left && tipBox.right > switcherBox.left - 12 && tipBox.left >= 0, tip && `${tipBox.left}-${tipBox.right},${tipBox.top} switcher ${switcherBox.left},${switcherBox.top}`);
+check('only once, ever', stored['long-press-tip-shown'] === true && tipTimers.length === 0);
+await press(50);
+check('opening the switcher puts it away', tips().length === 0 && flyoutOpen());
+tippy.hideAll();
+await wait(50);
+
+pageChanges.length = 0;
+await press(700);
+check('holding the switcher goes straight to the skill you are training', pageChanges.length === 1 && pageChanges[0][0] === woodcuttingPage, JSON.stringify(pageChanges.map((change) => change[0].id)));
+check('without opening the switcher', !flyoutOpen());
+await press(50);
+check('a quick tap still opens the switcher', flyoutOpen() && pageChanges.length === 1);
+document.querySelector('.skill-switcher-tile').click();
+await wait(100);
+delete stored['long-press-tip-shown'];
+await press(700);
+check('a long press counts as knowing about it, so the tip will not show', stored['long-press-tip-shown'] === true);
+training(false);
+await press(700);
+check('with nothing being trained, holding it just opens the switcher', flyoutOpen() && pageChanges.length === 3, pageChanges.length);
+document.body.click();
+await wait(50);
+
+const caret = minibar.lastElementChild;
+const boxOf = (element) => element.getBoundingClientRect();
+check('Jump to Top position is a dropdown, above the menu button by default', configs['top-position'].type === 'dropdown' && configs['top-position'].default === 'stack' && JSON.stringify(configs['top-position'].options.map((option) => option.value)) === '["stack","arrow","side"]');
+tippy.hideAll();
+minibar.classList.remove('d-none');
+patches['Minibar.setSkill']();
+await wait(50);
+choose('top-position', 'arrow');
+await wait(50);
+check('above the down arrow, it sits between the switcher and the down arrow in the same column', boxOf(topButton).top >= boxOf(switcher).bottom - 2 && boxOf(topButton).bottom <= boxOf(caret).top + 2 && Math.abs(boxOf(topButton).left - boxOf(caret).left) < 1, `top ${boxOf(topButton).top}-${boxOf(topButton).bottom} switcher ${boxOf(switcher).bottom} arrow ${boxOf(caret).top}`);
+choose('top-position', 'side');
+await wait(50);
+check('to the side, on a skill page it sits right against the left of the down arrow, level with it, the same as the stack', Math.abs(boxOf(topButton).right - boxOf(caret).left) < 1 && Math.abs(boxOf(topButton).top - boxOf(caret).top) < 2 && Math.abs(boxOf(switcher).bottom - boxOf(caret).top) < 2, `top ${boxOf(topButton).left}-${boxOf(topButton).right},${boxOf(topButton).top} arrow ${boxOf(caret).left},${boxOf(caret).top}`);
+check('and can still be tapped', topAt(topButton).closest('.skill-switcher-top') === topButton, `${topAt(topButton).tagName}#${topAt(topButton).id}.${topAt(topButton).className} at ${centerOf(topButton)}`);
+minibar.classList.add('d-none');
+patches['Minibar.setSkill']();
+await wait(50);
+check('off the skill pages, with no down arrow, it sits right against the left of the switcher instead', Math.abs(boxOf(topButton).right - boxOf(switcher).left) < 1 && Math.abs(boxOf(topButton).top - boxOf(switcher).top) < 2, `top ${boxOf(topButton).right},${boxOf(topButton).top} switcher ${boxOf(switcher).left},${boxOf(switcher).top}`);
+choose('top-position', 'arrow');
+await wait(50);
+check('above the down arrow, off the skill pages it sits under the switcher', boxOf(topButton).top >= boxOf(switcher).bottom - 2 && Math.abs(boxOf(topButton).left - boxOf(switcher).left) < 1);
+choose('top-position', 'stack');
+await wait(50);
+check('back to the default, it is above the menu button again', Math.abs(boxOf(topButton).bottom - boxOf(menu).top) < 2 && Math.abs(boxOf(topButton).left - boxOf(menu).left) < 1);
 
 report();
 </script></body></html>

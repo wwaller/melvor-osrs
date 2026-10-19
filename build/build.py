@@ -56,7 +56,6 @@ def square(image):
 
 
 def draw_logo():
-    """The flyout as the art: a grid of skill icons with the active one outlined green."""
     logo = Image.new("RGBA", (1280, 720), BACKGROUND)
     pen = ImageDraw.Draw(logo)
     cell, gap, left, top = 96, 12, 60, 102

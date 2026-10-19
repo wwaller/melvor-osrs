@@ -1,6 +1,9 @@
 import assert from 'node:assert';
 import { test } from 'node:test';
 
+const realSetTimeout = globalThis.setTimeout;
+globalThis.setTimeout = (fn, ms, ...rest) => (ms >= 60000 ? 0 : realSetTimeout(fn, ms, ...rest));
+
 function element(tag) {
   const classes = new Set();
   const node = {
@@ -16,6 +19,8 @@ function element(tag) {
       toggle: (name, on) => (on ? classes.add(name) : classes.delete(name)),
     },
     setAttribute(name, value) { node.attributes[name] = value; },
+    addEventListener() {},
+    getClientRects() { return [{}]; },
     append(...nodes) { nodes.forEach((child) => { if (child.parent) child.parent.children = child.parent.children.filter((c) => c !== child); child.parent = node; node.children.push(child); }); },
     replaceChildren(...nodes) { node.children = []; node.append(...nodes); },
     insertBefore(child, before) {
@@ -113,6 +118,7 @@ async function boot(values = {}, { interfaceReady = true, desktop = false, sideb
     settings: { section: () => ({ add: (config) => [config].flat().forEach((each) => (ctx.configs[each.name] = each)), get: (name) => values[name] ?? ctx.configs[name]?.default }) },
     patch: (target, method) => ({ after: (fn) => (patches[`${target.name}.${method}`] = fn), replace: (fn) => (patches[`${target.name}.${method}`] = fn) }),
     onInterfaceReady: (fn) => (ready = fn),
+    accountStorage: { getItem: () => true, setItem() {} },
   };
   const { setup } = await import(`../mod/setup.mjs?${Math.random()}`);
   setup(ctx);

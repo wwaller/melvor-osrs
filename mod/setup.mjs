@@ -3,8 +3,19 @@ const COMBAT_PAGE = 'melvorD:Combat';
 const GRID_ICON = 'fas fa-th-large';
 const SHORTCUT_PAGES = ['melvorD:Bank', 'melvorD:Shop'];
 const ABOVE_SIDEBAR_CLASS = 'skill-switcher-above-sidebar';
+const TOP_SIDE_CLASS = 'skill-switcher-top-side';
+const TOP_POSITIONS = [
+  { value: 'stack', display: 'Above the menu button' },
+  { value: 'arrow', display: 'Above the down arrow' },
+  { value: 'side', display: 'Left of the down arrow, or of the switcher' },
+];
+const LONG_PRESS_MS = 500;
+const TIP_KEY = 'long-press-tip-shown';
+const TIP_MS = 6000;
+const TIP_EARLIEST_MS = 2 * 60 * 1000;
+const TIP_LATEST_MS = 10 * 60 * 1000;
+const TIP_GAP_PX = 6;
 
-/** Every skill page in the sidebar's order, with Combat as one entry; skips what the sidebar hides and keeps what it dims. */
 export function skillEntries(sidebarAPI, gameAPI) {
   const entries = [];
   for (const categoryID of CATEGORIES) {
@@ -64,6 +75,17 @@ export function setup(ctx) {
       },
     },
     {
+      type: 'dropdown',
+      name: 'top-position',
+      label: 'Jump to Top position',
+      hint: 'Where the up arrow sits: at the top of the stack, between the skill switcher and the minibar\'s down arrow, or to the left of the down arrow (to the left of the skill switcher where there is no down arrow).',
+      default: 'stack',
+      options: TOP_POSITIONS,
+      onChange: (position) => {
+        if (button) place(position);
+      },
+    },
+    {
       type: 'switch',
       name: 'above-sidebar',
       label: 'Keep these buttons over the sidebar on mobile',
@@ -79,8 +101,36 @@ export function setup(ctx) {
 
   const entries = () => skillEntries(sidebar, game);
 
+  const activeEntry = () => entries().find(isActive);
+
+  const goTo = (entry) => {
+    changePage(entry.page, -1, entry.skill, false, false);
+    if (!window.matchMedia('(min-width: 992px)').matches && document.getElementById('page-container')?.classList.contains('sidebar-o-xs')) One.layout('sidebar_close');
+  };
+
+  let tip = null;
+  const hideTip = () => {
+    tip?.remove();
+    tip = null;
+  };
+  const scheduleTip = () => setTimeout(showTip, TIP_EARLIEST_MS + Math.random() * (TIP_LATEST_MS - TIP_EARLIEST_MS));
+  function showTip() {
+    if (ctx.accountStorage.getItem(TIP_KEY)) return;
+    const box = button.getBoundingClientRect();
+    if (!activeEntry() || flyout.state.isVisible || box.width === 0) {
+      scheduleTip();
+      return;
+    }
+    ctx.accountStorage.setItem(TIP_KEY, true);
+    const beside = topButton.classList.contains(TOP_SIDE_CLASS) && topButton.nextElementSibling === button && topButton.getClientRects().length ? topButton.getBoundingClientRect() : box;
+    tip = Object.assign(document.createElement('div'), { className: 'skill-switcher-tip', textContent: 'Try long pressing instead!' });
+    Object.assign(tip.style, { top: `${box.top + box.height / 2}px`, right: `${window.innerWidth - beside.left + TIP_GAP_PX}px` });
+    document.body.append(tip);
+    setTimeout(hideTip, TIP_MS);
+  }
+
   const showButtonIcon = () => {
-    const active = entries().find(isActive);
+    const active = activeEntry();
     icon.replaceChildren(active ? Object.assign(document.createElement('img'), { className: 'skill-icon-xs m-0', src: active.media }) : Object.assign(document.createElement('i'), { className: `${GRID_ICON} text-white` }));
   };
 
@@ -96,8 +146,7 @@ export function setup(ctx) {
     tileButton.append(Object.assign(document.createElement('img'), { src: entry.media, alt: '' }));
     tileButton.onclick = () => {
       flyout.hide();
-      changePage(entry.page, -1, entry.skill, false, false);
-      if (!window.matchMedia('(min-width: 992px)').matches && document.getElementById('page-container')?.classList.contains('sidebar-o-xs')) One.layout('sidebar_close');
+      goTo(entry);
     };
     return tileButton;
   };
@@ -123,14 +172,18 @@ export function setup(ctx) {
     return panel;
   };
 
-  /** On skill pages, sit just above the minibar's collapse arrow so it shows even when the minibar is folded away; elsewhere, float in the same corner. */
-  const place = () => {
+  // Sits above the minibar's collapse arrow so it stays visible when the minibar is folded away.
+  const place = (position = settings.get('top-position')) => {
     const container = document.getElementById('skill-footer-minibar-container');
     const minibarShown = container !== null && !container.classList.contains('d-none');
     if (minibarShown) container.insertBefore(button, container.lastElementChild);
     else floating.append(button);
     button.before(menuButton);
-    menuButton.before(topButton);
+    const arrowShown = minibarShown && container.lastElementChild.getClientRects().length > 0;
+    if (position === 'arrow' || (position === 'side' && arrowShown)) button.after(topButton);
+    else if (position === 'side') button.before(topButton);
+    else menuButton.before(topButton);
+    topButton.classList.toggle(TOP_SIDE_CLASS, position === 'side');
     floating.classList.toggle('d-none', minibarShown);
     showButtonIcon();
   };
@@ -151,6 +204,27 @@ export function setup(ctx) {
     button.setAttribute('aria-label', 'Switch skill');
     icon = document.createElement('span');
     button.append(icon);
+    let pressTimer = 0;
+    let longPressed = false;
+    button.addEventListener('pointerdown', () => {
+      longPressed = false;
+      clearTimeout(pressTimer);
+      pressTimer = setTimeout(() => {
+        const active = activeEntry();
+        if (!active) return;
+        longPressed = true;
+        ctx.accountStorage.setItem(TIP_KEY, true);
+        flyout.hide();
+        goTo(active);
+      }, LONG_PRESS_MS);
+    });
+    for (const type of ['pointerup', 'pointercancel', 'pointerleave']) button.addEventListener(type, () => clearTimeout(pressTimer));
+    button.addEventListener('click', (event) => {
+      if (!longPressed) return;
+      longPressed = false;
+      event.stopImmediatePropagation();
+    }, true);
+    button.addEventListener('contextmenu', (event) => event.preventDefault());
     menuButton = document.createElement('button');
     menuButton.type = 'button';
     menuButton.className = 'btn btn-sm btn-light skill-switcher-menu';
@@ -178,8 +252,12 @@ export function setup(ctx) {
       animation: false,
       maxWidth: 'none',
       appendTo: () => document.body,
-      onShow: (instance) => instance.setContent(flyoutContent()),
+      onShow: (instance) => {
+        hideTip();
+        instance.setContent(flyoutContent());
+      },
     });
     place();
+    scheduleTip();
   });
 }
