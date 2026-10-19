@@ -92,6 +92,8 @@ WORN_STAND_INS = {
     "melvorF:Blazing_Lantern": "Lit bug lantern",
     "melvorF:Jeweled_Necklace": "Amulet of glory",
     "melvorF:Cave_Giant_Boots": "Bandos boots",
+    "melvorAoD:Magicburn_Shield": "Dragonfire shield",
+    "melvorItA:Desolation_Wand": "Thammaron's sceptre",
     "melvorF:Fine_Coinpurse": "Forager's pouch",
     "melvorF:Book_Of_Scholars": "Mage's book",
     "melvorAoD:Torch": "Bruma torch (off-hand)",
