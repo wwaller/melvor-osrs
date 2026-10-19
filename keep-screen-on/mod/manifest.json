@@ -1,0 +1,5 @@
+{
+  "namespace": "keepScreenOn",
+  "icon": "icon.png",
+  "setup": "setup.mjs"
+}
