@@ -13,7 +13,6 @@ const UNLOCKED_BY = {
   'melvorItA:AbyssalSlayer': abyssUnlocked,
 };
 
-/** Can this be bought right now, at the current buy quantity: not at its buy limit, requirements met, costs owned. */
 export function canBuy(shop, game, purchase) {
   if (shop.isPurchaseAtBuyLimit(purchase)) return false;
   if (!game.checkRequirements(purchase.purchaseRequirements, false)) return false;
@@ -53,7 +52,6 @@ export function setup(ctx) {
     }, true);
   };
 
-  /** Tags each card: greyed when it cannot be bought, open when tapped. */
   function refresh(tab) {
     tabs.add(tab);
     if (!shopShown) {
@@ -71,14 +69,13 @@ export function setup(ctx) {
       const expanded = open === purchase;
       container.classList.toggle(LOCKED, !buyable);
       container.classList.toggle(OPEN, expanded);
-      item.mobileShopBuy.disabled = !buyable;
+      if (item.mobileShopBuy.disabled === buyable) item.mobileShopBuy.disabled = !buyable;
     }
   }
 
   const available = (menu, category) => Boolean(category) && !category.isGolbinRaid && menu.shouldShowCategory(category) && (UNLOCKED_BY[category.id]?.() ?? true);
   const firstCategory = (menu) => game.shop.categoryDisplayOrder.find((category) => available(menu, category));
   const markSelected = () => buttons.forEach((button, category) => button.classList.toggle(SELECTED, category === selected));
-  /** Township, Atlas of Discovery and the Abyss categories only get a button once that content is unlocked. */
   const updateCategories = () => {
     buttons.forEach((button, category) => button.classList.toggle(UNAVAILABLE, !category.isGolbinRaid && !available(shopMenu, category)));
     if (selected && !available(shopMenu, selected)) shopMenu.showSingleTab(firstCategory(shopMenu));
