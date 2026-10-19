@@ -1,0 +1,1092 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="https://steam.melvoridle.com/assets/css/oneui.css"><link rel="stylesheet" href="https://steam.melvoridle.com/assets/css/game.css?12097"><script src="https://steam.melvoridle.com/assets/js/oneui.core.min.js"></script><script src="https://steam.melvoridle.com/assets/js/popper.min.js"></script><style>body { width: 800px; } .d-none { display: none !important; } @keyframes progressBar { from { width: 0%; } to { width: 100%; } }</style></head><body>
+<header id="page-header" style="position: sticky; top: 0; height: 56px; z-index: 10; background: #444; color: #fff;">Header</header>
+<div><div class="row row-deck" id="trees"><div class="col-12" id="xp-block"><div class="block">XP and progress</div></div></div></div>
+<div><div class="row row-deck" id="areas"></div></div>
+<div><div class="row row-deck" id="panels"></div></div>
+<div class="content" id="smithing-container"><div class="skill-info">Smithing header</div><div class="row" id="smithing-menu">recipes</div></div>
+<template id="tree-template"><div class="block block-rounded d-none locked">Locked</div><div class="block block-rounded shown"><span class="name"></span><div class="progress"><div class="progress-bar" style="width: 0%"></div></div><button class="cut">Cut</button></div></template>
+<template id="area-template"><div class="block block-rounded"><h5 class="area-name"></h5><div class="buttons"></div><div class="media"><small>Fishing</small><span class="fish-name">-</span></div></div></template>
+<template id="panel-template"><div class="block block-rounded"><div class="targets"></div><div class="info"><div class="info-heading"><small class="info-skill-name">Thieving</small><span>Fisherman</span></div><button class="start">Pickpocket</button></div></div></template>
+<div class="col-12 col-xl-6" id="combat-column"><div class="block-content pt-0 px-2"><div class="block block-rounded-double bg-combat-inner-dark text-center p-0 mb-2" id="food-block"><div class="block-header">Food</div><div class="row no-gutters px-2"><div class="col-12"><h5 class="font-w400 text-center m-1 mb-2 mt-2"><food-select-menu id="combat-food-select">Shrimp</food-select-menu></h5></div></div></div><div id="combat-player-container"><div class="block block-rounded-double bg-combat-inner-dark text-center p-0 mb-2" id="combat-menu-tabs"><div class="px-2">
+  <img class="combat-menu-img border-rounded-equip p-1 m-1 pointer-enabled border border-2x border-combat-outline" id="combat-menu-item-0" src="/mod/icon.png?equipment">
+  <img class="combat-menu-img border-rounded-equip p-1 m-1 pointer-enabled" id="combat-menu-item-1" src="/mod/icon.png?spellbook">
+  <img class="combat-menu-img border-rounded-equip p-1 m-1 pointer-enabled" id="combat-menu-item-2" src="/mod/icon.png?prayer">
+  <img class="combat-menu-img border-rounded-equip p-1 m-1 pointer-enabled d-lg-none" id="combat-menu-item-5" src="/mod/icon.png?slayer">
+</div>
+<div id="combat-menu-0">Equipment</div>
+<div class="d-none" id="combat-menu-1">Spellbook menu</div>
+<div class="d-none" id="combat-menu-2"><prayer-book-menu id="combat-prayer-book-menu"><div class="row"><div class="col-6"><h5>Prayer</h5></div><div class="col-6"><h5><small>Click to Activate</small></h5></div></div></prayer-book-menu></div>
+<div class="d-none" id="combat-menu-5"><div id="combat-slayer-task-menu">Slayer task: 10 Chickens</div></div>
+</div></div><div class="block-content" id="desktop-combat-menus">Player stats<div class="block block-rounded-double bg-combat-inner-dark text-center mb-2 p-0-mobile" id="combat-attack-styles">
+  <div class="block-header block-header-default bg-dark-bank-block-header px-3 py-1 mb-1"><h5 class="font-size-sm font-w600 mb-0 w-100 text-center">Attack Style</h5></div>
+  <div class="row gutters-tiny px-2" id="melee-attack-style-buttons"></div>
+  <div class="row gutters-tiny px-2" id="ranged-attack-style-buttons"></div>
+  <div class="row gutters-tiny px-2" id="magic-attack-style-buttons"></div>
+</div></div></div></div>
+<template id="category-menu-template">
+  <div class="bg-white push content-justify-center w-100" id="container">
+    <div class="block-header block-header-default bg-dark-bank-block-header px-3 py-1 d-none" id="header-div"><h5 class="font-size-sm font-w600 mb-0 w-100 text-center" id="header-name">Header Name</h5></div>
+    <div class="p-3">
+      <div class="d-lg-none"><button class="btn btn-block btn-light d-flex justify-content-between align-items-center text-combat-smoke" type="button" id="expand-button"><span id="expand-text"></span><i class="fa fa-bars"></i></button></div>
+      <div class="d-none d-lg-block mt-2 mt-lg-0" id="expand-div"><ul class="nav-main nav-main-horizontal nav-main-hover nav-main-horizontal-center" id="options-container"></ul></div>
+    </div>
+  </div>
+</template>
+<template id="category-menu-option-template"><li class="nav-main-item"><a class="nav-main-link active" id="link"><img class="skill-icon-xs m-0 mr-2" id="image"><span class="nav-main-link-name" id="name"></span></a></li></template>
+<template id="combat-area-menu-template">
+  <div class="block block-content block-rounded border-top border-combat border-4x pointer-enabled px-1"
+    id="open-button">
+    <div style="position: absolute;right: 4px;top: 5px;">
+      <a class="font-w600 font-size-sm m-2 pointer-enabled dropdown-toggle" id="area-info-dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><lang-string lang-id="MENU_TEXT_AREA_INFO"></lang-string></a>
+      <div class="dropdown-menu dropdown-menu-right font-size-sm" aria-labelledby="dropdown-default-primary">
+        <a class="dropdown-item pointer-enabled" id="view-monster-list-cont"><lang-string lang-id="MENU_TEXT_VIEW_MONSTER_LIST"></lang-string></a>
+        <a class="dropdown-item pointer-enabled" id="view-combat-triangle"><lang-string lang-id="MENU_TEXT_VIEW_COMBAT_TRIANGLE"></lang-string></a>
+        <div class="dropdown-divider" id="area-info-divider"></div>
+        <div class="dropdown-item" id="complete-count"></div>
+        <div class="dropdown-item" id="pet-located"></div>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item pointer-enabled font-size-xs" id="wiki-link">
+          <img class="skill-icon-xxs mr-1">
+          <lang-string lang-id="VIEW_ON_OFFICIAL_WIKI"></lang-string>
+        </a>
+      </div>
+    </div>
+    <img id="title-aod" class="combat-area-title-aod d-none">
+    <img id="title-toth" class="combat-area-title-toth d-none">
+    <div class="media d-flex align-items-center push">
+      <div class="mr-3">
+        <img class="shop-img" id="image">
+      </div>
+      <div class="media-body" id="locked-container">
+        <div class="font-w600" id="unlock-text"></div>
+      </div>
+      <div class="media-body" id="unlocked-container">
+        <span class="p-1 bg-success rounded font-w700 d-none" id="tutorial-here"><lang-string
+            lang-id="COMBAT_MISC_HERE"></lang-string></span>
+        <div class="font-w600">
+          <span id="area-name"></span>
+          <span class="badge badge-pill m-1" id="min-difficulty-badge"></span>
+          <span id="difficulty-dash">-</span>
+          <span class="badge badge-pill m-1" id="max-difficulty-badge"></span>
+        </div>
+        <div class="font-size-2sm font-w600 text-warning d-none" id="barrier-notification"></div>
+        <div class="font-size-2sm font-w600 text-warning d-none" id="combat-triangle-notification"></div>
+        <div class="font-size-2sm font-w600 text-warning d-none" id="damage-type-notification"></div>
+        <div class="font-size-2sm font-w600" id="entry-requirements-title"><lang-string
+            lang-id="COMBAT_MISC_48"></lang-string></div>
+        <ul class="nav-main nav-main-horizontal nav-main-horizontal-override font-size-2sm" id="entry-requirements">
+        </ul>
+        <div class="font-size-2sm text-danger" id="area-effect-container">
+          <i class="fa fa-fw fa-info-circle mr-1"></i>
+          <span id="effect-description"></span>
+        </div>
+        <div class="font-size-2sm d-none" id="monster-count"></div>
+        <div class="font-size-2sm d-none" id="monster-level"></div>
+        <div class="font-size-2sm d-none" id="rewards"></div>
+        <div class="font-size-2sm font-size-xs font-w600 text-warning d-none" id="skill-unlock"></div>
+      </div>
+    </div>
+    <div id="open-options" class="d-none"></div>
+    <div class="font-size-sm d-none" id="event-button-cont">
+      <button class="btn btn-sm btn-danger m-1 w-100" role="button" id="event-button"></button>
+    </div>
+  </div>
+</template>
+<div class="sidemenu bg-white rounded d-none" id="skill-footer-minibar-container"><div id="skill-footer-minibar"><button class="btn btn-sm btn-light" style="width:42px; height:34px;">M</button></div><button class="btn btn-sm btn-light" id="minibar-arrow" style="width:42px; height:34px;">v</button></div>
+<category-menu id="combat-area-category-menu"></category-menu>
+<div class="row row-deck"><div class="col-12 col-md-6" id="combat-fight-container-player"><div class="col-12 px-2" id="player-hp">
+  <div class="row m-0 position-relative invisible" id="player-hp-spacer"><div class="progress combat active mb-1" style="height: 6px;"><div class="progress-bar bg-secondary" role="progressbar" style="width: 0%;"></div></div></div>
+  <div class="row m-0 position-relative"><div class="progress active bg-danger col-12 p-0" style="height: 15px"><div id="combat-player-hitpoints-bar" class="progress-bar bg-success" role="progressbar" style="width: 40%;"></div></div><div class="font-size-sm font-w600 text-danger" id="combat-player-splash-container">-5</div></div>
+  <div class="text-size-sm"><span id="combat-player-hitpoints-current">40</span>/<span id="combat-player-hitpoints-max">100</span></div>
+</div><div class="col-12 col-xl-6" id="player-timers"><div class="progress-height-6 mb-1 summoning-combat-bar" id="combat-progress-attack-summoning"><div class="progress"><div class="progress-bar"></div></div></div><div class="progress-height-10" id="combat-progress-attack-player"><div class="progress"><div class="progress-bar"></div></div></div><h5 class="text-combat-smoke text-center"><small><span id="combat-player-attack-speed-desc">Attack Interval:</span> <span id="combat-player-attack-speed">2.4s</span></small></h5></div></div>
+<div class="col-12 col-md-6" id="combat-fight-container-enemy"><div class="block block-rounded block-link-pop bg-combat-dark border-top border-danger border-4x"><div class="row row-deck">
+  <div class="col-12" id="monster-view"><div class="block-content pt-0 px-2 px-1-mobile"><div class="block block-rounded-double bg-combat-inner-dark text-center pb-1 mb-2"><div class="row no-gutters px-2">
+    <div class="col-12" id="enemy-hp">
+      <div id="combat-enemy-barrier-container" class="invisible barrier-info"><div class="row m-0 mb-1 position-relative"><div class="progress active bg-secondary col-12 p-0" style="height: 7px"><div id="combat-enemy-barrier-bar" class="progress-bar bg-info" role="progressbar" style="width: 0%;"></div></div></div></div>
+      <div class="row m-0 position-relative"><div class="progress active bg-danger col-12 p-0" style="height: 15px"><div id="combat-enemy-hitpoints-bar" class="progress-bar bg-success" role="progressbar" style="width: 70%;"></div></div><div class="font-size-sm font-w600 text-danger" id="combat-enemy-splash-container">-3</div></div>
+      <div class="text-size-sm"><span id="combat-enemy-hitpoints-current">7</span>/<span id="combat-enemy-hitpoints-max">10</span></div>
+    </div>
+    <div class="col-12 col-xl-6 px-2 px-0-mobile" id="enemy-timers"><div class="invisible"><div class="row m-0 mb-1 position-relative"><div class="progress active bg-secondary col-12 p-0" style="height: 3px"><div class="progress-bar bg-info"></div></div></div></div><div class="progress-height-10" id="combat-progress-attack-enemy"><div class="progress"><div class="progress-bar"></div></div></div><div class="text-size-sm text-combat-smoke text-center"><small><span id="combat-enemy-attack-speed-desc">Attack Interval:</span> <span id="combat-enemy-attack-speed">3.0s</span></small></div></div>
+    <div class="col-12" id="enemy-image">Chicken</div>
+    <div class="col-12"><div class="row gutters-tiny"><div class="col-6"><button role="button" class="btn btn-sm btn-primary m-1 w-100" id="combat-btn-monster-drops">View Monster Drops</button></div><div class="col-6" id="combat-enemy-options"><button type="button" class="btn btn-sm btn-warning m-1 w-100" id="combat-btn-run"><img class="skill-icon-xxs mr-1" src="/mod/icon.png?run">Run / Area Select</button></div></div></div>
+  </div></div></div></div>
+  <div class="col-md-2"></div>
+  <div class="col-12" id="combat-enemy-passive-desc-container-block"><div class="block-content pt-0 w-100 px-2 px-1-mobile">Passives</div></div>
+  <div class="col-12" id="enemy-stats-section"><div class="block-content pt-0 px-2 px-1-mobile"><div class="row row-deck"><div class="col-12 col-xl-6 d-block mb-2" id="combat-enemy-offensive-stats">Offensive Stats</div><div class="col-12 col-xl-6 d-block mb-2">Defensive Stats</div></div></div></div>
+</div></div></div></div>
+<div style="height: 1400px"></div>
+<pre id="result"></pre>
+<script>
+class TreeCard extends HTMLElement {
+  constructor() {
+    super();
+    this._content = document.getElementById('tree-template').content.cloneNode(true);
+    this.name = this._content.querySelector('.name');
+    this.bar = this._content.querySelector('.progress-bar');
+    this.button = this._content.querySelector('.cut');
+    this.clicks = 0;
+    this.button.onclick = () => this.clicks++;
+  }
+  connectedCallback() { this.appendChild(this._content); }
+}
+customElements.define('tree-card', TreeCard);
+class FishButton extends HTMLElement {
+  connectedCallback() { if (!this.textContent) this.textContent = this.dataset.fish; }
+}
+customElements.define('fish-button', FishButton);
+class AreaCard extends HTMLElement {
+  constructor() {
+    super();
+    this._content = document.getElementById('area-template').content.cloneNode(true);
+    this.buttonContainer = this._content.querySelector('.buttons');
+    this.fishName = this._content.querySelector('.fish-name');
+    this.fishButtons = [];
+  }
+  connectedCallback() { this.appendChild(this._content); }
+  setFish(fish) {
+    this.buttonContainer.textContent = '';
+    this.fishButtons = fish.map((name) => {
+      const button = document.createElement('fish-button');
+      button.dataset.fish = name;
+      this.buttonContainer.append(button);
+      return button;
+    });
+  }
+}
+customElements.define('area-card', AreaCard);
+class NpcNav extends HTMLElement {
+  connectedCallback() { if (!this.textContent) this.textContent = this.dataset.npc; }
+}
+customElements.define('npc-nav', NpcNav);
+class PanelCard extends HTMLElement {
+  constructor() {
+    super();
+    this._content = document.getElementById('panel-template').content.cloneNode(true);
+    this.targetContainer = this._content.querySelector('.targets');
+    this.infoSkillName = this._content.querySelector('.info-skill-name');
+    this.npcNavs = new Map();
+  }
+  connectedCallback() { this.appendChild(this._content); }
+  setArea(area) {
+    for (const npc of area.npcs) {
+      const nav = document.createElement('npc-nav');
+      nav.dataset.npc = npc.id;
+      this.targetContainer.append(nav);
+      this.npcNavs.set(npc, nav);
+    }
+  }
+}
+customElements.define('panel-card', PanelCard);
+const getTemplateNode = (id) => document.getElementById(id).content.cloneNode(true);
+const getElementFromFragment = (fragment, id) => {
+  const element = fragment.getElementById(id);
+  element.removeAttribute('id');
+  return element;
+};
+class CategoryMenuOptionElement extends HTMLElement {
+  constructor() {
+    super();
+    this._content = new DocumentFragment();
+    this._content.append(getTemplateNode('category-menu-option-template'));
+    this.link = getElementFromFragment(this._content, 'link');
+    this.image = getElementFromFragment(this._content, 'image');
+    this.name = getElementFromFragment(this._content, 'name');
+  }
+  connectedCallback() { this.appendChild(this._content); }
+  setOption(option, callbackFn) {
+    this.link.onclick = () => callbackFn();
+    this.image.src = option.media;
+    this.name.textContent = option.name;
+  }
+  highlight() { this.link.classList.add('bg-combat-menu-selected'); }
+  unhighlight() { this.link.classList.remove('bg-combat-menu-selected'); }
+}
+customElements.define('category-menu-option', CategoryMenuOptionElement);
+class CategoryMenuElement extends HTMLElement {
+  constructor() {
+    super();
+    this.options = new Map();
+    this._content = new DocumentFragment();
+    this._content.append(getTemplateNode('category-menu-template'));
+    this.expandButton = getElementFromFragment(this._content, 'expand-button');
+    this.expandText = getElementFromFragment(this._content, 'expand-text');
+    this.expandDiv = getElementFromFragment(this._content, 'expand-div');
+    this.optionsContainer = getElementFromFragment(this._content, 'options-container');
+    this.expandButton.onclick = () => this.expandDiv.classList.toggle('d-none');
+  }
+  connectedCallback() { this.appendChild(this._content); }
+  addOptions(options, expandText, callbackFn) {
+    this.expandText.textContent = expandText;
+    options.forEach((option) => {
+      const newOption = new CategoryMenuOptionElement();
+      newOption.setOption(option, () => { callbackFn(option); this.expandDiv.classList.add('d-none'); });
+      this.optionsContainer.append(newOption);
+      this.options.set(option, newOption);
+    });
+  }
+  highlightOption(option) { this.options.get(option)?.highlight(); }
+  unhighlightOption(option) { this.options.get(option)?.unhighlight(); }
+  hideCategory(category) { this.options.get(category)?.classList.add('d-none'); }
+  showCategory(category) { this.options.get(category)?.classList.remove('d-none'); }
+}
+customElements.define('category-menu', CategoryMenuElement);
+const areaFights = [];
+const langStrings = { MENU_TEXT_AREA_INFO: 'Area Info', MENU_TEXT_VIEW_MONSTER_LIST: 'View Monster List', MENU_TEXT_VIEW_COMBAT_TRIANGLE: 'View Combat Triangle', VIEW_ON_OFFICIAL_WIKI: 'View on Wiki', COMBAT_MISC_48: 'Requires:', COMBAT_MISC_HERE: 'Here' };
+customElements.define('lang-string', class extends HTMLElement { connectedCallback() { this.textContent = langStrings[this.getAttribute('lang-id')] ?? ''; } });
+class CombatAreaMenuElement extends HTMLElement {
+  constructor() {
+    super();
+    this.isOpen = false;
+    this._content = new DocumentFragment();
+    this._content.append(getTemplateNode('combat-area-menu-template'));
+    this.openButton = getElementFromFragment(this._content, 'open-button');
+    this.image = getElementFromFragment(this._content, 'image');
+    this.lockedContainer = getElementFromFragment(this._content, 'locked-container');
+    this.unlockedContainer = getElementFromFragment(this._content, 'unlocked-container');
+    this.areaName = getElementFromFragment(this._content, 'area-name');
+    this.minDifficultyBadge = getElementFromFragment(this._content, 'min-difficulty-badge');
+    this.entryRequirements = getElementFromFragment(this._content, 'entry-requirements');
+    this.openOptions = getElementFromFragment(this._content, 'open-options');
+  }
+  connectedCallback() { this.appendChild(this._content); }
+  setArea(area) {
+    this.openButton.onclick = () => this.toggleOptions(area);
+    this.image.src = area.media;
+    this.areaName.textContent = area.name;
+    this.minDifficultyBadge.textContent = 'Easy';
+    this.minDifficultyBadge.classList.add('badge-success');
+    this.entryRequirements.innerHTML = `<li><span class="text-success">Level ${area.name.length}</span></li>`;
+    this.lockedContainer.querySelector('.font-w600').textContent = `Complete ${area.name} trials to unlock`;
+    this.lockedContainer.classList.toggle('d-none', !area.locked);
+    this.unlockedContainer.classList.toggle('d-none', area.locked);
+    for (const monster of area.monsters) {
+      const row = Object.assign(document.createElement('div'), { className: 'monster-row d-flex justify-content-between' });
+      const fight = Object.assign(document.createElement('button'), { className: 'btn btn-sm btn-danger area-fight', textContent: 'Fight' });
+      fight.onclick = (event) => {
+        areaFights.push(`${monster} in ${area.id}`);
+        event.stopPropagation();
+      };
+      row.append(Object.assign(document.createElement('span'), { textContent: monster }), fight);
+      this.openOptions.append(row);
+    }
+  }
+  toggleOptions(area) {
+    if (area.locked) return;
+    this.openOptions.classList.toggle('d-none', this.isOpen);
+    this.isOpen = !this.isOpen;
+  }
+}
+customElements.define('combat-area-menu', CombatAreaMenuElement);
+class CombatAreaMenu {
+  constructor(container, areas) {
+    this.container = container;
+    this.menuElems = new Map();
+    areas.forEach((area) => {
+      const element = new CombatAreaMenuElement();
+      element.className = 'col-12 col-md-6 col-xl-4';
+      this.container.append(element);
+      element.setArea(area);
+      this.menuElems.set(area, element);
+    });
+  }
+  open() { this.container.classList.remove('d-none'); }
+  close() { this.container.classList.add('d-none'); }
+}
+class CombatAreaMenuManager {
+  constructor() { this.all = new Map(); }
+  init(categories, categoryMenu) {
+    this.categoryMenu = categoryMenu;
+    let insertPoint = categoryMenu;
+    categories.forEach((category) => {
+      const container = document.createElement('div');
+      container.className = 'row row-deck gutters-tiny mt-3 d-none';
+      this.all.set(category, new CombatAreaMenu(container, category.areas));
+      insertPoint.insertAdjacentElement('afterend', container);
+      insertPoint = container;
+    });
+  }
+  closeOpen() {
+    if (this.open === undefined) return;
+    this.all.get(this.open).close();
+    this.categoryMenu.unhighlightOption(this.open);
+    this.open = undefined;
+  }
+  toggleCategory(category) {
+    const wasOpen = this.open === category;
+    this.closeOpen();
+    if (!wasOpen) {
+      this.all.get(category).open();
+      this.categoryMenu.highlightOption(category);
+      this.open = category;
+    }
+  }
+}
+const attackStyles = [['melee', 'Stab'], ['melee', 'Slash'], ['melee', 'Block'], ['ranged', 'Accurate'], ['ranged', 'Rapid'], ['magic', 'Magic'], ['magic', 'Defensive']].map(([attackType, name]) => ({ attackType, name, buttonID: `${name}-attack-style-button` }));
+const stylePlayer = {
+  attackType: 'melee', style: 'Stab', picks: [],
+  setAttackStyle(style) { this.picks.push(style.name); this.style = style.name; this.renderAttackStyle(); },
+  renderAttackStyle() {
+    for (const type of ['melee', 'ranged', 'magic']) document.getElementById(`${type}-attack-style-buttons`).classList.toggle('d-none', type !== this.attackType);
+    for (const style of attackStyles) {
+      const button = document.getElementById(style.buttonID);
+      button.classList.toggle('btn-secondary', style.name === this.style);
+      button.classList.toggle('btn-outline-secondary', style.name !== this.style);
+    }
+  },
+};
+for (const style of attackStyles) {
+  const button = Object.assign(document.createElement('button'), { className: 'btn btn-outline-secondary my-1', id: style.buttonID });
+  button.style.width = '100%';
+  button.append(Object.assign(document.createElement('img'), { className: 'nav-img', src: `/mod/icon.png?${style.name}` }), Object.assign(document.createElement('span'), { textContent: style.name }));
+  button.onclick = () => stylePlayer.setAttackStyle(style);
+  document.getElementById(`${style.attackType}-attack-style-buttons`).appendChild(Object.assign(document.createElement('div'), { className: 'col-6 col-lg-12' })).appendChild(button);
+}
+stylePlayer.renderAttackStyle();
+const controlledPicks = [];
+const addControlled = (name) => {
+  const button = Object.assign(document.createElement('button'), { className: 'btn btn-outline-secondary my-1 controlled-style', textContent: name });
+  button.addEventListener('click', () => controlledPicks.push(name));
+  document.getElementById('melee-attack-style-buttons').appendChild(Object.assign(document.createElement('div'), { className: 'col-6 col-lg-12' })).appendChild(button);
+};
+addControlled('Controlled');
+const areasOf = (names) => names.map((name) => ({ id: name.replace(/ /g, '_').replace('*', ''), name: name.replace('*', ''), media: `/mod/icon.png?${name.replace(/ /g, '_').replace('*', '')}`, locked: name.endsWith('*'), monsters: ['Ghost', 'Skeleton', 'Zombie'] }));
+const areaCategories = [['Combat Areas', ['Farmlands', 'Forest']], ['Slayer Areas', ['Graveyard', 'Spider Forest', 'Volcano']], ['Dungeons', ['Chicken Coop', 'Hidden Tomb*']], ['Strongholds', ['Bandit Base']], ['The Abyss', ['Shattered Depths']]]
+  .map(([name, areas], index) => ({ id: `cat${index}`, name, media: `/mod/icon.png?cat${index}`, areas: areasOf(areas) }));
+const combatAreaMenus = new CombatAreaMenuManager();
+const categoryMenu = document.getElementById('combat-area-category-menu');
+categoryMenu.addOptions(areaCategories, 'Select Combat Area', (category) => combatAreaMenus.toggleCategory(category));
+combatAreaMenus.init(areaCategories, categoryMenu);
+document.querySelectorAll('.monster-row').forEach((row) => row.append(Object.assign(document.createElement('span'), { className: 'slayer-indicator', textContent: '*' })));
+categoryMenu.hideCategory(areaCategories[4]);
+</script>
+<script type="module">
+const results = [];
+const check = (name, ok, detail = '') => results.push({ name, ok: Boolean(ok), detail: String(detail) });
+const report = () => (document.getElementById('result').textContent = JSON.stringify(results));
+addEventListener('error', (event) => {
+  check('the page runs to the end', false, event.error?.stack ?? event.message);
+  report();
+});
+const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+const shown = (element) => element.checkVisibility();
+
+const trees = ['Normal', 'Oak', 'Willow'].map((id) => ({ id }));
+const treeMenus = new Map(trees.map((tree) => {
+  const card = document.createElement('tree-card');
+  card.className = 'col-6 col-md-4';
+  document.getElementById('trees').append(card);
+  card.name.textContent = tree.id;
+  return [tree, card];
+}));
+const areas = [{ id: 'River', fish: ['Trout', 'Salmon'] }, { id: 'Shore', fish: ['Shrimp', 'Sardine', 'Herring'] }];
+const areaCards = areas.map((area) => {
+  const card = document.createElement('area-card');
+  card.className = 'col-12';
+  document.getElementById('areas').append(card);
+  card.setFish(area.fish);
+  return card;
+});
+const thievingAreas = [{ id: 'Farm', npcs: [{ id: 'Farmer' }] }, { id: 'Port', npcs: [{ id: 'Man' }, { id: 'Fisherman' }, { id: 'Guard' }] }];
+const panels = thievingAreas.map((area) => {
+  const panel = document.createElement('panel-card');
+  panel.className = 'col-12';
+  document.getElementById('panels').append(panel);
+  panel.setArea(area);
+  return panel;
+});
+const thieving = { id: 'melvorD:Thieving', isActive: false, currentArea: undefined, currentNPC: undefined };
+window.thievingMenu = { areaPanels: new Map(thievingAreas.map((area, index) => [area, panels[index]])) };
+const registryOf = (list) => ({ getObjectByID: (id) => list.find((entry) => entry.id === id) });
+const treeActions = trees.map((tree) => Object.assign(tree, { name: `${tree.id} Tree`, media: `/mod/icon.png?${tree.id}` }));
+const selectedTrees = [];
+const woodcutting = { id: 'melvorD:Woodcutting', isActive: false, activeTrees: new Set(), actions: registryOf(treeActions), selectTree: (tree) => selectedTrees.push(tree.id) };
+const bars = [{ id: 'Bronze_Bar', name: 'Bronze Bar', media: '/mod/icon.png?bronze' }, { id: 'Iron_Bar', name: 'Iron Bar', media: '/mod/icon.png?iron' }];
+const smithingCalls = [];
+const smithing = {
+  id: 'melvorD:Smithing', isActive: false, selectedRecipe: undefined, actions: registryOf(bars),
+  selectRecipeOnClick(recipe) { smithingCalls.push(`select ${recipe.id}`); this.selectedRecipe = recipe; },
+  createButtonOnClick() { smithingCalls.push(`create ${this.selectedRecipe?.id}`); },
+};
+const fishing = { id: 'melvorD:Fishing', isActive: false, activeFishingArea: undefined, selectedAreaFish: new Map() };
+window.woodcuttingMenu = { treeMenus };
+window.fishingAreaMenus = new Map(areas.map((area, index) => [area, areaCards[index]]));
+window.Game = class Game { render() {} };
+window.game = { skills: { getObjectByID: (id) => ({ [woodcutting.id]: woodcutting, [fishing.id]: fishing, [thieving.id]: thieving, [smithing.id]: smithing })[id] } };
+const chicken = { id: 'melvorD:Chicken', name: 'Chicken', media: '/mod/icon.png?chicken' };
+const cow = { id: 'melvorD:Cow', name: 'Cow', media: '/mod/icon.png?cow' };
+const farmlands = { id: 'melvorD:Farmlands', name: 'Farmlands', media: '/mod/icon.png?farmlands' };
+const coop = { id: 'melvorD:Chicken_Coop', name: 'Chicken Coop', media: '/mod/icon.png?coop' };
+const depth = { id: 'melvorItA:Shattered_Depths', name: 'Shattered Depths', media: '/mod/icon.png?depth' };
+const fortress = { id: 'melvorF:Bandit_Base', name: 'Bandit Base', media: '/mod/icon.png?fort', getTierName: (tier) => `${tier} Bandit Base` };
+const windStrike = { id: 'melvorD:WindStrike', media: '/mod/icon.png?wind-strike' };
+const fireStrike = { id: 'melvorD:FireStrike', media: '/mod/icon.png?fire-strike' };
+const thickSkin = { id: 'melvorD:Thick_Skin', media: '/mod/icon.png?thick-skin' };
+const protectFromMelee = { id: 'melvorF:Protect_from_Melee', media: '/mod/icon.png?protect-from-melee' };
+const fights = [];
+const combat = {
+  isActive: false, selectedArea: undefined, selectedMonster: undefined, strongholdTier: 'Standard', activeEvent: undefined,
+  player: { attackType: 'melee', spellSelection: { attack: windStrike }, activePrayers: new Set(), prayerPoints: 3860 },
+  selectMonster: (monster, area) => fights.push(`monster ${monster.id} in ${area.id}`),
+  selectDungeon: (area) => fights.push(`dungeon ${area.id}`),
+  selectAbyssDepth: (area) => fights.push(`depth ${area.id}`),
+  selectStronghold: (area, tier) => fights.push(`stronghold ${area.id} ${tier}`),
+};
+const runButton = document.getElementById('combat-btn-run');
+runButton.onclick = () => {
+  fights.push('run');
+  Object.assign(combat, { isActive: false, selectedArea: undefined, selectedMonster: undefined });
+};
+const combatPage = { id: 'melvorD:Combat', name: 'Combat' };
+const pageChanges = [];
+window.changePage = (page, ...rest) => {
+  pageChanges.push([page.id, ...rest]);
+  window.game.openPage = page;
+};
+let selectedCombatMenu = 0;
+const lockedMenus = new Set();
+const lockedAlerts = [];
+window.changeCombatMenu = (id) => {
+  if (lockedMenus.has(id)) {
+    lockedAlerts.push(id);
+    return;
+  }
+  document.getElementById(`combat-menu-${selectedCombatMenu}`).classList.add('d-none');
+  document.getElementById(`combat-menu-item-${selectedCombatMenu}`).classList.remove('border', 'border-2x', 'border-combat-outline');
+  selectedCombatMenu = id;
+  document.getElementById(`combat-menu-${id}`).classList.remove('d-none');
+  document.getElementById(`combat-menu-item-${id}`).classList.add('border', 'border-2x', 'border-combat-outline');
+};
+window.togglePlayerContainer = () => document.getElementById('combat-player-container').classList.toggle('d-mobile-none');
+Object.assign(window.game, {
+  pages: registryOf([combatPage]),
+  openPage: undefined,
+  combat,
+  monsters: registryOf([chicken, cow]),
+  combatAreas: registryOf([farmlands, coop, depth, fortress]),
+  dungeons: registryOf([coop]),
+  abyssDepths: registryOf([depth]),
+  strongholds: registryOf([fortress]),
+  prayer: { isUnlocked: true },
+  altMagic: { isUnlocked: true },
+  isGolbinRaid: false,
+});
+window.numberWithCommas = (number) => number.toLocaleString('en-US');
+window.formatNumber = (number) => (number >= 1e6 ? `${numberWithCommas(Math.floor(number / 1000))}K` : numberWithCommas(number));
+const stored = {};
+const settingConfigs = {};
+const settingValues = {};
+const hooks = {};
+let render = () => {};
+const ctx = {
+  loadStylesheet: (path) => document.head.insertAdjacentHTML('beforeend', `<link rel="stylesheet" href="/mod/${path}">`),
+  characterStorage: { getItem: (key) => stored[key], setItem: (key, value) => (stored[key] = value) },
+  settings: { section: () => ({ add: (config) => [config].flat().forEach((each) => (settingConfigs[each.name] = each)), get: (name) => settingValues[name] ?? settingConfigs[name]?.default }) },
+  patch: (target, method) => ({ after: (fn) => (render = fn) }),
+  onCharacterLoaded: (fn) => (hooks.character = fn),
+  onInterfaceReady: (fn) => (hooks.ready = fn),
+  loadModule: (path) => import(`/mod/${path}`),
+  accountStorage: { getItem: () => undefined, setItem() {} },
+  getResourceUrl: (path) => `/mod/${path}`,
+};
+const onByDefault = ['compact-area-select', 'combat-menu-buttons', 'scroll-on-area-fight'];
+for (const name of onByDefault) settingValues[name] = false;
+const { setup } = await import('/mod/setup.mjs');
+setup(ctx);
+hooks.character();
+hooks.ready();
+await settle();
+
+const melvorAccepts = (result) => typeof result !== 'string' && (result === undefined || Boolean(result));
+const list = document.getElementById('trees');
+const startSection = (id) => document.getElementById(id).querySelector('.mobile-combat-start-section');
+render();
+check('no Start Last Target on a skill page before any target', !startSection('trees') || !shown(startSection('trees')));
+woodcutting.isActive = true;
+woodcutting.activeTrees = new Set([trees[2]]);
+render();
+await settle();
+check('no Start Last Target while the skill runs', !startSection('trees') || !shown(startSection('trees')));
+check('the last target is saved with the character', JSON.stringify(stored.last?.['melvorD:Woodcutting']) === '["Willow"]', JSON.stringify(stored.last));
+woodcutting.isActive = false;
+woodcutting.activeTrees = new Set();
+render();
+await settle();
+const top = startSection('trees');
+check('once idle, a Start Last Target button sits after the XP block, just before the first tree', top && shown(top) && top.previousElementSibling.id === 'xp-block' && top.nextElementSibling === treeMenus.get(trees[0]));
+check('the button names the last target and shows its icon', top.querySelector('.mobile-combat-start-name').textContent === 'Willow Tree' && top.querySelector('.mobile-combat-start-icon').getAttribute('src').endsWith('Willow'), top.querySelector('.mobile-combat-start-name').textContent);
+check('the button reads Start Last Target, then the icon', top.querySelector('.mobile-combat-start-line').firstElementChild.textContent === 'Start Last Target' && top.querySelector('.mobile-combat-start-line').lastElementChild.localName === 'img');
+top.querySelector('.mobile-combat-start').click();
+check('the button starts the last tree again', JSON.stringify(selectedTrees) === '["Willow"]', JSON.stringify(selectedTrees));
+check('the cards stay as Melvor laid them out, since moving them is Active First\'s job', [...list.children].filter((child) => child.localName === 'tree-card').map((card) => card.name.textContent).join(',') === 'Normal,Oak,Willow');
+check('Start Last Target is on by default', settingConfigs['start-last-target'].default === true);
+check('Melvor keeps the switch off when it is turned off', melvorAccepts(settingConfigs['start-last-target'].onChange(false, true)));
+check('turned off, the button goes away', !shown(top));
+check('Melvor keeps it on when it is turned back on', melvorAccepts(settingConfigs['start-last-target'].onChange(true, false)));
+check('and it is back', shown(top));
+settingValues['start-last-target'] = false;
+hooks.character();
+check('a switch saved as off hides it once the character loads', !shown(top));
+delete settingValues['start-last-target'];
+hooks.character();
+
+smithing.isActive = true;
+smithing.selectedRecipe = bars[1];
+render();
+await settle();
+const smithingSection = () => document.querySelector('#smithing-container > .mobile-combat-start-section');
+check('nothing extra on a recipe skill page while it runs', !smithingSection() || !shown(smithingSection()));
+smithing.isActive = false;
+smithing.selectedRecipe = bars[0];
+render();
+await settle();
+check('a recipe skill gets the button under its skill header', smithingSection() && smithingSection().previousElementSibling.classList.contains('skill-info') && shown(smithingSection().querySelector('.mobile-combat-start')));
+check('it names the last recipe made, not the one selected since', smithingSection().querySelector('.mobile-combat-start-name').textContent === 'Iron Bar', smithingSection().querySelector('.mobile-combat-start-name').textContent);
+smithingSection().querySelector('.mobile-combat-start').click();
+check('the button selects the last recipe again and presses Create', JSON.stringify(smithingCalls) === '["select Iron_Bar","create Iron_Bar"]', JSON.stringify(smithingCalls));
+
+const food = document.getElementById('food-block');
+const playerPanel = document.getElementById('combat-fight-container-player');
+const jumpButtons = () => document.querySelectorAll('.mobile-combat-jump');
+const jumpSection = () => jumpButtons()[0];
+const jumpButton = () => jumpSection()?.querySelector('button');
+const fightTo = (area, monster, tier) => Object.assign(combat, { isActive: true, selectedArea: area, selectedMonster: monster, strongholdTier: tier ?? 'Standard' });
+const stopFighting = () => Object.assign(combat, { isActive: false, selectedArea: undefined, selectedMonster: undefined });
+render();
+check('no Jump To Last before any fight', !jumpSection() || !shown(jumpSection()));
+
+fightTo(farmlands, chicken);
+render();
+await settle();
+check('no Jump To Last while fighting', !shown(jumpSection()));
+check('the fight is saved with the character', JSON.stringify(stored.fight) === '["melvorD:Farmlands","melvorD:Chicken"]', JSON.stringify(stored.fight));
+stopFighting();
+render();
+await settle();
+check('after the fight Jump To Last shows in its own section, beside the Player and Combat panels and just above Player', shown(jumpSection()) && jumpSection().nextElementSibling === playerPanel && jumpSection().parentElement === playerPanel.parentElement && jumpSection().classList.contains('col-12') && !playerPanel.contains(jumpSection()));
+check('spanning the full width above the Player panel, edge to edge with it', jumpSection().getBoundingClientRect().bottom <= playerPanel.getBoundingClientRect().top + 1 && Math.abs(jumpButton().getBoundingClientRect().width - jumpSection().getBoundingClientRect().width) < 2 && Math.abs(jumpSection().getBoundingClientRect().left - playerPanel.parentElement.getBoundingClientRect().left) < 1, `${jumpSection().getBoundingClientRect().left} ${playerPanel.parentElement.getBoundingClientRect().left}`);
+check('it no longer sits by Food', !food.parentElement.querySelector('.mobile-combat-jump'));
+check('it reads Jump To Last, then the enemy icon, with the enemy name under it', jumpButton().querySelector('.mobile-combat-start-line').firstElementChild.textContent === 'Jump To Last' && jumpButton().querySelector('.mobile-combat-start-icon').getAttribute('src').endsWith('chicken') && jumpButton().querySelector('.mobile-combat-start-name').textContent === 'Chicken', jumpButton().textContent);
+jumpButton().click();
+check('pressing it fights that monster in that area again, as its Fight button would', fights.at(-1) === 'monster melvorD:Chicken in melvorD:Farmlands', fights.at(-1));
+for (let i = 0; i < 5; i++) render();
+check('only ever one Jump To Last', jumpButtons().length === 1 && jumpSection().querySelectorAll('button').length === 1, jumpButtons().length);
+check('there is no Leave Combat button any more, since the combat minibar has Run', ![...document.querySelectorAll('button')].some((button) => button.textContent.includes('Leave Combat')));
+
+fightTo(coop, chicken);
+render();
+window.game.golbinRaid = { isActive: true };
+stopFighting();
+render();
+check('in a Golbin Raid Jump To Last stays hidden', !shown(jumpSection()));
+delete window.game.golbinRaid;
+render();
+await settle();
+
+fightTo(coop, chicken);
+render();
+combat.selectedMonster = cow;
+render();
+stopFighting();
+render();
+await settle();
+check('a dungeon comes back as the dungeon, with its icon, whichever monster was last in it', jumpButton().querySelector('.mobile-combat-start-name').textContent === 'Chicken Coop' && jumpButton().querySelector('.mobile-combat-start-icon').getAttribute('src').endsWith('coop') && JSON.stringify(stored.fight) === '["melvorD:Chicken_Coop"]', JSON.stringify(stored.fight));
+jumpButton().click();
+check('and starts the dungeon over', fights.at(-1) === 'dungeon melvorD:Chicken_Coop', fights.at(-1));
+
+fightTo(depth, cow);
+render();
+stopFighting();
+render();
+jumpButton().click();
+check('an abyss depth starts the depth', fights.at(-1) === 'depth melvorItA:Shattered_Depths', fights.at(-1));
+
+fightTo(fortress, cow, 'Augmented');
+render();
+stopFighting();
+render();
+await settle();
+check('a stronghold keeps its tier and names it', jumpButton().querySelector('.mobile-combat-start-name').textContent === 'Augmented Bandit Base', jumpButton().querySelector('.mobile-combat-start-name').textContent);
+jumpButton().click();
+check('and starts that tier', fights.at(-1) === 'stronghold melvorF:Bandit_Base Augmented', fights.at(-1));
+
+fightTo(farmlands, cow);
+combat.activeEvent = { id: 'event' };
+render();
+combat.activeEvent = undefined;
+stopFighting();
+render();
+check('an event fight, which cannot be restarted from a button, is not saved over the last one', JSON.stringify(stored.fight) === '["melvorF:Bandit_Base","Augmented"]', JSON.stringify(stored.fight));
+
+fightTo(farmlands, cow);
+render();
+stopFighting();
+const savedFight = stored.fight;
+stored.fight = ['someMod:Gone_Area', 'melvorD:Cow'];
+hooks.character();
+render();
+await settle();
+check('a saved area that no longer exists shows no button and breaks nothing', !shown(jumpButton()));
+stored.fight = savedFight;
+hooks.character();
+render();
+await settle();
+check('the last fight comes back after a reload', shown(jumpButton()) && jumpButton().querySelector('.mobile-combat-start-name').textContent === 'Cow');
+
+check('the Jump To Last setting is on by default', settingConfigs['jump-to-last'].default === true);
+check('Melvor keeps the switch off when it is turned off', melvorAccepts(settingConfigs['jump-to-last'].onChange(false, true)));
+check('turned off, the button goes away', !shown(jumpButton()));
+render();
+check('and stays away through renders', !shown(jumpButton()));
+check('Melvor keeps the switch on when it is turned back on', melvorAccepts(settingConfigs['jump-to-last'].onChange(true, false)));
+check('turned back on, the button returns', shown(jumpButton()));
+settingValues['jump-to-last'] = false;
+hooks.character();
+check('a switch saved as off hides it once the character loads, since Melvor restores it without calling onChange', !shown(jumpButton()));
+delete settingValues['jump-to-last'];
+hooks.character();
+check('and a switch saved as on shows it', shown(jumpButton()));
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const options = () => [...categoryMenu.options.values()];
+const shownOptions = () => options().filter(shown);
+const optionNames = (list) => JSON.stringify(list.map((option) => option.name.textContent));
+const red = (option) => getComputedStyle(option.link).backgroundColor === 'rgb(222, 59, 59)';
+const areaMenuOf = (index) => combatAreaMenus.all.get(areaCategories[index]);
+const cardsOf = (index) => [...areaMenuOf(index).menuElems.values()];
+const box = (element) => element.getBoundingClientRect();
+const areaRegion = () => [categoryMenu, ...[...combatAreaMenus.all.values()].map((areaMenu) => areaMenu.container)];
+const nodeCount = () => areaRegion().reduce((sum, element) => sum + element.querySelectorAll('*').length, 0);
+const indicators = [...document.querySelectorAll('.slayer-indicator')];
+const before = nodeCount();
+render();
+check('the page is narrow, where Melvor uses the Select Combat Area dropdown', innerWidth < 992 && shown(categoryMenu.expandButton) && !shown(categoryMenu.expandDiv), innerWidth);
+check('the setting is called Compact Area Select and is on by default', settingConfigs['compact-area-select'].label === 'Compact Area Select' && settingConfigs['compact-area-select'].default === true);
+categoryMenu.options.get(areaCategories[1]).link.click();
+await wait(50);
+const melvorShare = matchMedia('(min-width: 1200px)').matches ? 1 / 3 : matchMedia('(min-width: 768px)').matches ? 1 / 2 : 1;
+check('off, Melvor\'s area cards keep their own width', cardsOf(1).every((card) => Math.abs(box(card).width - box(areaMenuOf(1).container).width * melvorShare) < 2), `${box(cardsOf(1)[0]).width} of ${box(areaMenuOf(1).container).width}`);
+categoryMenu.options.get(areaCategories[1]).link.click();
+check('Melvor keeps the switch on when it is turned on', melvorAccepts(settingConfigs['compact-area-select'].onChange(true, false)));
+render();
+await wait(50);
+check('turned on, the Select Combat Area button is gone', !shown(categoryMenu.expandButton));
+check('and Melvor\'s own area type options show in its place, not copies of them', optionNames(shownOptions()) === '["Combat Areas","Slayer Areas","Dungeons","Strongholds"]' && shownOptions().every((option) => categoryMenu.contains(option)), optionNames(shownOptions()));
+const [o0, o1, o2, o3] = shownOptions().map(box);
+check('laid out 2x2', Math.abs(o0.top - o1.top) < 1 && Math.abs(o2.top - o3.top) < 1 && o2.top > o0.bottom - 1 && Math.abs(o0.left - o2.left) < 1 && o1.left > o0.right - 1 && Math.abs(o0.width - o1.width) < 1, `${o0.left},${o0.top} ${o1.left},${o1.top} ${o2.left},${o2.top} ${o3.left},${o3.top}`);
+check('nothing is red until an area type is open', !options().some(red));
+
+shownOptions()[1].link.click();
+render();
+await wait(400);
+check('pressing an area type opens it through Melvor', combatAreaMenus.open === areaCategories[1] && shown(areaMenuOf(1).container));
+check('and that one shows red and pressed', red(shownOptions()[1]) && getComputedStyle(shownOptions()[1].link).boxShadow.includes('inset') && getComputedStyle(shownOptions()[1].link).borderTopColor === 'rgb(220, 49, 49)', getComputedStyle(shownOptions()[1].link).backgroundColor);
+check('while the others stay plain', !red(shownOptions()[0]) && !red(shownOptions()[2]));
+check('the area types stay up after a pick, since Melvor folds its dropdown away', shown(categoryMenu.expandDiv));
+const container = areaMenuOf(1).container;
+check('a divider runs between the area types and the cards', getComputedStyle(container).borderTopStyle === 'solid' && box(categoryMenu).bottom <= box(container).top + 1);
+const [c0, c1, c2] = cardsOf(1).map(box);
+check('the cards sit two to a row', Math.abs(c0.top - c1.top) < 1 && c2.top > c0.bottom - 1 && Math.abs(c0.width - box(container).width / 2) < 2 && Math.abs(c0.left - c2.left) < 1, `${c0.width} of ${box(container).width}`);
+check('each card is Melvor\'s own, still holding all its contents', cardsOf(1).every((card) => container.contains(card) && card.contains(card.minDifficultyBadge) && card.contains(card.entryRequirements) && card.contains(card.openButton.querySelector('[data-toggle="dropdown"]'))));
+const infoToggle = (card) => card.openButton.querySelector('[data-toggle="dropdown"]');
+const closedCard = cardsOf(1)[0];
+check('an unexpanded card shows just its art, name and difficulty', shown(closedCard.image) && shown(closedCard.areaName) && shown(closedCard.minDifficultyBadge) && !shown(closedCard.entryRequirements) && !shown(infoToggle(closedCard)), `${shown(closedCard.minDifficultyBadge)} ${shown(closedCard.entryRequirements)} ${shown(infoToggle(closedCard))}`);
+check('with small art to the left, centred on the name and difficulty', box(closedCard.image).width <= 32 && box(closedCard.image).right <= box(closedCard.areaName).left + 1 && Math.abs((box(closedCard.image).top + box(closedCard.image).bottom) / 2 - (box(closedCard.areaName.parentElement).top + box(closedCard.areaName.parentElement).bottom) / 2) < 8, `${box(closedCard.image).width}px, ${box(closedCard.image).right} vs ${box(closedCard.areaName).left}`);
+check('no Area Info and no ? on it', !shown(infoToggle(closedCard)) && getComputedStyle(infoToggle(closedCard), '::before').content === 'none');
+check('its difficulty sits on its own line under the name, lined up with it', box(closedCard.minDifficultyBadge).top >= box(closedCard.areaName).bottom - 1 && Math.abs(box(closedCard.minDifficultyBadge).left - box(closedCard.areaName).left) < 2, `${box(closedCard.minDifficultyBadge).top} ${box(closedCard.areaName).bottom}`);
+check('so it is still short, just the name and its difficulty beside small art', box(closedCard).height < 80, box(closedCard).height);
+check('its difficulty is cut to its first letter so it fits, with the full word on hover', closedCard.minDifficultyBadge.textContent === 'E' && closedCard.minDifficultyBadge.title === 'Easy', closedCard.minDifficultyBadge.textContent);
+const cardLook = getComputedStyle(closedCard.openButton);
+const typeLook = getComputedStyle(shownOptions()[0].link);
+check('it looks like the area type buttons: same thin rounded border and fill, no thick top edge or shadow', cardLook.borderTopWidth === '1px' && cardLook.borderTopColor === typeLook.borderTopColor && cardLook.borderRadius === typeLook.borderRadius && cardLook.backgroundColor === typeLook.backgroundColor && cardLook.boxShadow === 'none' && typeLook.boxShadow === 'none', `card ${cardLook.borderTopWidth} ${cardLook.borderTopColor} ${cardLook.borderRadius} ${cardLook.backgroundColor} ${cardLook.boxShadow} / type ${typeLook.borderTopColor} ${typeLook.borderRadius} ${typeLook.backgroundColor}`);
+check('an area you can enter is not dimmed', getComputedStyle(closedCard.openButton.querySelector('.media')).opacity === '1');
+closedCard.entryRequirements.querySelector('span').classList.replace('text-success', 'text-danger');
+render();
+check('an area whose entry requirements Melvor marks unmet is dimmed', getComputedStyle(closedCard.openButton.querySelector('.media')).opacity === '0.5');
+closedCard.entryRequirements.querySelector('span').classList.replace('text-danger', 'text-success');
+render();
+check('and lights back up once they are met', getComputedStyle(closedCard.openButton.querySelector('.media')).opacity === '1');
+cardsOf(1)[1].openButton.click();
+await wait(50);
+check('opening a card makes it full width', Math.abs(box(cardsOf(1)[1]).width - box(container).width) < 2, `${box(cardsOf(1)[1]).width} of ${box(container).width}`);
+const openCard = cardsOf(1)[1];
+render();
+check('an opened card spells its difficulty out again', openCard.minDifficultyBadge.textContent === 'Easy' && !openCard.minDifficultyBadge.title);
+check('an opened card looks just as it does without the setting: Melvor\'s card with its thick top edge, full art beside the details, difficulty, requirements and Area Info', getComputedStyle(openCard.openButton).borderTopWidth === '4px' && box(openCard.image).width === 64 && box(openCard.image).right <= box(openCard.areaName).left + 1 && shown(openCard.minDifficultyBadge) && shown(openCard.entryRequirements) && shown(infoToggle(openCard)) && infoToggle(openCard).textContent.includes('Area Info') && getComputedStyle(infoToggle(openCard), '::before').content === 'none', `${box(openCard.image).right} ${box(openCard.areaName).left} ${getComputedStyle(infoToggle(openCard), '::before').content}`);
+const openInfoMenu = openCard.openButton.querySelector('.dropdown-menu');
+infoToggle(openCard).click();
+await wait(50);
+check('its Area Info opens Melvor\'s menu, and the card stays open so the menu stays up', openInfoMenu.classList.contains('show') && shown(openInfoMenu) && openInfoMenu.textContent.includes('View Combat Triangle') && openCard.isOpen, `${openInfoMenu.classList.contains('show')} ${shown(openInfoMenu)} ${openCard.isOpen}`);
+openInfoMenu.querySelector('.dropdown-item').click();
+await wait(50);
+check('picking something in that menu leaves the card open too', openCard.isOpen);
+document.body.click();
+await wait(50);
+check('with its list of enemies at full width, as without the setting', shown(cardsOf(1)[1].openOptions) && box(cardsOf(1)[1].openOptions).width > box(container).width - 40 && cardsOf(1)[1].querySelectorAll('.monster-row').length === 3, box(cardsOf(1)[1].openOptions).width);
+check('the cards around it keep two to a row', Math.abs(box(cardsOf(1)[0]).width - box(container).width / 2) < 2 && Math.abs(box(cardsOf(1)[2]).width - box(container).width / 2) < 2);
+cardsOf(1)[1].querySelector('.area-fight').click();
+check('its Fight buttons work as usual', areaFights.at(-1) === 'Ghost in Spider_Forest', areaFights.at(-1));
+check('what other mods put on the monsters stays, on the very same elements', indicators.every((indicator) => indicator.isConnected) && document.querySelectorAll('.slayer-indicator').length === indicators.length && cardsOf(1)[1].querySelectorAll('.slayer-indicator').length === 3);
+check('nothing is copied or rebuilt', nodeCount() === before && !document.querySelector('.mobile-combat-area-button, .mobile-combat-area-select'), `${nodeCount()} vs ${before}`);
+cardsOf(1)[1].openButton.click();
+await wait(50);
+check('closing the card puts it back to half width', Math.abs(box(cardsOf(1)[1]).width - box(container).width / 2) < 2);
+
+shownOptions()[2].link.click();
+render();
+await wait(400);
+check('another area type swaps in its cards and moves the red', shown(areaMenuOf(2).container) && !shown(areaMenuOf(1).container) && red(shownOptions()[2]) && !red(shownOptions()[1]));
+const lockedCard = cardsOf(2)[1];
+check('a locked dungeon keeps Melvor\'s unlock line in place of its name, dimmed', shown(lockedCard.lockedContainer) && lockedCard.lockedContainer.textContent.includes('to unlock') && !shown(lockedCard.areaName) && getComputedStyle(lockedCard.openButton.querySelector('.media')).opacity === '0.5');
+shownOptions()[2].link.click();
+render();
+await wait(400);
+check('pressing the red one again hides its areas and unpresses it', combatAreaMenus.open === undefined && !shown(areaMenuOf(2).container) && !options().some(red));
+combatAreaMenus.toggleCategory(areaCategories[0]);
+render();
+await wait(400);
+check('an area type Melvor opens itself, say from a slayer task, shows red too', red(shownOptions()[0]));
+combatAreaMenus.toggleCategory(areaCategories[0]);
+categoryMenu.showCategory(areaCategories[4]);
+categoryMenu.hideCategory(areaCategories[3]);
+render();
+check('the area types follow which ones Melvor shows for the realm', optionNames(shownOptions()) === '["Combat Areas","Slayer Areas","Dungeons","The Abyss"]', optionNames(shownOptions()));
+categoryMenu.showCategory(areaCategories[3]);
+categoryMenu.hideCategory(areaCategories[4]);
+
+shownOptions()[1].link.click();
+render();
+check('the area list is open before a fight', combatAreaMenus.open === areaCategories[1]);
+fightTo(farmlands, chicken);
+render();
+await wait(400);
+check('picking an enemy to fight closes the area select, as pressing the red area type would', combatAreaMenus.open === undefined && !shown(areaMenuOf(1).container) && !options().some(red));
+shownOptions()[1].link.click();
+render();
+render();
+check('opened again mid-fight, it stays open', combatAreaMenus.open === areaCategories[1] && shown(areaMenuOf(1).container));
+combat.selectedMonster = cow;
+render();
+check('picking another enemy mid-fight closes it again', combatAreaMenus.open === undefined);
+stopFighting();
+render();
+shownOptions()[1].link.click();
+render();
+check('Melvor keeps the switch off when it is turned off', melvorAccepts(settingConfigs['compact-area-select'].onChange(false, true)));
+await wait(50);
+render();
+check('turned off, every difficulty reads in full', cardsOf(1).every((card) => card.minDifficultyBadge.textContent === 'Easy' && !card.minDifficultyBadge.title));
+check('turned off, the dropdown is back and the cards are Melvor\'s own width again', shown(categoryMenu.expandButton) && !shown(categoryMenu.expandDiv) && cardsOf(1).every((card) => Math.abs(box(card).width - box(container).width * melvorShare) < 2) && getComputedStyle(container).borderTopStyle === 'none');
+categoryMenu.expandButton.click();
+check('and the dropdown still opens as before', shown(categoryMenu.expandDiv));
+categoryMenu.expandButton.click();
+fightTo(farmlands, chicken);
+render();
+check('with the setting off, starting a fight leaves the area list alone', combatAreaMenus.open === areaCategories[1]);
+stopFighting();
+render();
+settingValues['compact-area-select'] = true;
+hooks.character();
+await wait(50);
+check('a switch saved as on brings it back once the character loads', !shown(categoryMenu.expandButton) && Math.abs(box(cardsOf(1)[0]).width - box(container).width / 2) < 2);
+settingValues['compact-area-select'] = false;
+hooks.character();
+const attackStylesSection = document.getElementById('combat-attack-styles');
+const movedTo = () => document.querySelector('.mobile-combat-styles-section');
+const styleButtons = () => [...attackStylesSection.querySelectorAll('button')].filter(shown);
+const labels = (buttons) => JSON.stringify(buttons.map((button) => button.textContent.trim()));
+const styleButton = (name) => styleButtons().find((button) => button.textContent.trim() === name);
+const enemyStatsSection = document.getElementById('enemy-stats-section');
+const homeColumn = document.getElementById('desktop-combat-menus');
+window.isOnMobileLayout = false;
+render();
+check('moving Attack Styles is off by default, leaving the section where Melvor put it', settingConfigs['attack-styles-under-enemy'].default === false && attackStylesSection.parentElement === homeColumn && (!movedTo() || !shown(movedTo())));
+check('Melvor keeps the switch on when it is turned on', melvorAccepts(settingConfigs['attack-styles-under-enemy'].onChange(true, false)));
+render();
+check('turned on, Melvor\'s own Attack Style section moves into a section of its own, directly above the enemy Offensive Stats', movedTo().contains(attackStylesSection) && movedTo().nextElementSibling === enemyStatsSection && movedTo().parentElement === enemyStatsSection.parentElement && shown(attackStylesSection));
+check('it is moved, not copied: there is still just one, and its old spot is empty', document.querySelectorAll('#combat-attack-styles').length === 1 && !homeColumn.contains(attackStylesSection) && document.querySelectorAll('#Slash-attack-style-button').length === 1);
+check('laid out like the sections around it, full width with the same side padding', Math.abs(box(movedTo()).width - box(enemyStatsSection).width) < 2 && getComputedStyle(movedTo().firstElementChild).paddingLeft === getComputedStyle(enemyStatsSection.firstElementChild).paddingLeft);
+check('with every button, including one another mod added', labels(styleButtons()) === '["Stab","Slash","Block","Controlled"]', labels(styleButtons()));
+styleButton('Slash').click();
+check('its buttons work as ever, being the real ones', JSON.stringify(stylePlayer.picks) === '["Slash"]' && styleButton('Slash').classList.contains('btn-secondary'));
+styleButton('Controlled').click();
+check('another mod\'s button works too', JSON.stringify(controlledPicks) === '["Controlled"]');
+addControlled('Defensive Controlled');
+check('and buttons other mods add later land in it as usual', labels(styleButtons()) === '["Stab","Slash","Block","Controlled","Defensive Controlled"]', labels(styleButtons()));
+stylePlayer.attackType = 'ranged';
+stylePlayer.style = 'Rapid';
+stylePlayer.renderAttackStyle();
+check('switching to a bow shows the ranged styles there', labels(styleButtons()) === '["Accurate","Rapid"]');
+document.getElementById('combat-menu-0').append(attackStylesSection);
+render();
+check('when Melvor moves it for a layout change, it comes straight back', movedTo().contains(attackStylesSection));
+for (let i = 0; i < 5; i++) render();
+check('only one section for it, ever', document.querySelectorAll('.mobile-combat-styles-section').length === 1);
+check('Melvor keeps the switch off when it is turned off', melvorAccepts(settingConfigs['attack-styles-under-enemy'].onChange(false, true)));
+render();
+check('turned off on the desktop layout, it goes back to the desktop column, where Melvor keeps it, and the empty section hides', attackStylesSection.parentElement === homeColumn && homeColumn.lastElementChild === attackStylesSection && !shown(movedTo()));
+settingConfigs['attack-styles-under-enemy'].onChange(true, false);
+render();
+window.isOnMobileLayout = true;
+settingConfigs['attack-styles-under-enemy'].onChange(false, true);
+render();
+check('turned off on the phone layout, it goes back into the Equipment tab, where Melvor keeps it there', attackStylesSection.parentElement === document.getElementById('combat-menu-0') && document.getElementById('combat-menu-0').lastElementChild === attackStylesSection);
+window.isOnMobileLayout = false;
+homeColumn.append(attackStylesSection);
+stylePlayer.attackType = 'melee';
+stylePlayer.style = 'Slash';
+stylePlayer.renderAttackStyle();
+settingValues['attack-styles-under-enemy'] = true;
+hooks.character();
+render();
+check('a switch saved as on moves it once the character loads', movedTo().contains(attackStylesSection));
+delete settingValues['attack-styles-under-enemy'];
+hooks.character();
+render();
+check('and back when it loads off', attackStylesSection.parentElement === homeColumn);
+
+const foodSection = document.getElementById('food-block');
+render();
+check('hiding Food is off by default, so the Food section shows', settingConfigs['hide-food'].default === false && shown(foodSection));
+check('Melvor keeps the switch on when it is turned on', melvorAccepts(settingConfigs['hide-food'].onChange(true, false)));
+render();
+check('turned on, the Food section on the combat page is hidden', !shown(foodSection) && foodSection.isConnected);
+check('and only that section: the rest of your side of the page stays', shown(document.getElementById('combat-player-container')) && shown(document.getElementById('combat-menu-tabs')));
+check('Melvor keeps the switch off when it is turned off', melvorAccepts(settingConfigs['hide-food'].onChange(false, true)));
+check('turned off, Food is back', shown(foodSection));
+settingValues['hide-food'] = true;
+hooks.character();
+check('a switch saved as on hides it once the character loads', !shown(foodSection));
+delete settingValues['hide-food'];
+hooks.character();
+
+const cornerStack = () => document.querySelector('.mobile-combat-corner');
+const cornerButtons = () => [...(cornerStack()?.querySelectorAll('button') ?? [])].filter(shown);
+const cornerFightButton = () => cornerStack()?.querySelector('.mobile-combat-corner-fight');
+const minibarBox = document.getElementById('skill-footer-minibar-container');
+render();
+const cornerButton = (title) => cornerButtons().find((button) => button.title === title);
+window.game.openPage = combatPage;
+check('the corner combat menu buttons are on by default, and off here since this character saved them off', settingConfigs['combat-menu-buttons'].default === true && (!cornerStack() || !shown(cornerStack())));
+check('Melvor keeps the switch on when it is turned on', melvorAccepts(settingConfigs['combat-menu-buttons'].onChange(true, false)));
+render();
+check('turned on, on the combat page, Equipment, Spellbook, Prayer and Slayer buttons sit in the bottom right corner, in Melvor\'s tab order, on their own when Skill Switcher is not installed', shown(cornerStack()) && JSON.stringify(cornerButtons().map((button) => button.title)) === '["Equipment","Spellbook","Prayer","Slayer"]' && cornerStack().parentElement.classList.contains('sidemenu') && box(cornerButtons().at(-1)).right > innerWidth - 60 && box(cornerButtons().at(-1)).bottom > innerHeight - 60, `${box(cornerButtons().at(-1)).right},${box(cornerButtons().at(-1)).bottom} of ${innerWidth}x${innerHeight}`);
+check('with the icons Melvor uses for those combat menus, stacked top to bottom', JSON.stringify(cornerButtons().map((button) => button.querySelector('img').getAttribute('src').split('?')[1])) === '["equipment","spellbook","prayer","slayer"]' && cornerButtons().every((button, index, all) => index === 0 || box(all[index - 1]).bottom <= box(button).top + 1));
+const cornerFloat = () => document.querySelector('.mobile-combat-corner-float');
+window.game.openPage = { id: 'melvorD:Woodcutting', name: 'Woodcutting' };
+minibarBox.classList.remove('d-none');
+render();
+check('on a skill page there are none, minibar or not', !shown(cornerStack()) && !shown(cornerFloat()));
+minibarBox.classList.add('d-none');
+window.game.openPage = { id: 'melvorD:Bank', name: 'Bank' };
+render();
+check('nor on any other page that is not combat', !shown(cornerStack()) && !shown(cornerFloat()));
+window.game.openPage = combatPage;
+render();
+check('back on the combat page they show again', shown(cornerStack()) && cornerButtons().length === 4);
+const fakeSwitcherTop = Object.assign(document.createElement('button'), { className: 'btn btn-sm btn-light skill-switcher-top' });
+const fakeSwitcherMenu = Object.assign(document.createElement('button'), { className: 'btn btn-sm btn-light skill-switcher-menu d-none' });
+const fakeSwitcher = Object.assign(document.createElement('button'), { className: 'btn btn-sm btn-light skill-switcher-button' });
+const switcherFloat = Object.assign(document.createElement('div'), { className: 'sidemenu bg-white rounded' });
+document.body.append(switcherFloat);
+switcherFloat.append(fakeSwitcherTop, fakeSwitcherMenu, fakeSwitcher);
+await new Promise((resolve) => setTimeout(resolve, 1100));
+render();
+check('with Skill Switcher installed they sit just above all its buttons, Jump to Top included, on the combat page', cornerStack().parentElement === switcherFloat && cornerStack().nextElementSibling === fakeSwitcherTop && shown(cornerStack()) && !shown(cornerFloat()));
+window.game.openPage = { id: 'melvorD:Woodcutting', name: 'Woodcutting' };
+render();
+check('and leave Skill Switcher on its own on other pages', !shown(cornerStack()) && shown(fakeSwitcher));
+window.game.openPage = combatPage;
+switcherFloat.remove();
+render();
+check('back on their own once Skill Switcher is gone', cornerStack().parentElement.classList.contains('mobile-combat-corner-float') && shown(cornerStack()));
+for (let i = 0; i < 5; i++) render();
+check('only one set of buttons, ever', document.querySelectorAll('.mobile-combat-corner').length === 1 && document.querySelectorAll('.mobile-combat-corner-float').length === 1);
+
+const cornerIcon = (title) => cornerButton(title).querySelector('img').getAttribute('src').split('?')[1];
+const cornerCount = () => cornerButton('Prayer').querySelector('.mobile-combat-corner-count');
+const prayerHeading = () => document.querySelector('#combat-prayer-book-menu h5');
+check('with no prayer on and a spell picked but not cast, Prayer and Spellbook keep Melvor\'s icons', cornerIcon('Prayer') === 'prayer' && cornerIcon('Spellbook') === 'spellbook');
+combat.player.activePrayers.add(thickSkin);
+render();
+check('turning a prayer on puts that prayer on the Prayer button', cornerIcon('Prayer') === 'thick-skin');
+combat.player.activePrayers.add(protectFromMelee);
+render();
+check('with two on, it keeps the first one turned on', cornerIcon('Prayer') === 'thick-skin');
+combat.player.activePrayers.clear();
+render();
+check('and turning them off brings Melvor\'s icon back', cornerIcon('Prayer') === 'prayer');
+combat.player.attackType = 'magic';
+render();
+check('casting with magic puts the attack spell on the Spellbook button', cornerIcon('Spellbook') === 'wind-strike');
+combat.player.spellSelection.attack = fireStrike;
+render();
+check('and it follows a new spell', cornerIcon('Spellbook') === 'fire-strike');
+combat.player.attackType = 'ranged';
+render();
+check('switching away from magic brings Melvor\'s icon back', cornerIcon('Spellbook') === 'spellbook');
+check('the Prayer button shows your prayer points along its bottom edge, over the icon', cornerCount()?.textContent === '3,860' && shown(cornerCount()) && Math.abs(box(cornerCount()).bottom - box(cornerButton('Prayer')).bottom) < 3 && box(cornerCount()).width <= box(cornerButton('Prayer')).width, `${cornerCount()?.textContent} ${JSON.stringify(box(cornerCount()))}`);
+check('the Prayer menu heading shows them too, the way Melvor\'s sidebar does', prayerHeading().textContent === 'Prayer3,860' && prayerHeading().querySelector('small').className === 'ml-1 text-success' && document.querySelectorAll('#combat-prayer-book-menu small.text-success').length === 1, prayerHeading().textContent);
+combat.player.prayerPoints = 1234567;
+render();
+check('a big total stays short on the button and in full in the heading', cornerCount().textContent === '1,234K' && prayerHeading().textContent === 'Prayer1,234,567', `${cornerCount().textContent} ${prayerHeading().textContent}`);
+const raid = { isActive: true, player: { attackType: 'magic', spellSelection: { attack: windStrike }, activePrayers: new Set([protectFromMelee]), prayerPoints: 12 } };
+Object.assign(window.game, { isGolbinRaid: true, golbinRaid: raid });
+render();
+check('in a Golbin Raid they show the raid\'s own prayer, spell and prayer points', cornerIcon('Prayer') === 'protect-from-melee' && cornerIcon('Spellbook') === 'wind-strike' && cornerCount().textContent === '12' && prayerHeading().textContent === 'Prayer12');
+window.game.isGolbinRaid = false;
+delete window.game.golbinRaid;
+combat.player.prayerPoints = 3860;
+window.game.prayer.isUnlocked = false;
+window.game.altMagic.isUnlocked = false;
+render();
+check('with Prayer and Magic still locked, their buttons are not on the shelf', !cornerButton('Prayer') && !cornerButton('Spellbook') && cornerButtons().length === 2);
+Object.assign(window.game, { isGolbinRaid: true, golbinRaid: raid });
+render();
+check('except in a Golbin Raid, where Melvor opens those menus anyway', Boolean(cornerButton('Prayer')) && Boolean(cornerButton('Spellbook')));
+window.game.isGolbinRaid = false;
+delete window.game.golbinRaid;
+window.game.prayer.isUnlocked = true;
+window.game.altMagic.isUnlocked = true;
+render();
+check('and they come back once unlocked', cornerButtons().length === 4);
+
+const playerContainer = document.getElementById('combat-player-container');
+playerContainer.classList.add('d-mobile-none');
+window.scrollTo(0, 0);
+const cornerScrolls = [];
+const realScroll = window.scrollTo.bind(window);
+window.scrollTo = (options) => {
+  cornerScrolls.push(options);
+  realScroll({ top: options.top, behavior: 'instant' });
+};
+cornerButton('Prayer').click();
+await settle();
+await new Promise((resolve) => setTimeout(resolve, 100));
+check('unfolds your side of the combat page if it was folded away', !playerContainer.classList.contains('d-mobile-none'));
+check('switches to Melvor\'s own Prayer menu', !document.getElementById('combat-menu-2').classList.contains('d-none') && document.getElementById('combat-menu-0').classList.contains('d-none') && document.getElementById('combat-menu-item-2').classList.contains('border-combat-outline'));
+check('and scrolls the combat menus up to just under the sticky header', cornerScrolls.length === 1 && cornerScrolls[0].behavior === 'smooth' && Math.abs(box(document.getElementById('combat-menu-tabs')).top - box(document.getElementById('page-header')).height) < 3, `${box(document.getElementById('combat-menu-tabs')).top} after ${JSON.stringify(cornerScrolls)}`);
+const changesBefore = pageChanges.length;
+cornerButton('Spellbook').click();
+await new Promise((resolve) => setTimeout(resolve, 100));
+check('pressing Spellbook on the combat page just switches to the spellbook, and leaves the page alone', pageChanges.length === changesBefore && !document.getElementById('combat-menu-1').classList.contains('d-none') && document.getElementById('combat-menu-2').classList.contains('d-none'));
+check('and keeps your side of the page open rather than folding it', !playerContainer.classList.contains('d-mobile-none'));
+cornerButton('Equipment').click();
+await new Promise((resolve) => setTimeout(resolve, 100));
+check('pressing Equipment switches back to the equipment tab and scrolls to it', !document.getElementById('combat-menu-0').classList.contains('d-none') && document.getElementById('combat-menu-1').classList.contains('d-none') && Math.abs(box(document.getElementById('combat-menu-tabs')).top - box(document.getElementById('page-header')).height) < 3);
+window.scrollTo(0, 0);
+cornerButton('Slayer').click();
+await new Promise((resolve) => setTimeout(resolve, 100));
+check('pressing Slayer, while Melvor keeps the task in its Slayer tab, switches to that tab and scrolls to it', !document.getElementById('combat-menu-5').classList.contains('d-none') && document.getElementById('combat-menu-0').classList.contains('d-none') && Math.abs(box(document.getElementById('combat-menu-tabs')).top - box(document.getElementById('page-header')).height) < 3);
+const slayerTask = document.getElementById('combat-slayer-task-menu');
+document.getElementById('desktop-combat-menus').append(slayerTask);
+changeCombatMenu(0);
+window.scrollTo(0, 0);
+cornerButton('Slayer').click();
+await new Promise((resolve) => setTimeout(resolve, 100));
+check('with the desktop layout, where Melvor shows the task outside the tabs, Slayer scrolls straight to the task and leaves the tabs alone', !document.getElementById('combat-menu-0').classList.contains('d-none') && document.getElementById('combat-menu-5').classList.contains('d-none') && Math.abs(box(slayerTask).top - box(document.getElementById('page-header')).height) < 3, `${box(slayerTask).top}`);
+document.getElementById('combat-menu-5').append(slayerTask);
+changeCombatMenu(1);
+window.scrollTo(0, 0);
+lockedMenus.add(5);
+const scrollsBefore = cornerScrolls.length;
+cornerButton('Slayer').click();
+await new Promise((resolve) => setTimeout(resolve, 100));
+check('with Slayer still locked, Melvor shows its own locked message and nothing scrolls', JSON.stringify(lockedAlerts) === '[5]' && cornerScrolls.length === scrollsBefore && !document.getElementById('combat-menu-1').classList.contains('d-none'));
+lockedMenus.clear();
+check('no Scroll to Combat button on the shelf while not fighting', !shown(cornerFightButton()));
+fightTo(farmlands, chicken);
+render();
+if (innerWidth < 768) {
+  check('while fighting on a narrow screen, a Scroll to Combat button with the enemy on it heads the corner shelf', shown(cornerFightButton()) && cornerStack().firstElementChild === cornerFightButton() && cornerFightButton().title === 'Scroll to Combat' && cornerFightButton().querySelector('img').getAttribute('src').endsWith('chicken'), cornerFightButton().querySelector('img').getAttribute('src'));
+  combat.selectedMonster = cow;
+  render();
+  check('its icon follows the enemy you are fighting', cornerFightButton().querySelector('img').getAttribute('src').endsWith('cow'));
+  realScroll(0, 0);
+  cornerFightButton().click();
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  check('pressing it scrolls the enemy panel up under the sticky header',  Math.abs(box(document.getElementById('combat-fight-container-enemy')).top - box(document.getElementById('page-header')).height) < 3 && cornerScrolls.at(-1).behavior === 'smooth', `${box(document.getElementById('combat-fight-container-enemy')).top}`);
+} else {
+  check('on a wide screen, where the enemy sits beside you, there is no Scroll to Combat button', !shown(cornerFightButton()), innerWidth);
+}
+window.game.golbinRaid = { isActive: true };
+render();
+check('none in a Golbin Raid', !shown(cornerFightButton()));
+delete window.game.golbinRaid;
+stopFighting();
+render();
+check('and it goes once the fight ends', !shown(cornerFightButton()));
+
+check('Scroll to Combat after picking an enemy is on by default', settingConfigs['scroll-on-area-fight'].default === true);
+const pickCard = cardsOf(1)[0];
+const pickFight = pickCard.querySelector('.area-fight');
+pickFight.onclick = (event) => {
+  event.stopPropagation();
+  fightTo(farmlands, chicken);
+};
+realScroll(0, 0);
+const pickScrollsBefore = cornerScrolls.length;
+pickFight.click();
+await new Promise((resolve) => setTimeout(resolve, 100));
+check('off, picking an enemy leaves the page where it is', cornerScrolls.length === pickScrollsBefore);
+stopFighting();
+render();
+check('Melvor keeps the switch on when it is turned on', melvorAccepts(settingConfigs['scroll-on-area-fight'].onChange(true, false)));
+settingConfigs['compact-area-select'].onChange(true, false);
+shownOptions()[1].link.click();
+render();
+realScroll(0, 0);
+pickFight.click();
+await new Promise((resolve) => setTimeout(resolve, 100));
+check('on, starting a fight from an area card scrolls down to it, even though Melvor\'s Fight button stops its click from bubbling', cornerScrolls.length === pickScrollsBefore + 1 && cornerScrolls.at(-1).behavior === 'smooth' && Math.abs(box(document.getElementById('combat-fight-container-enemy')).top - box(document.getElementById('page-header')).height) < 3, `${cornerScrolls.length - pickScrollsBefore} ${box(document.getElementById('combat-fight-container-enemy')).top}`);
+check('with Compact Area Select on, the area list closes first, so the fight lands right under the header', combatAreaMenus.open === undefined);
+pickFight.click();
+await new Promise((resolve) => setTimeout(resolve, 100));
+check('pressing Fight on the enemy you are already fighting does not scroll again', cornerScrolls.length === pickScrollsBefore + 1);
+stopFighting();
+render();
+shownOptions()[1].link.click();
+render();
+pickCard.openButton.click();
+await new Promise((resolve) => setTimeout(resolve, 100));
+check('opening or closing an area card without starting a fight does not scroll', cornerScrolls.length === pickScrollsBefore + 1);
+shownOptions()[1].link.click();
+render();
+settingConfigs['compact-area-select'].onChange(false, true);
+check('Melvor keeps the switch off when it is turned off', melvorAccepts(settingConfigs['scroll-on-area-fight'].onChange(false, true)));
+window.scrollTo = realScroll;
+window.scrollTo(0, 0);
+check('Melvor keeps the switch off when it is turned off', melvorAccepts(settingConfigs['combat-menu-buttons'].onChange(false, true)));
+check('turned off, the buttons go away', !shown(cornerStack()));
+check('Melvor keeps it on when it is turned back on', melvorAccepts(settingConfigs['combat-menu-buttons'].onChange(true, false)));
+check('and they are back', shown(cornerStack()));
+settingValues['combat-menu-buttons'] = false;
+hooks.character();
+check('a switch saved as off hides them once the character loads', !shown(cornerStack()));
+settingValues['combat-menu-buttons'] = false;
+hooks.character();
+const hpBars = () => [document.getElementById('combat-player-hitpoints-bar').parentElement, document.getElementById('combat-enemy-hitpoints-bar').parentElement];
+const attackTimers = () => ['player-timers', 'enemy-timers'].map((id) => document.getElementById(id));
+const keptHp = () => ['combat-player-splash-container', 'combat-enemy-splash-container', 'combat-player-hitpoints-current', 'combat-enemy-hitpoints-current'].map((id) => document.getElementById(id));
+render();
+check('hiding the HP bars is off by default, so both bars and both attack intervals show', settingConfigs['hide-hp-bars'].default === false && hpBars().every(shown) && attackTimers().every(shown));
+check('Melvor keeps the switch on when it is turned on', melvorAccepts(settingConfigs['hide-hp-bars'].onChange(true, false)));
+render();
+check('turned on, your HP bar and the enemy HP bar are hidden', hpBars().every((bar) => !shown(bar)));
+check('along with the enemy barrier bar and the empty spacer Melvor keeps beside your bar for it', !shown(document.getElementById('combat-enemy-barrier-container')) && !shown(document.getElementById('player-hp-spacer')));
+check('and both attack intervals: your attack and familiar timers with the Attack Interval line, and the enemy timer with its line', attackTimers().every((timer) => !shown(timer)) && !shown(document.getElementById('combat-progress-attack-summoning')) && !shown(document.getElementById('combat-enemy-attack-speed')) && !shown(document.getElementById('combat-player-attack-speed')));
+check('while the HP numbers and the hit splashes, which themes draw hitsplats in, stay', keptHp().every(shown));
+check('the bars are Melvor\'s own, only hidden, never removed', hpBars().every((bar) => bar.isConnected) && document.getElementById('combat-player-hitpoints-bar').isConnected);
+check('Melvor keeps the switch off when it is turned off', melvorAccepts(settingConfigs['hide-hp-bars'].onChange(false, true)));
+check('turned off, the bars and attack intervals are back', hpBars().every(shown) && attackTimers().every(shown));
+settingValues['hide-hp-bars'] = true;
+hooks.character();
+check('a switch saved as on hides them once the character loads', hpBars().every((bar) => !shown(bar)));
+delete settingValues['hide-hp-bars'];
+hooks.character();
+
+for (const name of onByDefault) delete settingValues[name];
+hooks.character();
+check('a character that never touched them gets Jump To Last, the corner buttons, scrolling after picking an enemy and Compact Area Select on', ['mobile-combat-jump-on', 'mobile-combat-corner-on', 'mobile-combat-fight-scroll-on', 'mobile-combat-area-grid-on'].every((name) => document.body.classList.contains(name)), document.body.className);
+check('while the rest stay off', !['mobile-combat-styles-on', 'mobile-combat-hide-hp-on', 'mobile-combat-hide-food-on'].some((name) => document.body.classList.contains(name)), document.body.className);
+
+report();
+</script></body></html>

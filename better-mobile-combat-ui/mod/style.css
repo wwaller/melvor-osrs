@@ -1,0 +1,40 @@
+.row > div.mobile-combat-start-section { display: block; }
+body:not(.mobile-combat-start-on) .mobile-combat-start-section { display: none !important; }
+.mobile-combat-start { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 14px 16px; margin-bottom: 12px; font-size: 1.35rem; font-weight: 700; }
+.mobile-combat-start-line { display: flex; align-items: center; gap: 12px; }
+.mobile-combat-start-icon { width: 40px; height: 40px; object-fit: contain; }
+.mobile-combat-start-name { font-size: 0.85rem; font-weight: 600; opacity: 0.85; }
+body:not(.mobile-combat-jump-on) .mobile-combat-jump { display: none !important; }
+.mobile-combat-area-grid-on .mobile-combat-area-dropdown { display: none !important; }
+.mobile-combat-area-grid-on .mobile-combat-area-types { display: block !important; }
+.mobile-combat-area-grid-on #combat-area-category-menu .mobile-combat-area-types .nav-main { display: grid !important; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0; }
+.mobile-combat-area-grid-on #combat-area-category-menu .mobile-combat-area-types .nav-main-item { margin: 0; width: 100%; }
+.mobile-combat-area-grid-on #combat-area-category-menu .mobile-combat-area-types .nav-main-link { justify-content: center; height: 100%; margin: 0; padding: 8px 6px; }
+.mobile-combat-area-grid-on #combat-area-category-menu .mobile-combat-area-types .nav-main-link, .mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) > .block { border: 1px solid rgba(127, 127, 127, 0.35) !important; border-radius: 4px !important; background-color: rgba(127, 127, 127, 0.12) !important; box-shadow: none !important; }
+.mobile-combat-area-grid-on #combat-area-category-menu .mobile-combat-area-types .nav-main-link:hover, .mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) > .block:hover { background-color: rgba(127, 127, 127, 0.22) !important; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) > .block:active { box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.4) !important; }
+.mobile-combat-area-grid-on #combat-area-category-menu .mobile-combat-area-types .nav-main-link.bg-combat-menu-selected { background-color: #de3b3b !important; border-color: #dc3131 !important; color: #fff; box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.4) !important; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas { border-top: 1px solid rgba(127, 127, 127, 0.4); padding-top: 10px; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu { flex: 0 0 50%; max-width: 50%; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu.mobile-combat-area-open { flex: 0 0 100%; max-width: 100%; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) > .block { padding: 8px 6px !important; margin-bottom: 6px; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) > .block > :first-child { display: none; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) > .block > .media { margin-bottom: 0 !important; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) > .block > .media > .mr-3 { margin-right: 8px !important; flex-shrink: 0; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) > .block > .media .shop-img { width: 32px !important; height: 32px !important; margin: 0; object-fit: contain; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) .mobile-combat-area-details > :not(.mobile-combat-area-title) { display: none !important; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) .mobile-combat-area-title { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 3px; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) .mobile-combat-area-title > :first-child { flex: 0 0 100%; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) .mobile-combat-area-title > .badge { margin: 0 !important; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) > .block > .media > .media-body:not(.mobile-combat-area-details) { font-size: 0.8rem; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open).mobile-combat-area-unmet > .block > .media { opacity: 0.5; }
+body:not(.mobile-combat-styles-on) .mobile-combat-styles-section { display: none !important; }
+.mobile-combat-corner-button { position: relative; width: 42px; height: 34px; padding: 0; }
+.mobile-combat-corner-counted img { transform: translateY(-5px); }
+.mobile-combat-corner-count { position: absolute; left: 0; right: 0; bottom: 1px; font-size: 10px; font-weight: 700; line-height: 1; color: #fff; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; pointer-events: none; }
+body:not(.mobile-combat-corner-on) :is(.mobile-combat-corner, .mobile-combat-corner-float) { display: none !important; }
+@media (min-width: 768px) {
+  .mobile-combat-corner-fight { display: none !important; }
+}
+.mobile-combat-hide-hp-on .mobile-combat-hp-bar { display: none !important; }
+.mobile-combat-hide-food-on .mobile-combat-food-section { display: none !important; }
