@@ -28,3 +28,7 @@
 .mobile-shop-card.mobile-shop-open .media-body > * { margin-bottom: 4px; }
 .mobile-shop-card:not(.mobile-shop-open) .mobile-shop-buy { display: none; }
 .mobile-shop-buy { display: block; width: 100%; margin-top: 6px; }
+.mobile-shop-solid #shop-tab-container.mobile-shop-categories > .nav-main-item > .nav-main-link { background-color: #343a40; }
+.mobile-shop-solid #shop-tab-container.mobile-shop-categories > .nav-main-item > .nav-main-link:hover { background-color: #3f464e; }
+.mobile-shop-solid #shop-tab-container.mobile-shop-categories > .mobile-shop-selected > .nav-main-link { background-color: #4a5159; }
+.mobile-shop-solid .mobile-shop-card > .block { background-color: #343a40 !important; }

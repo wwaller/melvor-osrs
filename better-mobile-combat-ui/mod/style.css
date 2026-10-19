@@ -38,3 +38,5 @@ body:not(.mobile-combat-corner-on) :is(.mobile-combat-corner, .mobile-combat-cor
 }
 .mobile-combat-hide-hp-on .mobile-combat-hp-bar { display: none !important; }
 .mobile-combat-hide-food-on .mobile-combat-food-section { display: none !important; }
+.mobile-combat-solid.mobile-combat-area-grid-on #combat-area-category-menu .mobile-combat-area-types .nav-main-link, .mobile-combat-solid.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) > .block { background-color: #343a40 !important; }
+.mobile-combat-solid.mobile-combat-area-grid-on #combat-area-category-menu .mobile-combat-area-types .nav-main-link:hover, .mobile-combat-solid.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) > .block:hover { background-color: #3f464e !important; }

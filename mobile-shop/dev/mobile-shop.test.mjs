@@ -121,6 +121,7 @@ async function boot({ saved, shown = true, unlocked = { township: true, atlas: t
     accountStorage: { getItem: (key) => stored.get(key), setItem: (key, value) => stored.set(key, value) },
     patch: (target, method) => ({ after(fn) { const original = target.prototype[method]; target.prototype[method] = function (...args) { const result = original.apply(this, args); fn.call(this, result, ...args); return result; }; } }),
     onInterfaceReady: (fn) => (hooks.ready = fn),
+    settings: { section: () => ({ add() {}, get: () => false }) },
   };
   const { setup } = await import(`../mod/setup.mjs?${Math.random()}`);
   setup(ctx);

@@ -3,6 +3,7 @@ const FIGHT_KEY = 'fight';
 const START_CLASS = 'mobile-combat-start-on';
 const JUMP_CLASS = 'mobile-combat-jump-on';
 const AREA_GRID_CLASS = 'mobile-combat-area-grid-on';
+const SOLID_CLASS = 'mobile-combat-solid';
 const STYLES_MOVE_CLASS = 'mobile-combat-styles-on';
 const CORNER_CLASS = 'mobile-combat-corner-on';
 const SWITCHER_LOOKUP_MS = 1000;
@@ -214,6 +215,8 @@ export function setup(ctx) {
     { type: 'switch', name: 'hide-hp-bars', label: 'Hide the HP bars and attack intervals on the combat page', hint: 'Hides your HP bar, the enemy HP and barrier bars, and both attack interval timers (your familiar one too) on the combat page, since the combat minibar already shows them. The HP numbers stay.', default: false, onChange: switches['hide-hp-bars'] },
     { type: 'switch', name: 'hide-food', label: 'Hide the Food section on the combat page', hint: 'Hides the Food section on the combat page, since the combat minibar already has your food.', default: false, onChange: switches['hide-food'] },
   ]);
+  const accessibility = ctx.settings.section('Accessibility');
+  accessibility.add([{ type: 'switch', name: 'solid-buttons', label: 'Solid area buttons', hint: 'The Compact Area Select buttons and closed area cards get a solid background instead of a see-through one.', default: false, onChange: bodySwitch(SOLID_CLASS) }]);
   const starters = new Map();
   let last = {};
   let fight;
@@ -520,6 +523,7 @@ export function setup(ctx) {
 
   ctx.onCharacterLoaded(() => {
     for (const [name, apply] of Object.entries(switches)) apply(settings.get(name));
+    bodySwitch(SOLID_CLASS)(accessibility.get('solid-buttons'));
     last = ctx.characterStorage.getItem(LAST_KEY) || {};
     fight = ctx.characterStorage.getItem(FIGHT_KEY) || undefined;
   });
