@@ -1,0 +1,5 @@
+{
+  "namespace": "osrsCharacter",
+  "icon": "icon.png",
+  "setup": "setup.mjs"
+}
