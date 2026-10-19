@@ -45,6 +45,10 @@ HITSPLATS = {
 LOGIN_BACKGROUND = "File:Login background mobile (original).png"
 RECIPE_BOOK = "File:Pie recipe book.png"
 LOGIN_SPRITES = {"titlebox": 499, "titlebutton": 2135}
+# Skills tab stones: left half and right half with the slash, as RuneLite's STATS_TILE sprites.
+SKILL_STONES = {"skill-stone": (174, 175), "skill-stone-selected": (177, 182), "skill-stone-plain": (174, 176)}
+STONE_LEFT_BOX = (2, 2, 33, 34)
+STONE_RIGHT_BOX = (3, 2, 34, 34)
 GAME_BACKGROUNDS = {
     "lumbridge": ("File:Lumbridge.png", "Lumbridge", "day"),
     "varrock": ("File:Varrock.png", "Varrock", "day"),
@@ -323,6 +327,13 @@ def main():
     cache = Cache(CACHE)
     for name, sprite_id in LOGIN_SPRITES.items():
         cache.sprites(sprite_id)[0].save(images / f"{name}.png", optimize=True)
+    for name, (left_id, right_id) in SKILL_STONES.items():
+        left = cache.sprites(left_id)[0].crop(STONE_LEFT_BOX)
+        right = cache.sprites(right_id)[0].crop(STONE_RIGHT_BOX)
+        stone = Image.new("RGBA", (left.width + right.width, left.height))
+        stone.paste(left, (0, 0))
+        stone.paste(right, (left.width, 0))
+        stone.save(images / f"{name}.png", optimize=True)
     DIST_DIR.mkdir(exist_ok=True)
     draw_logo(icon, Image.open(images / "titlebox.png").convert("RGBA")).convert("RGB").save(DIST_DIR / "logo.png", optimize=True)
     archive = DIST_DIR / "melvor-osrs-theme.zip"

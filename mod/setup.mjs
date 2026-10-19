@@ -20,10 +20,19 @@ const SLAYER_MASTER_MAX_SHARE = 0.33;
 const SLAYER_MASTER_MIN_VIEW = 320;
 const FOLLOWS_MELVOR_ACCESSIBILITY = ['bank-big-icons', 'bank-names'];
 const DEBUG_LOG_SIZE = 150;
+const HISTORY_DATABASE = 'osrs-theme-history';
+const HISTORY_SHOWN = 5000;
+const MODS_KEY = 'osrsThemeLastMods';
+const SCREEN_SETTLE_MS = 1000;
+const ERROR_REPEAT_MS = 60 * 1000;
 const IMAGE_CHECK_MS = 3000;
 const MINIBAR_PARTS_SHOWN = 40;
 const DEBUG_PART_MS = 5000;
 const PROGRESS_ATTRIBUTE = 'data-osrs-progress';
+const LEVEL_ATTRIBUTE = 'data-osrs-level';
+const CAP_ATTRIBUTE = 'data-osrs-cap';
+const STONES_CLASS = 'osrs-skill-stones';
+const PROGRESS_PROPERTY = '--osrs-progress';
 const FONT_SAMPLES = [
   ['sidebar links', '.nav-main-link-name'],
   ['sidebar headings', '.nav-main-heading'],
@@ -90,6 +99,7 @@ const FEATURES = [
   { name: 'stacks', label: 'OSRS bank stack colours', hint: 'Yellow under 100K, white with a K up to 10M, green with an M after that.' },
   { name: 'bank-layout', label: 'OSRS bank tabs and items', hint: 'Bank tabs become OSRS folder tabs, and items sit bare on the bank with the stack count in the top left, a white box around the selected item and a padlock on locked ones. Search Bank becomes a Search button in a bar under the items.' },
   { name: 'tooltips', label: 'OSRS-style tooltips', hint: 'Translucent brown hover boxes with a thin border, like RuneLite.' },
+  { name: 'skill-stones', label: 'OSRS skill stones in the sidebar', hint: 'Skills in the sidebar become a grid of stones like the OSRS Skills tab, each with its icon and your level over the level cap. Hover a stone for its name and progress. Works with Sidebar Progress Bars, Sidebar Level Bars and Hide Unlearned Skills.' },
   { name: 'level-progress', label: 'Level progress in the sidebar', hint: 'A yellow (48%) to the left of each skill\'s level in the sidebar shows how far you are to the next level, and goes away at the level cap. Works alongside Sidebar Progress Bars.' },
   { name: 'slayer-masters', label: 'OSRS Slayer Masters', hint: 'The Slayer Task box shows the OSRS Slayer Master for the task\'s tier beside the monster: Turael for Easy, then Krystilia, Mazchna, Vannaka, Nieve, Duradel, and Mortimer for Mythical. Abyssal tasks have none.' },
   { section: 'Advanced', name: 'shadows', label: 'Black text shadow', hint: 'OSRS draws all interface text with a 1px black shadow.' },
@@ -100,7 +110,7 @@ const FEATURES = [
   { section: 'Advanced', name: 'sidebar', label: 'OSRS sidebar', hint: 'Skill rows alternate dark and darker with stone edges, and section headers become bevelled title bars.' },
   { section: 'Advanced', name: 'buttons', label: 'OSRS stone buttons', hint: 'Bevelled stone buttons that match the panels, red for dangerous actions, with coloured text instead of coloured buttons.' },
   { section: 'Advanced', name: 'compact-headers', label: 'Compact popup headers', hint: 'The offline recap\'s skill icon and the ! on character select warnings sit to the left of the title instead of as big pictures above it.' },
-  { section: 'Advanced', name: 'hide-abyssal-ui', label: 'Hide Abyssal extras until the Abyssal Realm unlocks', hint: 'Until you unlock the Abyssal Realm by completing Into the Abyss, skill headers hide their Abyssal level, XP and level cap button, and skill pages hide their Skill Tree button. The Skill Tree entry in the sidebar stays.' },
+  { section: 'Advanced', name: 'hide-abyssal-ui', label: 'Hide Abyssal extras until the Abyssal Realm unlocks', hint: 'Until you unlock the Abyssal Realm by completing Into the Abyss, skill headers hide their Abyssal level, XP and level cap button, skill pages hide their Skill Tree button, and the Prayer menu hides its Abyssal prayers tab. The Skill Tree entry in the sidebar stays.' },
   { section: 'Advanced', name: 'click-recap', label: 'Click to close the offline recap', hint: 'Clicking anywhere on the offline progress window closes it, like pressing OK. Better Offline Recap\'s section headers still fold their sections.' },
   { section: 'Advanced', name: 'short-recap', label: 'Shorter offline recap lines', hint: 'Lines in the offline recap drop "You gained", "You earned", "You used", "You ate" and "You spent", since a green count is a gain and a red one a loss. Lines like "You killed" just drop the "You".' },
   { section: 'Advanced', name: 'hide-dlc', label: 'Hide the DLC bars in the sidebar', hint: 'Hides the Throne of the Herald, Atlas of Discovery and Into the Abyss bars at the top of the sidebar that show each expansion is on.', default: false },
@@ -121,6 +131,9 @@ const ASSETS = {
   '--osrs-login': 'img/login.jpg',
   '--osrs-titlebox': 'img/titlebox.png',
   '--osrs-titlebutton': 'img/titlebutton.png',
+  '--osrs-skill-stone': 'img/skill-stone.png',
+  '--osrs-skill-stone-selected': 'img/skill-stone-selected.png',
+  '--osrs-skill-stone-plain': 'img/skill-stone-plain.png',
   '--osrs-hitsplat-damage': 'img/hitsplat-damage.png',
   '--osrs-hitsplat-max-hit': 'img/hitsplat-max-hit.png',
   '--osrs-hitsplat-tinted': 'img/hitsplat-tinted.png',
@@ -138,11 +151,17 @@ export async function setup(ctx) {
   const failures = [];
   const events = [];
   const fontStatus = {};
+  const shared = await ctx.loadModule('overhaul.mjs');
+  const deviceLog = typeof indexedDB === 'undefined' ? null : shared.createHistory(indexedDB, HISTORY_DATABASE);
   const note = (text) => {
     events.push(`${new Date().toLocaleTimeString()} ${text}`);
     if (events.length > DEBUG_LOG_SIZE) events.shift();
+    deviceLog?.add(text);
   };
-  note('theme starting');
+  const screenText = () => safe(() => `${window.innerWidth}x${window.innerHeight} at ${window.devicePixelRatio}x, ${screen.orientation?.type ?? 'orientation not reported'}`);
+  note(`opened: OSRS Theme ${safe(() => ctx.version, '?')} on Melvor ${safe(() => gameVersion, '?')}, ${safe(() => navigator.userAgent, '-')}, screen ${screenText()}`);
+  shared.noteModChanges(note, MODS_KEY);
+  watchForHistory(note, screenText, deviceLog);
   ctx.loadStylesheet('theme.css');
   for (const [property, path] of Object.entries(ASSETS)) document.documentElement.style.setProperty(property, `url("${ctx.getResourceUrl(path)}")`);
   for (const [family, { path, sizeAdjust }] of Object.entries(FONTS)) {
@@ -177,7 +196,9 @@ export async function setup(ctx) {
   const section = ctx.settings.section('General');
   const { createLoginScene } = await ctx.loadModule('fire.mjs');
   const { createRecolorer } = await ctx.loadModule('palette.mjs');
-  (await ctx.loadModule('overhaul.mjs')).offerOverhaul(ctx);
+  shared.offerOverhaul(ctx);
+  shared.dropOrphanedSongs();
+  shared.closeOnOutsidePress(document, () => ({ toggle: document.getElementById('page-header-equipment-dropdown'), menu: document.getElementById('header-equipment-dropdown') }));
   const loginScene = createLoginScene(document, window);
   const recolorer = createRecolorer(window);
   let settingsSwitch = null;
@@ -206,7 +227,10 @@ export async function setup(ctx) {
   accessibility.add(FEATURES.filter((feature) => sectionOf(feature) === accessibility).map(featureSwitch));
   advanced.add([
     ...FEATURES.filter((feature) => sectionOf(feature) === advanced).map(featureSwitch),
-    { type: 'button', name: 'debug', display: 'Copy theme debug info', color: 'secondary', onClick: showDebugInfo },
+    { type: 'button', name: 'debug', display: 'Copy theme debug info', color: 'secondary', onClick: () => {
+      note('pressed Copy theme debug info');
+      return showDebugInfo();
+    } },
   ]);
 
   document.addEventListener('click', (event) => {
@@ -392,6 +416,17 @@ export async function setup(ctx) {
       })));
     });
 
+    await part(`History on this device (last ${deviceLog?.days ?? 7} days)`, async () => {
+      if (!deviceLog) {
+        add('not kept here: this browser has no IndexedDB');
+        return;
+      }
+      const history = await deviceLog.read();
+      const stamp = (time) => new Date(time).toISOString().replace('T', ' ').slice(0, 19);
+      if (history.length > HISTORY_SHOWN) add(`(${history.length - HISTORY_SHOWN} older events left out)`);
+      add(...history.slice(-HISTORY_SHOWN).map((event) => `${stamp(event.t)} ${event.text}`));
+    });
+
     await part(`Recent events (last ${events.length})`, () => {
       add(...events);
     });
@@ -453,6 +488,7 @@ export async function setup(ctx) {
     else recolorer.clear();
     alignCombatBars();
     refreshBank();
+    if (typeof skillNav !== 'undefined') attempt('level progress', () => game.skills.forEach(showLevelProgress));
     attempt('bank search', placeBankSearch);
   }
 
@@ -679,18 +715,32 @@ export async function setup(ctx) {
   }
 
   function showLevelProgress(skill) {
+    const virtual = game.settings.showVirtualLevels;
+    const level = virtual ? skill.virtualLevel : skill.level;
+    const abyssalLevel = virtual ? skill.virtualAbyssalLevel : skill.abyssalLevel;
     const standard = levelProgress(skill.level, skill.currentLevelCap, skill.nextLevelProgress);
     const abyssal = levelProgress(skill.abyssalLevel, skill.currentAbyssalLevelCap, skill.nextAbyssalLevelProgress);
-    for (const { aside } of skillNav.getNavs(skill)) {
-      markProgress(aside.level, standard);
-      markProgress(aside.abyssalLevel, abyssal);
+    const stones = document.body.classList.contains(STONES_CLASS);
+    const onAbyssal = skill.shouldShowStandardLevels === false && skill.shouldShowAbyssalLevels === true;
+    for (const { item, aside } of skillNav.getNavs(skill)) {
+      mark(aside.level, PROGRESS_ATTRIBUTE, standard);
+      mark(aside.abyssalLevel, PROGRESS_ATTRIBUTE, abyssal);
+      mark(aside.level, LEVEL_ATTRIBUTE, String(level));
+      mark(aside.level, CAP_ATTRIBUTE, String(skill.currentLevelCap));
+      mark(aside.abyssalLevel, LEVEL_ATTRIBUTE, String(abyssalLevel));
+      mark(aside.abyssalLevel, CAP_ATTRIBUTE, String(skill.currentAbyssalLevelCap));
+      const name = item.nameEl?.textContent.trim() || skill.name;
+      mark(item.rootEl, 'title', stones ? (standard ? `${name} ${standard}` : name) : null);
+      const progress = onAbyssal ? (abyssal && skill.nextAbyssalLevelProgress) : (standard && skill.nextLevelProgress);
+      const fraction = progress ? (Math.min(progress, 100) / 100).toFixed(3) : '';
+      if (item.rootEl.style.getPropertyValue(PROGRESS_PROPERTY) !== fraction) item.rootEl.style.setProperty(PROGRESS_PROPERTY, fraction);
     }
   }
 
-  function markProgress(element, text) {
-    if (element.getAttribute(PROGRESS_ATTRIBUTE) === text) return;
-    if (text === null) element.removeAttribute(PROGRESS_ATTRIBUTE);
-    else element.setAttribute(PROGRESS_ATTRIBUTE, text);
+  function mark(element, attribute, text) {
+    if (!element || element.getAttribute(attribute) === text) return;
+    if (text === null) element.removeAttribute(attribute);
+    else element.setAttribute(attribute, text);
   }
 
   if (typeof SkillNav !== 'undefined') {
@@ -700,7 +750,7 @@ export async function setup(ctx) {
     ctx.patch(Skill, 'renderAbyssalXP').before(function () {
       if (this.renderQueue.abyssalXP) attempt('level progress', () => showLevelProgress(this));
     });
-    for (const method of ['updateSkillLevel', 'updateAbyssalSkillLevel']) {
+    for (const method of ['updateSkillLevel', 'updateAbyssalSkillLevel', 'updateLevelVisibility', 'updateAbyssalLevelVisibility']) {
       ctx.patch(SkillNav, method).after((_result, skill) => attempt('level progress', () => showLevelProgress(skill)));
     }
   }
@@ -761,7 +811,11 @@ export async function setup(ctx) {
     document.querySelectorAll(`settings-dropdown[data-setting-id="${BACKGROUND_SETTING}"]`).forEach((dropdown) => dropdown.updateValue(option));
   };
   // Kept out of Melvor's save: a background value it does not know stops the character loading once this mod is gone.
+  ctx.patch(Settings, 'toggleSetting').after(function (_result, setting) {
+    note(`Melvor setting ${setting} turned ${safe(() => (this.boolData[setting].currentValue ? 'on' : 'off'))}`);
+  });
   ctx.patch(Settings, 'changeChoiceSetting').replace(function (changeChoiceSetting, setting, value) {
+    note(`Melvor setting ${setting} changed to ${value}`);
     if (setting !== BACKGROUND_SETTING) return changeChoiceSetting(setting, value);
     const option = backgrounds.find((each) => each.value === value);
     if (!option) {
@@ -807,6 +861,43 @@ export async function setup(ctx) {
     attempt('accessibility defaults', followMelvorAccessibility);
     apply();
   });
+}
+
+function watchForHistory(note, screenText, deviceLog) {
+  let screenTimer = 0;
+  window.addEventListener('resize', () => {
+    clearTimeout(screenTimer);
+    screenTimer = setTimeout(() => note(`screen changed: ${screenText()}`), SCREEN_SETTLE_MS);
+  });
+  document.addEventListener('visibilitychange', () => {
+    note(`page ${document.hidden ? 'hidden' : 'visible'}`);
+    if (document.hidden) deviceLog?.flush();
+  });
+  window.addEventListener('pagehide', () => {
+    note('page closed or reloaded');
+    deviceLog?.flush();
+  });
+  const lastErrors = new Map();
+  const noteError = (kind, message, where) => {
+    const key = `${kind} ${message}`;
+    const seen = lastErrors.get(key);
+    if (seen && Date.now() - seen.at < ERROR_REPEAT_MS) {
+      seen.count++;
+      return;
+    }
+    if (seen?.count) note(`(the last ${kind} repeated ${seen.count} more times)`);
+    lastErrors.set(key, { at: Date.now(), count: 0 });
+    note(`${kind}: ${message}${where ? ` at ${where}` : ''}`);
+  };
+  window.addEventListener('error', (event) => noteError('error', event.message, event.filename ? `${event.filename.split('/').pop()}:${event.lineno}` : ''));
+  window.addEventListener('unhandledrejection', (event) => noteError('unhandled promise', describeError(event.reason), ''));
+  if (typeof changePage === 'function') {
+    const openPage = changePage;
+    globalThis.changePage = function (page, ...rest) {
+      note(`page: ${page?.id ?? page}`);
+      return openPage.call(this, page, ...rest);
+    };
+  }
 }
 
 export function closeRecapOnClick(target, swal) {

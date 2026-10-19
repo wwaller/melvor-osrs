@@ -47,7 +47,7 @@ async function boot(values = {}, { brokenFont, strictFontNames } = {}) {
   globalThis.saveData = () => {};
   globalThis.RealmManager = class RealmManager { onRealmRequirementMet() {} };
   globalThis.Skill = class Skill { renderXP() {} renderAbyssalXP() {} };
-  globalThis.SkillNav = class SkillNav { updateSkillLevel() {} updateAbyssalSkillLevel() {} };
+  globalThis.SkillNav = class SkillNav { updateSkillLevel() {} updateAbyssalSkillLevel() {} updateLevelVisibility() {} updateAbyssalLevelVisibility() {} };
   const stored = new Map();
   globalThis.document = {
     body: { tagName: 'BODY', children: [], style: { setProperty: (name, value) => (properties[`body ${name}`] = value) }, prepend(child) { this.children.unshift(child); child.isConnected = true; child.remove = () => { this.children = this.children.filter((c) => c !== child); child.isConnected = false; }; }, querySelectorAll: () => globalThis.pageElements || [], getBoundingClientRect: () => ({ width: 1000, height: 800 }), setAttribute(name, value) { this[name] = value; }, classList: { toggle: (name, on) => (on ? classes.add(name) : classes.delete(name)), add: (name) => classes.add(name), remove: (name) => classes.delete(name), contains: (name) => classes.has(name) } },
@@ -134,17 +134,25 @@ test('the sidebar shows progress to the next level beside each level, until the 
   assert.strictEqual(module.levelProgress(99, 99, 100), null);
   const span = () => ({ attributes: {}, getAttribute(name) { return this.attributes[name] ?? null; }, setAttribute(name, value) { this.attributes[name] = value; }, removeAttribute(name) { delete this.attributes[name]; } });
   const aside = { level: span(), abyssalLevel: span() };
-  globalThis.skillNav = { getNavs: () => [{ aside }] };
-  const skill = { level: 74, currentLevelCap: 99, nextLevelProgress: 48.7, abyssalLevel: 60, currentAbyssalLevelCap: 60, nextAbyssalLevelProgress: 100, renderQueue: { xp: true } };
+  const item = { rootEl: Object.assign(span(), { style: { values: {}, getPropertyValue(name) { return this.values[name] ?? ''; }, setProperty(name, value) { this.values[name] = value; } } }), nameEl: { textContent: 'Woodcutting' } };
+  globalThis.skillNav = { getNavs: () => [{ item, aside }] };
+  globalThis.game = { settings: { showVirtualLevels: false } };
+  const skill = { name: 'Woodcutting', shouldShowStandardLevels: true, shouldShowAbyssalLevels: false, level: 74, virtualLevel: 74, currentLevelCap: 99, nextLevelProgress: 48.7, abyssalLevel: 60, virtualAbyssalLevel: 60, currentAbyssalLevelCap: 60, nextAbyssalLevelProgress: 100, renderQueue: { xp: true } };
   patches['Skill.renderXP'].call(skill);
   assert.strictEqual(aside.level.attributes['data-osrs-progress'], '(48%)');
   assert.ok(!('data-osrs-progress' in aside.abyssalLevel.attributes));
+  assert.deepStrictEqual([aside.level.attributes['data-osrs-level'], aside.level.attributes['data-osrs-cap']], ['74', '99'], 'the skill stones read the level and cap from here');
+  assert.deepStrictEqual([aside.abyssalLevel.attributes['data-osrs-level'], aside.abyssalLevel.attributes['data-osrs-cap']], ['60', '60']);
+  assert.strictEqual(item.rootEl.attributes.title, 'Woodcutting (48%)', 'with the stones on, hovering one names the skill and its progress');
+  assert.strictEqual(item.rootEl.style.values['--osrs-progress'], '0.487', 'the stone draws a progress bar from this');
   Object.assign(skill, { level: 99, renderQueue: { xp: false } });
   patches['Skill.renderXP'].call(skill);
   assert.strictEqual(aside.level.attributes['data-osrs-progress'], '(48%)', 'nothing to redraw, so left alone');
   patches['SkillNav.updateSkillLevel'](undefined, skill);
   assert.ok(!('data-osrs-progress' in aside.level.attributes), 'gone at the level cap');
+  assert.strictEqual(item.rootEl.style.values['--osrs-progress'], '', 'and so is the bar');
   delete globalThis.skillNav;
+  delete globalThis.game;
 });
 
 test('bank stacks follow the OSRS rules', async () => {
@@ -455,7 +463,7 @@ test('General keeps the main switches, Accessibility comes second, and everythin
   const { sectionOf, sectionOrder } = await boot();
   assert.deepStrictEqual(sectionOrder, ['General', 'Accessibility', 'Advanced']);
   const inSection = (name) => Object.keys(sectionOf).filter((key) => sectionOf[key] === name).sort();
-  assert.deepStrictEqual(inSection('General'), ['bank-layout', 'enabled', 'font', 'font-all', 'hitsplats', 'level-progress', 'login', 'slayer-masters', 'stacks', 'tooltips']);
+  assert.deepStrictEqual(inSection('General'), ['bank-layout', 'enabled', 'font', 'font-all', 'hitsplats', 'level-progress', 'login', 'skill-stones', 'slayer-masters', 'stacks', 'tooltips']);
   assert.deepStrictEqual(inSection('Accessibility'), ['bank-big-icons', 'bank-names', 'crisp-text']);
   assert.deepStrictEqual(inSection('Advanced'), ['bank-hide-upgrades', 'bank-options-below', 'bevels', 'buttons', 'cards', 'click-recap', 'compact-headers', 'debug', 'hide-abyssal-ui', 'hide-dlc', 'hp-bars', 'sell-locked', 'shadows', 'short-recap', 'sidebar', 'texture']);
 });
@@ -796,3 +804,37 @@ test('the Slayer Master goes away when the task box is narrower than on an avera
   fitSlayerMaster(view, image);
   assert.ok(view.classList.contains('osrs-master-narrow'), 'unchanged while the combat page is hidden');
 });
+
+test('what happens is kept on the device for a week: opening the game, switches and Melvor settings', async () => {
+  const events = [];
+  globalThis.indexedDB = {
+    open() {
+      const request = {};
+      setTimeout(() => {
+        const rows = [];
+        request.result = {
+          createObjectStore() {},
+          transaction: () => {
+            const transaction = { objectStore: () => ({ add: (value) => (rows.push(value), events.push(value), {}), getAll: () => ({ result: rows }), getAllKeys: () => ({ result: rows.map((_, index) => index) }), delete() {} }) };
+            setTimeout(() => transaction.oncomplete?.());
+            return transaction;
+          },
+        };
+        request.onupgradeneeded?.();
+        request.onsuccess?.();
+      });
+      return request;
+    },
+  };
+  const { configs, patches } = await boot();
+  configs.font.onChange(false);
+  patches['Settings.toggleSetting'].call({ boolData: { pauseOnUnfocus: { currentValue: true } } }, undefined, 'pauseOnUnfocus');
+  await new Promise((resolve) => setTimeout(resolve, 5200));
+  const texts = events.map((event) => event.text);
+  assert.ok(texts.some((text) => text.startsWith('opened: OSRS Theme')), texts.join(' | '));
+  assert.ok(texts.includes('switched OSRS font off'), texts.join(' | '));
+  assert.ok(texts.includes('Melvor setting pauseOnUnfocus turned on'), texts.join(' | '));
+  assert.ok(events.every((event) => typeof event.t === 'number'));
+  delete globalThis.indexedDB;
+});
+
