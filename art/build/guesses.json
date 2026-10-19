@@ -184,12 +184,7 @@
   "melvorAoD:Crystallization_Potion_II": "File:Egniol potion (2).png",
   "melvorAoD:Crystallization_Potion_III": "File:Egniol potion (3).png",
   "melvorAoD:Crystallization_Potion_IV": "File:Egniol potion (4).png",
-  "melvorAoD:Cursed_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#a62200"
-   }
-  },
+  "melvorAoD:Cursed_Logs": "File:Cedar logs.png",
   "melvorAoD:Cursed_Potion_I": "File:Forgotten brew(1).png",
   "melvorAoD:Cursed_Potion_II": "File:Forgotten brew(2).png",
   "melvorAoD:Cursed_Potion_III": "File:Forgotten brew(3).png",
@@ -235,6 +230,8 @@
     "greys": 0.12
    }
   },
+  "melvorAoD:Enhanced_Spyglass": "File:Spyglass.png",
+  "melvorAoD:Golden_Golbin_Statue": "File:Golden goblin.png",
   "melvorAoD:Harming_Potion": "File:Explosive potion.png",
   "melvorAoD:Imbued_Adamantite_Bar": {
    "base": "File:Mithril bar.png",
@@ -243,18 +240,28 @@
    },
    "outline": "#00c6ff"
   },
+  "melvorAoD:Imbued_Black_Dragonhide": {
+   "base": "File:Black dragon leather.png",
+   "outline": "#00c6ff"
+  },
+  "melvorAoD:Imbued_Blue_Dragonhide": {
+   "base": "File:Blue dragon leather.png",
+   "outline": "#00c6ff"
+  },
   "melvorAoD:Imbued_Bronze_Bar": {
-   "base": "File:Mithril bar.png",
-   "recolor": {
-    "color": "#7a612a"
-   },
+   "base": "File:Bronze bar.png",
    "outline": "#00c6ff"
   },
   "melvorAoD:Imbued_Dragonite_Bar": {
-   "base": "File:Mithril bar.png",
-   "recolor": {
-    "color": "#b72b30"
-   },
+   "base": "File:Dragon bar.png",
+   "outline": "#00c6ff"
+  },
+  "melvorAoD:Imbued_Elder_Dragonhide": {
+   "base": "File:Hueycoatl hide.png",
+   "outline": "#00c6ff"
+  },
+  "melvorAoD:Imbued_Green_Dragonhide": {
+   "base": "File:Green dragon leather.png",
    "outline": "#00c6ff"
   },
   "melvorAoD:Imbued_Iron_Bar": {
@@ -264,11 +271,19 @@
    },
    "outline": "#00c6ff"
   },
+  "melvorAoD:Imbued_Leather": {
+   "base": "File:Hard leather.png",
+   "outline": "#00c6ff"
+  },
   "melvorAoD:Imbued_Mithril_Bar": {
    "base": "File:Mithril bar.png",
    "recolor": {
     "color": "#1b3cac"
    },
+   "outline": "#00c6ff"
+  },
+  "melvorAoD:Imbued_Red_Dragonhide": {
+   "base": "File:Red dragon leather.png",
    "outline": "#00c6ff"
   },
   "melvorAoD:Imbued_Runite_Bar": {
@@ -328,12 +343,7 @@
    "label": "S"
   },
   "melvorAoD:Underwater_Helmet": "File:Fishbowl helmet.png",
-  "melvorAoD:Unholy_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#b67a51"
-   }
-  },
+  "melvorAoD:Unholy_Logs": "File:Shayzien pine logs.png",
   "melvorAoD:Unholy_Potion_I": "File:Zamorak brew(1).png",
   "melvorAoD:Unholy_Potion_II": "File:Zamorak brew(2).png",
   "melvorAoD:Unholy_Potion_III": "File:Zamorak brew(3).png",
@@ -433,6 +443,8 @@
   "melvorD:Crab": "File:Dark crab.png",
   "melvorD:Crab_Perfect": "File:Dark crab.png",
   "melvorD:Cream": "File:Pot of cream.png",
+  "melvorD:Cream_Corn_Soup": "File:Tuna and corn.png",
+  "melvorD:Cream_Corn_Soup_Perfect": "File:Tuna and corn.png",
   "melvorD:Crown_of_Rhaelyx": "File:Crystal crown (Ithell).png",
   "melvorD:Defence_Skillcape": "File:Defence cape.png",
   "melvorD:Dragon_Crossbow_Head": "File:Dragon limbs.png",
@@ -708,7 +720,13 @@
   "melvorF:Damage_Reduction_Potion_II": "File:Super defence(2).png",
   "melvorF:Damage_Reduction_Potion_III": "File:Super defence(3).png",
   "melvorF:Damage_Reduction_Potion_IV": "File:Super defence(4).png",
-  "melvorF:Darksteel_Dagger": "File:Abyssal dagger.png",
+  "melvorF:Darksteel_Dagger": {
+   "base": "File:Steel dagger.png",
+   "recolor": {
+    "color": "#4f4d4d",
+    "greys": 0.12
+   }
+  },
   "melvorF:Deadeye_Amulet": "File:Onyx amulet.png",
   "melvorF:Deadeye_Ring": "File:Archers ring.png",
   "melvorF:Desecrated_Bones": "File:Zogre bones.png",
@@ -1241,6 +1259,7 @@
     ]
    }
   },
+  "melvorItA:Abyssal_Essence": "File:Abyssal-tainted essence.png",
   "melvorItA:Abyssal_Feathers": {
    "base": "File:Feather.png",
    "recolor": {
@@ -1307,12 +1326,16 @@
     ]
    }
   },
-  "melvorItA:Abyssia_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#f0355a"
-   }
-  },
+  "melvorItA:Abyssal_Pumpkin_Pie": "File:Pumpkin pie.png",
+  "melvorItA:Abyssal_Pumpkin_Pie_Perfect": "File:Pumpkin pie.png",
+  "melvorItA:Abyssal_Slayer_Helmet_Decayer": "File:Araxyte slayer helmet.png",
+  "melvorItA:Abyssal_Slayer_Helmet_Dissolver": "File:Purple slayer helmet.png",
+  "melvorItA:Abyssal_Slayer_Helmet_Fearful": "File:Radiant slayer helmet.png",
+  "melvorItA:Abyssal_Slayer_Helmet_Isolator": "File:Hooded slayer helmet.png",
+  "melvorItA:Abyssal_Slayer_Helmet_Resolver": "File:Oathplate slayer helmet.png",
+  "melvorItA:Abyssal_Slayer_Helmet_Ruiner": "File:Vampyric slayer helmet.png",
+  "melvorItA:Abyssal_Slayer_Helmet_Woeful": "File:Twisted slayer helmet.png",
+  "melvorItA:Abyssia_Logs": "File:Red logs.png",
   "melvorItA:Abyssium_2H_Sword": {
    "base": "File:Steel 2h sword.png",
    "recolor": {
@@ -1487,16 +1510,13 @@
     "color": "#1aadd3"
    }
   },
+  "melvorItA:Baked_Biter_Pie": "File:Fish pie.png",
+  "melvorItA:Baked_Biter_Pie_Perfect": "File:Fish pie.png",
   "melvorItA:Blighted_Touch_Potion_I": "File:Blighted super restore(1).png",
   "melvorItA:Blighted_Touch_Potion_II": "File:Blighted super restore(2).png",
   "melvorItA:Blighted_Touch_Potion_III": "File:Blighted super restore(3).png",
   "melvorItA:Blighted_Touch_Potion_IV": "File:Blighted super restore(4).png",
-  "melvorItA:Brumia_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#bbc3c0"
-   }
-  },
+  "melvorItA:Brumia_Logs": "File:Green logs.png",
   "melvorItA:Brumite_2H_Sword": {
    "base": "File:Steel 2h sword.png",
    "recolor": {
@@ -1669,26 +1689,20 @@
   "melvorItA:Corrupted_Fighter_Potion_II": "File:Elder potion (2).png",
   "melvorItA:Corrupted_Fighter_Potion_III": "File:Elder potion (3).png",
   "melvorItA:Corrupted_Fighter_Potion_IV": "File:Elder potion (4).png",
-  "melvorItA:Crumbletain_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#be8698"
-   }
-  },
+  "melvorItA:Crimson_Bream": "File:Cooked bream.png",
+  "melvorItA:Crimson_Bream_Perfect": "File:Cooked bream.png",
+  "melvorItA:Crumbletain_Logs": "File:Split log.png",
   "melvorItA:Dark_Ritual_Potion_I": "File:Sacred oil(1).png",
   "melvorItA:Dark_Ritual_Potion_II": "File:Sacred oil(2).png",
   "melvorItA:Dark_Ritual_Potion_III": "File:Sacred oil(3).png",
   "melvorItA:Dark_Ritual_Potion_IV": "File:Sacred oil(4).png",
+  "melvorItA:Deep_Squid": "File:Swordtip squid.png",
+  "melvorItA:Deep_Squid_Perfect": "File:Swordtip squid.png",
   "melvorItA:Echoing_Lure_Potion_I": "File:Super fishing potion(1).png",
   "melvorItA:Echoing_Lure_Potion_II": "File:Super fishing potion(2).png",
   "melvorItA:Echoing_Lure_Potion_III": "File:Super fishing potion(3).png",
   "melvorItA:Echoing_Lure_Potion_IV": "File:Super fishing potion(4).png",
-  "melvorItA:Eldria_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#e3cf96"
-   }
-  },
+  "melvorItA:Eldria_Logs": "File:Waxwood log.png",
   "melvorItA:Eldritch_Curse_Potion_I": {
    "base": "File:Attack potion(1).png",
    "recolor": {
@@ -1869,12 +1883,7 @@
     ]
    }
   },
-  "melvorItA:Gloomia_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#3a88cc"
-   }
-  },
+  "melvorItA:Gloomia_Logs": "File:Blue logs.png",
   "melvorItA:Gloomite_2H_Sword": {
    "base": "File:Steel 2h sword.png",
    "recolor": {
@@ -2245,12 +2254,7 @@
     ]
    }
   },
-  "melvorItA:Nethia_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#71132c"
-   }
-  },
+  "melvorItA:Nethia_Logs": "File:Red mahogany log.png",
   "melvorItA:Obsidian_Bar": {
    "base": "File:Mithril bar.png",
    "recolor": {
@@ -2323,18 +2327,12 @@
     ]
    }
   },
-  "melvorItA:Plagueroot_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#f88b67"
-   }
-  },
-  "melvorItA:Shadebark_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#45717b"
-   }
-  },
+  "melvorItA:Plagueroot_Logs": "File:Scrapey tree logs.png",
+  "melvorItA:Raw_Crimson_Bream": "File:Raw bream.png",
+  "melvorItA:Raw_Deep_Squid": "File:Raw swordtip squid.png",
+  "melvorItA:Raw_Stoneskin_Pike": "File:Raw pike.png",
+  "melvorItA:Riftwood_Logs": "File:Purple logs.png",
+  "melvorItA:Shadebark_Logs": "File:Juniper logs.png",
   "melvorItA:Shadeveil_Potion_I": "File:Serum 208 (1).png",
   "melvorItA:Shadeveil_Potion_II": "File:Serum 208 (2).png",
   "melvorItA:Shadeveil_Potion_III": "File:Serum 208 (3).png",
@@ -2463,13 +2461,11 @@
     ]
    }
   },
+  "melvorItA:Starwood_Logs": "File:Larch logs.png",
+  "melvorItA:Stoneskin_Pike": "File:Pike.png",
+  "melvorItA:Stoneskin_Pike_Perfect": "File:Pike.png",
   "melvorItA:Toxic_Protection_Mask": "File:Gas mask.png",
-  "melvorItA:Twisted_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#937057"
-   }
-  },
+  "melvorItA:Twisted_Logs": "File:Achey tree logs.png",
   "melvorItA:Void_Stabilisation_Potion_I": "File:Guthix balance(1).png",
   "melvorItA:Void_Stabilisation_Potion_II": "File:Guthix balance(2).png",
   "melvorItA:Void_Stabilisation_Potion_III": "File:Guthix balance(3).png",
@@ -2479,17 +2475,12 @@
   "melvorItA:Voidburst_Potion_III": "File:Ancient brew(3).png",
   "melvorItA:Voidburst_Potion_IV": "File:Ancient brew(4).png",
   "melvorItA:Voidia_Logs": {
-   "base": "File:Logs.png",
+   "base": "File:Blue logs.png",
    "recolor": {
-    "color": "#0089a9"
+    "color": "#008ead"
    }
   },
-  "melvorItA:Whisperwillow_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#c7deea"
-   }
-  },
+  "melvorItA:Whisperwillow_Logs": "File:Windswept logs.png",
   "melvorItA:Withering_Potion_I": {
    "base": "File:Attack potion(1).png",
    "recolor": {
@@ -2711,12 +2702,7 @@
     ]
    }
   },
-  "melvorItA:Withia_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#efebd9"
-   }
-  },
+  "melvorItA:Withia_Logs": "File:White logs.png",
   "melvorTotH:Adaptive_Accuracy_Potion_I": "File:Divine super attack potion(1).png",
   "melvorTotH:Adaptive_Accuracy_Potion_II": "File:Divine super attack potion(2).png",
   "melvorTotH:Adaptive_Accuracy_Potion_III": "File:Divine super attack potion(3).png",
@@ -2974,6 +2960,10 @@
     ]
    }
   },
+  "melvorTotH:Banana_Bread": "File:Bread (cookout).png",
+  "melvorTotH:Banana_Bread_Perfect": "File:Bread (cookout).png",
+  "melvorTotH:Beef_Mushroom_Stew": "File:Chilli con carne.png",
+  "melvorTotH:Beef_Mushroom_Stew_Perfect": "File:Chilli con carne.png",
   "melvorTotH:Bitterlyme_Herb": {
    "base": "File:Ranarr weed.png",
    "recolor": {
@@ -3046,18 +3036,18 @@
     ]
    }
   },
-  "melvorTotH:Carrion_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#6a5a52"
-   }
-  },
+  "melvorTotH:Carrion_Logs": "File:Blisterwood logs.png",
   "melvorTotH:Carrion_Tree_Seeds": {
    "base": "File:Maple seed.png",
    "recolor": {
     "color": "#62534a"
    }
   },
+  "melvorTotH:Cerulean": "File:Ice quartz.png",
+  "melvorTotH:Chicken_Cream_Mushroom_Soup": "File:Mushroom & onion.png",
+  "melvorTotH:Chicken_Cream_Mushroom_Soup_Perfect": "File:Mushroom & onion.png",
+  "melvorTotH:Chilli_Frost_Crab": "File:Spicy sauce.png",
+  "melvorTotH:Chilli_Frost_Crab_Perfect": "File:Spicy sauce.png",
   "melvorTotH:Chilli_Seeds": {
    "base": "File:Potato seed.png",
    "recolor": {
@@ -3543,12 +3533,7 @@
     "color": "#8f7e34"
    }
   },
-  "melvorTotH:Elderwood_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#806b80"
-   }
-  },
+  "melvorTotH:Elderwood_Logs": "File:Camphor logs.png",
   "melvorTotH:Elderwood_Tree_Seeds": {
    "base": "File:Maple seed.png",
    "recolor": {
@@ -3559,6 +3544,8 @@
   "melvorTotH:Enkindled_Yields_Potion_II": "File:Super antifire potion(2).png",
   "melvorTotH:Enkindled_Yields_Potion_III": "File:Super antifire potion(3).png",
   "melvorTotH:Enkindled_Yields_Potion_IV": "File:Super antifire potion(4).png",
+  "melvorTotH:Fancy_Meat_Pizza": "File:Meat pizza.png",
+  "melvorTotH:Fancy_Meat_Pizza_Perfect": "File:Meat pizza.png",
   "melvorTotH:Gem_Detector_Potion_I": {
    "base": "File:Attack potion(1).png",
    "recolor": {
@@ -3619,12 +3606,7 @@
     ]
    }
   },
-  "melvorTotH:Grove_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#c59a85"
-   }
-  },
+  "melvorTotH:Grove_Logs": "File:Balsa logs.png",
   "melvorTotH:Grove_Tree_Seeds": {
    "base": "File:Maple seed.png",
    "recolor": {
@@ -3635,30 +3617,20 @@
   "melvorTotH:Holy_Bulwark_Potion_II": "File:Prayer regeneration potion(2).png",
   "melvorTotH:Holy_Bulwark_Potion_III": "File:Prayer regeneration potion(3).png",
   "melvorTotH:Holy_Bulwark_Potion_IV": "File:Prayer regeneration potion(4).png",
-  "melvorTotH:Hornbeam_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#643927"
-   }
-  },
+  "melvorTotH:Hornbeam_Logs": "File:Ironwood logs.png",
   "melvorTotH:Iridium_Bar": {
    "base": "File:Mithril bar.png",
    "recolor": {
     "color": "#959595"
    }
   },
-  "melvorTotH:Iridium_Ore": {
-   "base": "File:Mithril ore.png",
-   "recolor": {
-    "color": "#7a7a7a"
-   }
-  },
-  "melvorTotH:Linden_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#905a45"
-   }
-  },
+  "melvorTotH:Iridium_Ore": "File:Lead ore.png",
+  "melvorTotH:Lava_Fish": "File:Lava eel.png",
+  "melvorTotH:Lava_Fish_Perfect": "File:Lava eel.png",
+  "melvorTotH:Linden_Logs": "File:Jatoba logs.png",
+  "melvorTotH:Magma_Eel": "File:Cooked slimy eel.png",
+  "melvorTotH:Magma_Eel_Perfect": "File:Cooked slimy eel.png",
+  "melvorTotH:Magma_Fish_Perfect": "File:Yellowfin.png",
   "melvorTotH:Meteorite_2H_Sword": {
    "base": "File:Steel 2h sword.png",
    "recolor": {
@@ -3788,12 +3760,11 @@
     ]
    }
   },
-  "melvorTotH:Mystic_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#d4a091"
-   }
-  },
+  "melvorTotH:Mushroom_Soup": "File:Fried mushrooms.png",
+  "melvorTotH:Mushroom_Soup_Perfect": "File:Fried mushrooms.png",
+  "melvorTotH:Mystic_Logs": "File:Dream log.png",
+  "melvorTotH:Mystic_Shark": "File:Corrupted shark.png",
+  "melvorTotH:Mystic_Shark_Perfect": "File:Corrupted shark.png",
   "melvorTotH:Palladium_Bar": {
    "base": "File:Mithril bar.png",
    "recolor": {
@@ -3816,22 +3787,24 @@
     "color": "#eb8738"
    }
   },
+  "melvorTotH:Pumpkin_Soup": "File:Curry.png",
+  "melvorTotH:Pumpkin_Soup_Perfect": "File:Curry.png",
+  "melvorTotH:Raw_Magma_Fish": "File:Raw yellowfin.png",
+  "melvorTotH:Raw_Mystic_Shark": {
+   "base": "File:Raw shark.png",
+   "recolor": {
+    "color": "#798eb7"
+   }
+  },
+  "melvorTotH:Raw_Rockfish": "File:Raw bass.png",
   "melvorTotH:Reaper_Potion_I": "File:Revitalisation potion (1).png",
   "melvorTotH:Reaper_Potion_II": "File:Revitalisation potion (2).png",
   "melvorTotH:Reaper_Potion_III": "File:Revitalisation potion (3).png",
   "melvorTotH:Reaper_Potion_IV": "File:Revitalisation potion (4).png",
-  "melvorTotH:Red_Oak_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#bc706b"
-   }
-  },
-  "melvorTotH:Revenant_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#e2bfb5"
-   }
-  },
+  "melvorTotH:Red_Oak_Logs": "File:Rosewood logs.png",
+  "melvorTotH:Revenant_Logs": "File:Deadwood log.png",
+  "melvorTotH:Sandwich": "File:Triangle sandwich.png",
+  "melvorTotH:Sandwich_Perfect": "File:Triangle sandwich.png",
   "melvorTotH:Slayer_Bounty_Potion_I": "File:Super combat potion(1).png",
   "melvorTotH:Slayer_Bounty_Potion_II": "File:Super combat potion(2).png",
   "melvorTotH:Slayer_Bounty_Potion_III": "File:Super combat potion(3).png",
@@ -3848,12 +3821,11 @@
     "color": "#7bc65d"
    }
   },
-  "melvorTotH:Spruce_Logs": {
-   "base": "File:Logs.png",
-   "recolor": {
-    "color": "#89532e"
-   }
-  },
+  "melvorTotH:Spicy_Chicken_Pizza": "File:Plain pizza.png",
+  "melvorTotH:Spicy_Chicken_Pizza_Perfect": "File:Plain pizza.png",
+  "melvorTotH:Spicy_Shrimp_Soup": "File:Spicy stew.png",
+  "melvorTotH:Spicy_Shrimp_Soup_Perfect": "File:Spicy stew.png",
+  "melvorTotH:Spruce_Logs": "File:Arctic pine logs.png",
   "melvorTotH:Star_Seeker_Potion_I": "File:Armadyl brew(1).png",
   "melvorTotH:Star_Seeker_Potion_II": "File:Armadyl brew(2).png",
   "melvorTotH:Star_Seeker_Potion_III": "File:Armadyl brew(3).png",
@@ -3879,7 +3851,8 @@
    "recolor": {
     "color": "#d07f5d"
    }
-  }
+  },
+  "melvorTotH:Zephyte": "File:Zenyte.png"
  },
  "monster": {
   "melvorD:AdamantKnight": "File:Animated Adamant Armour.png",
@@ -4097,7 +4070,12 @@
   "melvorF:Stone_Skin": "File:Rock Skin.png"
  },
  "shop": {
+  "melvorAoD:ShipUpgrade2": "File:Mast (Ghosts Ahoy).png",
+  "melvorAoD:ShipUpgrade3": "File:Sails (Ethically Acquired Antiquities).png",
+  "melvorAoD:ShipUpgrade4": "File:Anchor (scenery, 1).png",
   "melvorAoD:ShipUpgrade5": "File:Ship's wheel.png",
+  "melvorAoD:ShipUpgrade6": "File:Rune keel parts.png",
+  "melvorAoD:ShipUpgrade7": "File:Crow nest.png",
   "melvorAoD:ShipUpgrade8": "File:Pirate cannon.png",
   "melvorD:Adamant_Fishing_Rod": "File:Pearl fishing rod.png",
   "melvorD:Basic_Furnace": "File:Furnace.png",
@@ -4324,6 +4302,13 @@
    }
   },
   "melvorTotH:DivineFurnace": "File:Sacred Forge.png",
+  "melvorTotH:DivinePot": {
+   "base": "File:Cooking pot (unobtainable item).png",
+   "recolor": {
+    "color": "#c9a83a",
+    "greys": true
+   }
+  },
   "melvorTotH:Divine_Axe": {
    "base": "File:Steel axe.png",
    "recolor": {
@@ -4346,9 +4331,23 @@
    }
   },
   "melvorTotH:ElderWoodCookingFire": "File:Forester's Campfire.png",
+  "melvorTotH:IridiumPot": {
+   "base": "File:Cooking pot (unobtainable item).png",
+   "recolor": {
+    "color": "#a8b0b8",
+    "greys": true
+   }
+  },
   "melvorTotH:Meteorite_Axe": "File:Infernal axe.png",
   "melvorTotH:Meteorite_Fishing_Rod": "File:Infernal harpoon.png",
   "melvorTotH:Meteorite_Pickaxe": "File:Infernal pickaxe.png",
+  "melvorTotH:PalladiumPot": {
+   "base": "File:Cooking pot (unobtainable item).png",
+   "recolor": {
+    "color": "#86c085",
+    "greys": true
+   }
+  },
   "melvorTotH:SignOfTheStars": "File:Star chart (1).png",
   "melvorTotH:SpruceCookingFire": "File:Campfire.png"
  },
@@ -4373,5 +4372,45 @@
   "melvorF:SlicingWinds": "File:Wind Surge.png",
   "melvorF:SoulSplitI": "File:Blood Barrage.png",
   "melvorF:SoulSplitII": "File:Blood Barrage.png"
+ },
+ "tree": {
+  "melvorAoD:Cursed": "File:Darkwood tree.png",
+  "melvorAoD:Unholy": "File:Blisterwood tree.png",
+  "melvorItA:Abyssia": "File:Engorged bloodwood tree.png",
+  "melvorItA:Brumia": "File:Mangrove (1).png",
+  "melvorItA:Crumbletain": "File:Dying tree.png",
+  "melvorItA:Eldria": "File:Larch tree.png",
+  "melvorItA:Gloomia": "File:Crystal tree (choppable).png",
+  "melvorItA:Nethia": "File:Blood Stinktree.png",
+  "melvorItA:Plagueroot": "File:Strangled Tree.png",
+  "melvorItA:Riftwood": "File:Cedar tree.png",
+  "melvorItA:Shadebark": "File:Swamp tree (top).png",
+  "melvorItA:Starwood": {
+   "base": "File:Magic tree.png",
+   "recolor": {
+    "color": "#0c1c32",
+    "keep": [
+     [
+      0,
+      120,
+      128,
+      256
+     ]
+    ]
+   }
+  },
+  "melvorItA:Twisted": "File:Achey Tree.png",
+  "melvorItA:Voidia": "File:Dream tree.png",
+  "melvorItA:Whisperwillow": "File:Windswept tree.png",
+  "melvorItA:Withia": "File:Dead tree (weathered).png",
+  "melvorTotH:Carrion": "File:Rotting tree.png",
+  "melvorTotH:Elderwood": "File:Dramen tree.png",
+  "melvorTotH:Grove": "File:Celastrus tree (2 bark).png",
+  "melvorTotH:Hornbeam": "File:Ironwood tree.png",
+  "melvorTotH:Linden": "File:Camphor tree.png",
+  "melvorTotH:Mystic": "File:Rosewood tree.png",
+  "melvorTotH:Red_Oak": "File:Bloodwood tree (normal).png",
+  "melvorTotH:Revenant": "File:Haunted Tree.png",
+  "melvorTotH:Spruce": "File:Arctic pine tree.png"
  }
 }
