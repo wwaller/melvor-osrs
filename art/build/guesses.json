@@ -41,24 +41,37 @@
   "melvorF:Water_God_Dungeon": "File:Water elemental.png"
  },
  "item": {
+  "melvorAoD:Amphora": "File:Canopic jar (Scabaras).png",
+  "melvorAoD:Ancient_Arcana": "File:Ancient magicks tablet.png",
+  "melvorAoD:Ancient_Carrot": "File:Fancy carrot.png",
   "melvorAoD:Ancient_Carrot_Seeds": {
    "base": "File:Potato seed.png",
    "recolor": {
     "color": "#be6239"
    }
   },
+  "melvorAoD:Ancient_Corn": "File:Sweetcorn.png",
   "melvorAoD:Ancient_Corn_Seeds": {
    "base": "File:Potato seed.png",
    "recolor": {
     "color": "#aec667"
    }
   },
+  "melvorAoD:Ancient_Fossil": "File:Unidentified rare fossil.png",
+  "melvorAoD:Ancient_Hunting_Bow": "File:Bone shortbow.png",
+  "melvorAoD:Ancient_Scythe": "File:Scythe (Halloween event).png",
+  "melvorAoD:Ancient_Silk": "File:Fine red silk.png",
+  "melvorAoD:Ancient_Stone_Tablet": "File:Ancient tablet.png",
+  "melvorAoD:Ancient_Wall_Chart": "File:Astronomical chart icon.png",
+  "melvorAoD:Ancient_Wildberry": "File:Dwellberries.png",
   "melvorAoD:Ancient_Wildberry_Seeds": {
    "base": "File:Potato seed.png",
    "recolor": {
     "color": "#c6791d"
    }
   },
+  "melvorAoD:Ancient_Wine_Casket": "File:Keg (The Great Brain Robbery).png",
+  "melvorAoD:Ancient_Woven_Bags": "File:Red satchel.png",
   "melvorAoD:Aranite_2H_Blade": {
    "base": "File:Steel 2h sword.png",
    "recolor": {
@@ -106,6 +119,7 @@
     "greys": 0.12
    }
   },
+  "melvorAoD:Archaeologists_Consumable": "File:Parchment (Olaf's Quest).png",
   "melvorAoD:Barrier_Igniter_Potion_I": "File:Extended antifire(1).png",
   "melvorAoD:Barrier_Igniter_Potion_II": "File:Extended antifire(2).png",
   "melvorAoD:Barrier_Igniter_Potion_III": "File:Extended antifire(3).png",
@@ -114,6 +128,43 @@
   "melvorAoD:Barrier_Touch_Potion_II": "File:Absorption (2).png",
   "melvorAoD:Barrier_Touch_Potion_III": "File:Absorption (3).png",
   "melvorAoD:Barrier_Touch_Potion_IV": "File:Absorption (4).png",
+  "melvorAoD:Beaded_Necklace": "File:Beads of the Dead.png",
+  "melvorAoD:Blood_Chalice": "File:Poison chalice.png",
+  "melvorAoD:Blue_Jewel": "File:Polished blue gem.png",
+  "melvorAoD:Boat_Figurehead": "File:Figurehead (Sailing, wood).png",
+  "melvorAoD:Book_of_Prayers": "File:Prayer book.png",
+  "melvorAoD:Bottle_of_Mystic_Water": "File:Holy water.png",
+  "melvorAoD:Bottle_of_Rum": "File:Sunken rum.png",
+  "melvorAoD:Broken_Brush": "File:Brush.png",
+  "melvorAoD:Broken_Door": "File:Broken Door.png",
+  "melvorAoD:Broken_Down_Ballista": "File:Ballista (Tree Gnome Village).png",
+  "melvorAoD:Broken_Gem": "File:Crushed gem.png",
+  "melvorAoD:Broken_Golden_Harp": "File:Unstrung lyre.png",
+  "melvorAoD:Broken_Jug": "File:Pottery.png",
+  "melvorAoD:Broken_Oil_Lamp": "File:Empty oil lamp.png",
+  "melvorAoD:Broken_Quiver": "File:Dizana's quiver (broken).png",
+  "melvorAoD:Broken_Ship_Wood": "File:Damp planks.png",
+  "melvorAoD:Broken_Shovel": "File:Spade head.png",
+  "melvorAoD:Broken_Stone_Shard": "File:Plaster fragment.png",
+  "melvorAoD:Broken_Trowel": "File:Gardening trowel.png",
+  "melvorAoD:Bundle_of_Rope": "File:Long rope.png",
+  "melvorAoD:Candelabra": "File:Gold candlesticks icon.png",
+  "melvorAoD:Candelabra_Lit": "File:Candelabrum.png",
+  "melvorAoD:Candle_Lamp": "File:Empty candle lantern.png",
+  "melvorAoD:Candle_Lamp_Lit": "File:Candle lantern (black).png",
+  "melvorAoD:Captains_Logbook": "File:Captain's log.png",
+  "melvorAoD:Charged_Diamond_Shard": "File:Air diamond.png",
+  "melvorAoD:Charged_Emerald_Shard": "File:Earth emerald.png",
+  "melvorAoD:Charged_Jadestone_Shard": "File:Uncut jade.png",
+  "melvorAoD:Charged_Ruby_Shard": "File:Fire ruby.png",
+  "melvorAoD:Charged_Sapphire_Shard": "File:Water sapphire.png",
+  "melvorAoD:Charged_Topaz_Shard": "File:Sunstone.png",
+  "melvorAoD:Chipped_Marble": "File:Half a rock.png",
+  "melvorAoD:Circlet_of_Pain": "File:Stolen circlet.png",
+  "melvorAoD:City_Map": "File:Kourend map.png",
+  "melvorAoD:Colourful_Vase": "File:Vase.png",
+  "melvorAoD:Coral": "File:Red coral (interface item).png",
+  "melvorAoD:Crumbled_Artefact": "File:Uncleaned find.png",
   "melvorAoD:Crystal_Arrowtips": {
    "base": "File:Mithril arrowtips.png",
    "recolor": {
@@ -180,10 +231,18 @@
     ]
    }
   },
+  "melvorAoD:Crystalized_Dragon_Fragment": "File:Dragon metal slice.png",
+  "melvorAoD:Crystalized_Mithril_Fragment": "File:Mithril ore fragment.png",
   "melvorAoD:Crystallization_Potion_I": "File:Egniol potion (1).png",
   "melvorAoD:Crystallization_Potion_II": "File:Egniol potion (2).png",
   "melvorAoD:Crystallization_Potion_III": "File:Egniol potion (3).png",
   "melvorAoD:Crystallization_Potion_IV": "File:Egniol potion (4).png",
+  "melvorAoD:Cult_Flyer": "File:Flyer.png",
+  "melvorAoD:Cult_Robes": "File:Cultist robe.png",
+  "melvorAoD:Cursed_Arcana": "File:Hazeel scroll.png",
+  "melvorAoD:Cursed_Charm": "File:Terrifying charm.png",
+  "melvorAoD:Cursed_Golden_Disc": "File:Ancient medallion.png",
+  "melvorAoD:Cursed_Idol": "File:Idol of chaos.png",
   "melvorAoD:Cursed_Logs": "File:Cedar logs.png",
   "melvorAoD:Cursed_Potion_I": "File:Forgotten brew(1).png",
   "melvorAoD:Cursed_Potion_II": "File:Forgotten brew(2).png",
@@ -230,9 +289,37 @@
     "greys": 0.12
    }
   },
+  "melvorAoD:Decorative_Fabric": "File:Ancient fabric.png",
+  "melvorAoD:Decoy_Idol": "File:Golden goblin.png",
+  "melvorAoD:Destroyed_Cannon": "File:Broken cannon.png",
+  "melvorAoD:Diamond_Speck": "File:Crystal dust.png",
+  "melvorAoD:Dirty_Mining_Boots": "File:Gravedigger boots.png",
+  "melvorAoD:Dividers": "File:Sextant.png",
+  "melvorAoD:Dusty_Book_of_Knowledge": "File:Dusty book.png",
   "melvorAoD:Enhanced_Spyglass": "File:Spyglass.png",
+  "melvorAoD:Eyepatch": "File:Tattered eye patch.png",
+  "melvorAoD:Fishing_Net": "File:Small fishing net.png",
+  "melvorAoD:Flint": "File:Granite (500g).png",
+  "melvorAoD:Giant_Clay_Pot": "File:Pot.png",
+  "melvorAoD:Golbin_Portrait": "File:Sithik portrait.png",
+  "melvorAoD:Gold_Brazier": "File:Brazier.png",
+  "melvorAoD:Gold_Speck": "File:Golden nugget.png",
+  "melvorAoD:Golden_Bow": "File:3rd Age bow.png",
   "melvorAoD:Golden_Golbin_Statue": "File:Golden goblin.png",
+  "melvorAoD:Golden_Leaf": "File:Gold leaf.png",
+  "melvorAoD:Golden_Silk": "File:Golden wool.png",
+  "melvorAoD:Golden_Wreath": {
+   "base": "File:Druidic wreath.png",
+   "recolor": {
+    "color": "#ffb604"
+   }
+  },
+  "melvorAoD:Golden_idol": "File:Golden statuette.png",
+  "melvorAoD:Grinding_Stone": "File:Polishing rock.png",
   "melvorAoD:Harming_Potion": "File:Explosive potion.png",
+  "melvorAoD:Heavy_Boots": "File:Fremennik boots.png",
+  "melvorAoD:Horseshoe": "File:Horse shoe (RuneScape 2 Beta).png",
+  "melvorAoD:Hunting_Trophy": "File:Sunlight antelope antler.png",
   "melvorAoD:Imbued_Adamantite_Bar": {
    "base": "File:Mithril bar.png",
    "recolor": {
@@ -300,6 +387,101 @@
    },
    "outline": "#00c6ff"
   },
+  "melvorAoD:Impenetrable_Idol": "File:Idol of balance.png",
+  "melvorAoD:Incense": "File:Incense burner (Marble) icon.png",
+  "melvorAoD:Insignia": "File:Family crest (item).png",
+  "melvorAoD:Island_Map": "File:Crandor map.png",
+  "melvorAoD:Kingdom_Banners": "File:Shayzien banner.png",
+  "melvorAoD:Kingdom_Painting": "File:Lumbridge painting.png",
+  "melvorAoD:Kings_Crown": "File:Royal crown.png",
+  "melvorAoD:Large_Anchor": "File:Barrelchest anchor.png",
+  "melvorAoD:Large_Fossil": "File:Unidentified large fossil.png",
+  "melvorAoD:Large_Marble": "File:Marble block.png",
+  "melvorAoD:Large_Organ": "File:Organ icon.png",
+  "melvorAoD:Large_Shell": "File:Conch shell.png",
+  "melvorAoD:Large_Silver_Plate": "File:Serving platter.png",
+  "melvorAoD:Large_Stone": "File:Large rock.png",
+  "melvorAoD:Large_Warhorn": "File:Attacker horn.png",
+  "melvorAoD:Large_Wooden_Plank": "File:Timber beam.png",
+  "melvorAoD:Large_Woven_Rug": "File:Opulent rug icon.png",
+  "melvorAoD:Leather_Belt": "File:Wampum belt.png",
+  "melvorAoD:Lockbox_Key": "File:Brass key.png",
+  "melvorAoD:Lost_Cursed_Text": "File:Demonic incantations.png",
+  "melvorAoD:Magical_Broomstick": "File:Broom.png",
+  "melvorAoD:Marble": "File:Limestone.png",
+  "melvorAoD:Mask_of_Confusion": "File:Ancient ceremonial mask.png",
+  "melvorAoD:Mask_of_Weakening": "File:Mask of Ranul.png",
+  "melvorAoD:Melantis_Clue_1": {
+   "base": "File:Ancient page 1.png",
+   "label": "1"
+  },
+  "melvorAoD:Melantis_Clue_2": {
+   "base": "File:Ancient page 2.png",
+   "label": "2"
+  },
+  "melvorAoD:Melantis_Clue_3": {
+   "base": "File:Ancient page 3.png",
+   "label": "3"
+  },
+  "melvorAoD:Melantis_Clue_4": {
+   "base": "File:Ancient page 4.png",
+   "label": "4"
+  },
+  "melvorAoD:Merman_Pendant": "File:Medallion of the Deep.png",
+  "melvorAoD:Merman_Pendant_Piece_1": "File:Medallion fragment (1).png",
+  "melvorAoD:Miniature_Toy_Horse": "File:Brown toy horsey.png",
+  "melvorAoD:Mining_Lantern": "File:Oil lantern.png",
+  "melvorAoD:Misty_Jewel": "File:Mystic jewel.png",
+  "melvorAoD:Mosaic": "File:Tiles (flipped horizontally).png",
+  "melvorAoD:Museum_Token": "File:Curator's medallion.png",
+  "melvorAoD:Nails": "File:Iron nails.png",
+  "melvorAoD:Navigation_Chart": "File:Chart.png",
+  "melvorAoD:Noble_Jeweled_Necklace": "File:Ancient carcanet.png",
+  "melvorAoD:Old_Anvil": "File:Anvil.png",
+  "melvorAoD:Old_Aranite_Plating": "File:Damaged armour.png",
+  "melvorAoD:Old_Bucket": "File:Bucket.png",
+  "melvorAoD:Old_Burnt_Offerings": "File:Burnt bones.png",
+  "melvorAoD:Old_Carriage": "File:Travel cart.png",
+  "melvorAoD:Old_Cauldron": "File:Broken cauldron.png",
+  "melvorAoD:Old_Cell_Key": "File:Cell key.png",
+  "melvorAoD:Old_Cooking_Pot": "File:Cooking pot (unobtainable item).png",
+  "melvorAoD:Old_Crafting_Gloves": "File:Ham gloves.png",
+  "melvorAoD:Old_Darksteel_Plating": "File:Broken armour.png",
+  "melvorAoD:Old_Dreamcatcher": "File:Strung rabbit foot.png",
+  "melvorAoD:Old_Fancy_Quill": "File:Quill (Rocking Out).png",
+  "melvorAoD:Old_Gold_Bars": "File:Cursed gold bar.png",
+  "melvorAoD:Old_Gold_Coin": "File:Ancient coin.png",
+  "melvorAoD:Old_Headless_Arrows": "File:Headless arrow 5.png",
+  "melvorAoD:Old_Hunting_Bow": "File:Signed oak bow.png",
+  "melvorAoD:Old_Jeweled_Necklace": "File:Tarnished necklace.png",
+  "melvorAoD:Old_Metal_Plaque": "File:Stone-plaque.png",
+  "melvorAoD:Old_Music_Box": "File:Stolen jewelry box.png",
+  "melvorAoD:Old_Music_Manuscript": "File:Music sheet.png",
+  "melvorAoD:Old_Pirate_Pants": "File:Pirate leggings (beige).png",
+  "melvorAoD:Old_Plant_Pot": "File:Empty plant pot.png",
+  "melvorAoD:Old_Relic_Plating": "File:Ancient armour.png",
+  "melvorAoD:Old_Route_Chart": "File:Secret way map.png",
+  "melvorAoD:Old_Scripture": "File:Old writing.png",
+  "melvorAoD:Old_Silver_Coin": "File:Old coin.png",
+  "melvorAoD:Old_Spyglass": "File:Spyglass.png",
+  "melvorAoD:Old_Summoning_Amulet": "File:Ruby amulet (u).png",
+  "melvorAoD:Old_Summoning_Gloves": "File:Falconer's glove.png",
+  "melvorAoD:Old_Temple_Map": "File:Ancient map.png",
+  "melvorAoD:Old_Tower_Bell": "File:Bells icon.png",
+  "melvorAoD:Old_Vase": "File:Old chipped vase.png",
+  "melvorAoD:Old_Woodcutting_Gloves": "File:Twitcher's gloves.png",
+  "melvorAoD:Old_Wooden_Bowl": "File:Bowl.png",
+  "melvorAoD:Old_Wooden_Ladle": "File:Wooden spoon.png",
+  "melvorAoD:Pearl": "File:Oyster pearl.png",
+  "melvorAoD:Peasant_Shirt": "File:Shirt (lilac).png",
+  "melvorAoD:Pebble": "File:Glarial's pebble.png",
+  "melvorAoD:Pirate_Captains_Sword": "File:Lucky cutlass.png",
+  "melvorAoD:Pirate_Doubloons": "File:Pieces of eight 3.png",
+  "melvorAoD:Pirate_Flag": "File:Cutthroat flag.png",
+  "melvorAoD:Pirate_Hook": "File:Pirate's hook.png",
+  "melvorAoD:Power_Crystals": "File:Crystal of power (flatpack).png",
+  "melvorAoD:Prayer_Idol": "File:Idol of light.png",
+  "melvorAoD:Pristine_Jeweled_Necklace": "File:Clean necklace.png",
   "melvorAoD:Pure_Crystal_Arrowtips": {
    "base": "File:Mithril arrowtips.png",
    "recolor": {
@@ -342,12 +524,47 @@
    "base": "File:Crystal shield.png",
    "label": "S"
   },
+  "melvorAoD:Ring_of_Deception": "File:Ring of Charos.png",
+  "melvorAoD:Ring_of_Summoning": "File:Ring of stone.png",
+  "melvorAoD:Ritual_Bowl": "File:Stone bowl.png",
+  "melvorAoD:Rock_Carving": "File:Crude carving.png",
+  "melvorAoD:Rotten_Fish": "File:Ruined catfish.png",
+  "melvorAoD:Ruined_Woven_Bags": "File:Ruined backpack.png",
+  "melvorAoD:Rusted_Bronze_Coin": "File:Rusty coin.png",
+  "melvorAoD:Rusted_Ring": "File:Tarnished ring.png",
+  "melvorAoD:Sailors_Compass": "File:Compass (The Garden of Death).png",
+  "melvorAoD:Secret_Coffer": "File:Forgotten lockbox.png",
+  "melvorAoD:Shackles": "File:Spiked manacles.png",
+  "melvorAoD:Shatter_Stone": "File:Fractured crystal (vertical).png",
+  "melvorAoD:Shell_Amulet": "File:Sailors' amulet.png",
+  "melvorAoD:Shipment_Map": "File:Sea fishing map.png",
+  "melvorAoD:Silver_Armband": "File:Thieves' armband.png",
+  "melvorAoD:Silver_Goblet": "File:Silver cup.png",
+  "melvorAoD:Silver_Magic_Band": "File:Celestial ring (uncharged).png",
+  "melvorAoD:Silver_Spoon": "File:Silverware.png",
+  "melvorAoD:Silver_Statue": "File:Statuette (The Golem).png",
+  "melvorAoD:Silver_Stone_Brick": "File:Limestone brick.png",
+  "melvorAoD:Statue_of_Prosperity": "File:Ancient statuette.png",
+  "melvorAoD:Stone_Hammer": "File:Rock hammer.png",
+  "melvorAoD:Stone_statue": "File:Stone statuette.png",
+  "melvorAoD:Sturdy_Fancy_Quill": "File:Inky quill.png",
+  "melvorAoD:Summoners_Blessing": "File:Holy blessing.png",
+  "melvorAoD:Torn_Fishing_Net": "File:Drift net.png",
+  "melvorAoD:Torn_Map": "File:Map scrap.png",
+  "melvorAoD:Torn_Scrolls": "File:Ancient writings.png",
+  "melvorAoD:Totem_Pole": "File:Totem pole.png",
+  "melvorAoD:Tough_Quill_Feather": "File:Eagle feather 4.png",
   "melvorAoD:Underwater_Helmet": "File:Fishbowl helmet.png",
   "melvorAoD:Unholy_Logs": "File:Shayzien pine logs.png",
   "melvorAoD:Unholy_Potion_I": "File:Zamorak brew(1).png",
   "melvorAoD:Unholy_Potion_II": "File:Zamorak brew(2).png",
   "melvorAoD:Unholy_Potion_III": "File:Zamorak brew(3).png",
   "melvorAoD:Unholy_Potion_IV": "File:Zamorak brew(4).png",
+  "melvorAoD:Water_Crown": "File:Circlet of water.png",
+  "melvorAoD:Water_Sceptre": "File:Ice ancient sceptre.png",
+  "melvorAoD:Water_Shield": "File:Elidinis' ward.png",
+  "melvorAoD:Wooden_Cart": "File:Broken cart.png",
+  "melvorAoD:Wooden_Sign": "File:Signpost (Digsite).png",
   "melvorD:Adamant_Crossbow_Head": "File:Adamantite limbs.png",
   "melvorD:Adamant_Javelin_Heads": "File:Adamant javelin tips 5.png",
   "melvorD:Almighty_Ring": "File:Ring of the gods.png",
@@ -419,6 +636,7 @@
   "melvorD:Cave_Fish": "File:Cavefish.png",
   "melvorD:Cave_Fish_Perfect": "File:Cavefish.png",
   "melvorD:Charge_Stone_of_Rhaelyx": "File:Elemental guardian stone.png",
+  "melvorD:Cherry": "File:Redberries.png",
   "melvorD:Cherry_Seeds": {
    "base": "File:Potato seed.png",
    "recolor": {
@@ -1195,10 +1413,29 @@
   "melvorF:Woodcutters_Leggings": "File:Lumberjack legs.png",
   "melvorF:Woodcutting_Scroll_Of_XP": "File:Tattered scroll.png",
   "melvorF:Worm_Spike": "File:Long kebbit spike.png",
+  "melvorItA:Abyssal_Bark": {
+   "base": "File:Phren bark.png",
+   "recolor": {
+    "color": "#cd1548"
+   }
+  },
+  "melvorItA:Abyssal_Batwing": {
+   "base": "File:Bat wing.png",
+   "recolor": {
+    "color": "#b8273e"
+   }
+  },
   "melvorItA:Abyssal_Combination_Potion_I": "File:Combat potion(1).png",
   "melvorItA:Abyssal_Combination_Potion_II": "File:Combat potion(2).png",
   "melvorItA:Abyssal_Combination_Potion_III": "File:Combat potion(3).png",
   "melvorItA:Abyssal_Combination_Potion_IV": "File:Combat potion(4).png",
+  "melvorItA:Abyssal_Compost": {
+   "base": "File:Ultracompost.png",
+   "recolor": {
+    "color": "#f3435a",
+    "colours": true
+   }
+  },
   "melvorItA:Abyssal_Consumable_Potion_I": {
    "base": "File:Attack potion(1).png",
    "recolor": {
@@ -1326,8 +1563,22 @@
     ]
    }
   },
+  "melvorItA:Abyssal_Potato_Seed": {
+   "base": "File:Potato seed 5.png",
+   "recolor": {
+    "color": "#ff624d"
+   }
+  },
+  "melvorItA:Abyssal_Pumpkin": "File:Red pumpkin.png",
   "melvorItA:Abyssal_Pumpkin_Pie": "File:Pumpkin pie.png",
   "melvorItA:Abyssal_Pumpkin_Pie_Perfect": "File:Pumpkin pie.png",
+  "melvorItA:Abyssal_Pumpkin_Seed": {
+   "base": "File:Watermelon seed 5.png",
+   "recolor": {
+    "color": "#fe614d"
+   }
+  },
+  "melvorItA:Abyssal_Quartz": "File:Blood quartz.png",
   "melvorItA:Abyssal_Slayer_Helmet_Decayer": "File:Araxyte slayer helmet.png",
   "melvorItA:Abyssal_Slayer_Helmet_Dissolver": "File:Purple slayer helmet.png",
   "melvorItA:Abyssal_Slayer_Helmet_Fearful": "File:Radiant slayer helmet.png",
@@ -1335,7 +1586,20 @@
   "melvorItA:Abyssal_Slayer_Helmet_Resolver": "File:Oathplate slayer helmet.png",
   "melvorItA:Abyssal_Slayer_Helmet_Ruiner": "File:Vampyric slayer helmet.png",
   "melvorItA:Abyssal_Slayer_Helmet_Woeful": "File:Twisted slayer helmet.png",
+  "melvorItA:Abyssal_Stone": "File:Corrupted ore.png",
+  "melvorItA:Abyssal_Vein_Seed": {
+   "base": "File:Crystal seed (enchanted).png",
+   "recolor": {
+    "color": "#ff624d"
+   }
+  },
   "melvorItA:Abyssia_Logs": "File:Red logs.png",
+  "melvorItA:Abyssia_Tree_Seed": {
+   "base": "File:Redwood tree seed 5.png",
+   "recolor": {
+    "color": "#e91854"
+   }
+  },
   "melvorItA:Abyssium_2H_Sword": {
    "base": "File:Steel 2h sword.png",
    "recolor": {
@@ -1512,11 +1776,25 @@
   },
   "melvorItA:Baked_Biter_Pie": "File:Fish pie.png",
   "melvorItA:Baked_Biter_Pie_Perfect": "File:Fish pie.png",
+  "melvorItA:Blight_Powder": "File:Gorak claw powder.png",
+  "melvorItA:Blightblossom_Herb": "File:Medivaemia blossom.png",
+  "melvorItA:Blightblossom_Seed": {
+   "base": "File:Gorgeous orange lily seed.png",
+   "recolor": {
+    "color": "#c7854f"
+   }
+  },
   "melvorItA:Blighted_Touch_Potion_I": "File:Blighted super restore(1).png",
   "melvorItA:Blighted_Touch_Potion_II": "File:Blighted super restore(2).png",
   "melvorItA:Blighted_Touch_Potion_III": "File:Blighted super restore(3).png",
   "melvorItA:Blighted_Touch_Potion_IV": "File:Blighted super restore(4).png",
   "melvorItA:Brumia_Logs": "File:Green logs.png",
+  "melvorItA:Brumia_Tree_Seed": {
+   "base": "File:Camphor seed 5.png",
+   "recolor": {
+    "color": "#1fb27d"
+   }
+  },
   "melvorItA:Brumite_2H_Sword": {
    "base": "File:Steel 2h sword.png",
    "recolor": {
@@ -1702,7 +1980,39 @@
   "melvorItA:Echoing_Lure_Potion_II": "File:Super fishing potion(2).png",
   "melvorItA:Echoing_Lure_Potion_III": "File:Super fishing potion(3).png",
   "melvorItA:Echoing_Lure_Potion_IV": "File:Super fishing potion(4).png",
+  "melvorItA:Echosnap_Herb": "File:Enriched snapdragon.png",
+  "melvorItA:Echosnap_Seed": {
+   "base": "File:Enriched snapdragon seed.png",
+   "recolor": {
+    "color": "#adaddb"
+   }
+  },
+  "melvorItA:Eldraberry": {
+   "base": "File:White berries.png",
+   "recolor": {
+    "color": "#dabf75"
+   }
+  },
+  "melvorItA:Eldraberry_Seed": {
+   "base": "File:Whiteberry seed 5.png",
+   "recolor": {
+    "color": "#4a68a9"
+   }
+  },
+  "melvorItA:Eldraroot_Herb": "File:Arcenia root.png",
+  "melvorItA:Eldraroot_Seed": {
+   "base": "File:Limpwurt seed 5.png",
+   "recolor": {
+    "color": "#e9ce80"
+   }
+  },
   "melvorItA:Eldria_Logs": "File:Waxwood log.png",
+  "melvorItA:Eldria_Tree_Seed": {
+   "base": "File:Calquat tree seed 5.png",
+   "recolor": {
+    "color": "#4a68a9"
+   }
+  },
   "melvorItA:Eldritch_Curse_Potion_I": {
    "base": "File:Attack potion(1).png",
    "recolor": {
@@ -1763,6 +2073,13 @@
     ]
    }
   },
+  "melvorItA:Eldritch_Tendril": "File:Kraken tentacle.png",
+  "melvorItA:Essence_Seed": {
+   "base": "File:Spirit seed 5.png",
+   "recolor": {
+    "color": "#870e29"
+   }
+  },
   "melvorItA:Fear_Potion_I": {
    "base": "File:Attack potion(1).png",
    "recolor": {
@@ -1821,6 +2138,32 @@
       6
      ]
     ]
+   }
+  },
+  "melvorItA:Fearmallow_Herb": "File:Ardrigal.png",
+  "melvorItA:Fearmallow_Seed": {
+   "base": "File:Belladonna seed 5.png",
+   "recolor": {
+    "color": "#5c1e1e"
+   }
+  },
+  "melvorItA:Gloom_Amber": "File:Polished blue gem.png",
+  "melvorItA:Gloom_Resin": {
+   "base": "File:Swamp tar.png",
+   "recolor": {
+    "color": "#2a69b6"
+   }
+  },
+  "melvorItA:Gloom_Vein_Seed": {
+   "base": "File:Crystal seed (enchanted).png",
+   "recolor": {
+    "color": "#49d3eb"
+   }
+  },
+  "melvorItA:Gloom_Vine": {
+   "base": "File:Long vine.png",
+   "recolor": {
+    "color": "#2f73c2"
    }
   },
   "melvorItA:Gloomgrowth_Potion_I": {
@@ -1884,6 +2227,12 @@
    }
   },
   "melvorItA:Gloomia_Logs": "File:Blue logs.png",
+  "melvorItA:Gloomia_Tree_Seed": {
+   "base": "File:Ironwood seed 5.png",
+   "recolor": {
+    "color": "#2e70c0"
+   }
+  },
   "melvorItA:Gloomite_2H_Sword": {
    "base": "File:Steel 2h sword.png",
    "recolor": {
@@ -2052,10 +2401,47 @@
     ]
    }
   },
+  "melvorItA:Gloompepper": {
+   "base": "File:Red banana.png",
+   "recolor": {
+    "color": "#49d2ea"
+   }
+  },
+  "melvorItA:Gloompepper_Seed": {
+   "base": "File:Tomato seed 5.png",
+   "recolor": {
+    "color": "#2e6fbf"
+   }
+  },
+  "melvorItA:Gloomsprout_Herb": "File:Grym leaf.png",
+  "melvorItA:Gloomsprout_Seed": {
+   "base": "File:Iasor seed 5.png",
+   "recolor": {
+    "color": "#2f72c2"
+   }
+  },
   "melvorItA:Harvesters_Potion_I": "File:Super hunter potion(1).png",
   "melvorItA:Harvesters_Potion_II": "File:Super hunter potion(2).png",
   "melvorItA:Harvesters_Potion_III": "File:Super hunter potion(3).png",
   "melvorItA:Harvesters_Potion_IV": "File:Super hunter potion(4).png",
+  "melvorItA:Harvesting_Consumable_I": {
+   "base": "File:Gatherer scroll.png",
+   "recolor": {
+    "color": "#f0bf72"
+   }
+  },
+  "melvorItA:Harvesting_Consumable_II": {
+   "base": "File:Gatherer scroll.png",
+   "recolor": {
+    "color": "#f0bf72"
+   }
+  },
+  "melvorItA:Harvesting_Consumable_III": {
+   "base": "File:Gatherer scroll.png",
+   "recolor": {
+    "color": "#f0bf72"
+   }
+  },
   "melvorItA:Laceration_Potion_I": {
    "base": "File:Attack potion(1).png",
    "recolor": {
@@ -2255,10 +2641,47 @@
    }
   },
   "melvorItA:Nethia_Logs": "File:Red mahogany log.png",
+  "melvorItA:Nethia_Tree_Seed": {
+   "base": "File:Dragonfruit tree seed 5.png",
+   "recolor": {
+    "color": "#9b1732"
+   }
+  },
+  "melvorItA:Nightgleam_Herb": "File:Glowing fungus.png",
+  "melvorItA:Nightgleam_Seed": {
+   "base": "File:Kronos seed 5.png",
+   "recolor": {
+    "color": "#2c2366"
+   }
+  },
   "melvorItA:Obsidian_Bar": {
    "base": "File:Mithril bar.png",
    "recolor": {
     "color": "#424098"
+   }
+  },
+  "melvorItA:Obsidian_Bark": {
+   "base": "File:Phren bark.png",
+   "recolor": {
+    "color": "#413e88"
+   }
+  },
+  "melvorItA:Obsidian_Tendril": {
+   "base": "File:Short vine.png",
+   "recolor": {
+    "color": "#4f4e9f"
+   }
+  },
+  "melvorItA:Obsidian_Thorn": {
+   "base": "File:Cactus spine.png",
+   "recolor": {
+    "color": "#3c387f"
+   }
+  },
+  "melvorItA:Obsidian_Vein_Seed": {
+   "base": "File:Crystal seed (enchanted).png",
+   "recolor": {
+    "color": "#5958af"
    }
   },
   "melvorItA:Obzurian_Bar": {
@@ -2266,6 +2689,9 @@
    "recolor": {
     "color": "#207f9b"
    }
+  },
+  "melvorItA:Petrified_Eye": {
+   "asset": "petrified_eye.png"
   },
   "melvorItA:Piece_Finder_Potion_I": {
    "base": "File:Attack potion(1).png",
@@ -2331,12 +2757,35 @@
   "melvorItA:Raw_Crimson_Bream": "File:Raw bream.png",
   "melvorItA:Raw_Deep_Squid": "File:Raw swordtip squid.png",
   "melvorItA:Raw_Stoneskin_Pike": "File:Raw pike.png",
+  "melvorItA:Riftstone": "File:Catalytic guardian stone.png",
   "melvorItA:Riftwood_Logs": "File:Purple logs.png",
   "melvorItA:Shadebark_Logs": "File:Juniper logs.png",
+  "melvorItA:Shadefrond_Herb": "File:Snake weed.png",
+  "melvorItA:Shadefrond_Seed": {
+   "base": "File:Attas seed 5.png",
+   "recolor": {
+    "color": "#598da8"
+   }
+  },
+  "melvorItA:Shadenut": "File:Bitternut.png",
+  "melvorItA:Shadenut_Seed": {
+   "base": "File:Acorn 5.png",
+   "recolor": {
+    "color": "#4a7590"
+   }
+  },
   "melvorItA:Shadeveil_Potion_I": "File:Serum 208 (1).png",
   "melvorItA:Shadeveil_Potion_II": "File:Serum 208 (2).png",
   "melvorItA:Shadeveil_Potion_III": "File:Serum 208 (3).png",
   "melvorItA:Shadeveil_Potion_IV": "File:Serum 208 (4).png",
+  "melvorItA:Shadow_Scale": "File:Blue dragon scale.png",
+  "melvorItA:Shadow_Shard": "File:Nihil shard.png",
+  "melvorItA:Shadow_Vein_Seed": {
+   "base": "File:Crystal seed (enchanted).png",
+   "recolor": {
+    "color": "#477782"
+   }
+  },
   "melvorItA:Silence_Potion_I": {
    "base": "File:Attack potion(1).png",
    "recolor": {
@@ -2401,6 +2850,7 @@
   "melvorItA:Silent_Thief_Potion_II": "File:Goblin potion(2).png",
   "melvorItA:Silent_Thief_Potion_III": "File:Goblin potion(3).png",
   "melvorItA:Silent_Thief_Potion_IV": "File:Goblin potion(4).png",
+  "melvorItA:Silentsnap_Scales": "File:Lava scale.png",
   "melvorItA:Soulsnap_Potion_I": {
    "base": "File:Attack potion(1).png",
    "recolor": {
@@ -2466,18 +2916,72 @@
   "melvorItA:Stoneskin_Pike_Perfect": "File:Pike.png",
   "melvorItA:Toxic_Protection_Mask": "File:Gas mask.png",
   "melvorItA:Twisted_Logs": "File:Achey tree logs.png",
+  "melvorItA:Twisted_Root": "File:Evil root.png",
+  "melvorItA:Twisted_Tendril": "File:Tangle vine icon.png",
+  "melvorItA:Twisted_Thorn": "File:Cactus spine.png",
+  "melvorItA:Twisted_Vein_Seed": {
+   "base": "File:Crystal seed (enchanted).png",
+   "recolor": {
+    "color": "#a17968"
+   }
+  },
   "melvorItA:Void_Stabilisation_Potion_I": "File:Guthix balance(1).png",
   "melvorItA:Void_Stabilisation_Potion_II": "File:Guthix balance(2).png",
   "melvorItA:Void_Stabilisation_Potion_III": "File:Guthix balance(3).png",
   "melvorItA:Void_Stabilisation_Potion_IV": "File:Guthix balance(4).png",
+  "melvorItA:Voidbloom_Herb": "File:Exotic flower.png",
+  "melvorItA:Voidbloom_Seed": {
+   "base": "File:Delphinium seed 5.png",
+   "recolor": {
+    "color": "#29b5d4"
+   }
+  },
   "melvorItA:Voidburst_Potion_I": "File:Ancient brew(1).png",
   "melvorItA:Voidburst_Potion_II": "File:Ancient brew(2).png",
   "melvorItA:Voidburst_Potion_III": "File:Ancient brew(3).png",
   "melvorItA:Voidburst_Potion_IV": "File:Ancient brew(4).png",
+  "melvorItA:Voidfire_Ash": {
+   "base": "File:Volcanic ash.png",
+   "recolor": {
+    "color": "#0080a7"
+   }
+  },
+  "melvorItA:Voidfire_Quartz": "File:Ice quartz.png",
+  "melvorItA:Voidfire_Resin": {
+   "base": "File:Swamp tar.png",
+   "recolor": {
+    "color": "#0181a8"
+   }
+  },
+  "melvorItA:Voidfire_Vein_Seed": {
+   "base": "File:Crystal seed (enchanted).png",
+   "recolor": {
+    "color": "#0081a8"
+   }
+  },
   "melvorItA:Voidia_Logs": {
    "base": "File:Blue logs.png",
    "recolor": {
     "color": "#008ead"
+   }
+  },
+  "melvorItA:Whisperradish": {
+   "base": "File:Onion.png",
+   "recolor": {
+    "color": "#b1cbd8"
+   }
+  },
+  "melvorItA:Whisperradish_Seed": {
+   "base": "File:Onion seed 5.png",
+   "recolor": {
+    "color": "#bbd4e0"
+   }
+  },
+  "melvorItA:Whispertallow_Herb": "File:Bruma herb.png",
+  "melvorItA:Whispertallow_Seed": {
+   "base": "File:Snowdrop seed 5.png",
+   "recolor": {
+    "color": "#bad4e0"
    }
   },
   "melvorItA:Whisperwillow_Logs": "File:Windswept logs.png",
@@ -2702,7 +3206,32 @@
     ]
    }
   },
+  "melvorItA:Witherlyme_Herb": "File:Sito foil.png",
+  "melvorItA:Witherlyme_Seed": {
+   "base": "File:White lily seed 5.png",
+   "recolor": {
+    "color": "#d0cbb0"
+   }
+  },
+  "melvorItA:Withermelon": {
+   "base": "File:Watermelon.png",
+   "recolor": {
+    "color": "#d3ceb3"
+   }
+  },
+  "melvorItA:Withermelon_Seed": {
+   "base": "File:Watermelon seed 5.png",
+   "recolor": {
+    "color": "#d1ccb1"
+   }
+  },
   "melvorItA:Withia_Logs": "File:White logs.png",
+  "melvorItA:Withia_Tree_Seed": {
+   "base": "File:Rosewood seed 5.png",
+   "recolor": {
+    "color": "#d1ccb1"
+   }
+  },
   "melvorTotH:Adaptive_Accuracy_Potion_I": "File:Divine super attack potion(1).png",
   "melvorTotH:Adaptive_Accuracy_Potion_II": "File:Divine super attack potion(2).png",
   "melvorTotH:Adaptive_Accuracy_Potion_III": "File:Divine super attack potion(3).png",
@@ -3046,6 +3575,7 @@
   "melvorTotH:Cerulean": "File:Ice quartz.png",
   "melvorTotH:Chicken_Cream_Mushroom_Soup": "File:Mushroom & onion.png",
   "melvorTotH:Chicken_Cream_Mushroom_Soup_Perfect": "File:Mushroom & onion.png",
+  "melvorTotH:Chilli": "File:Red banana.png",
   "melvorTotH:Chilli_Frost_Crab": "File:Spicy sauce.png",
   "melvorTotH:Chilli_Frost_Crab_Perfect": "File:Spicy sauce.png",
   "melvorTotH:Chilli_Seeds": {
@@ -3830,6 +4360,7 @@
   "melvorTotH:Star_Seeker_Potion_II": "File:Armadyl brew(2).png",
   "melvorTotH:Star_Seeker_Potion_III": "File:Armadyl brew(3).png",
   "melvorTotH:Star_Seeker_Potion_IV": "File:Armadyl brew(4).png",
+  "melvorTotH:Starfruit": "File:Papaya fruit.png",
   "melvorTotH:Starfruit_Seeds": {
    "base": "File:Potato seed.png",
    "recolor": {
