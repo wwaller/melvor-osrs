@@ -1,4 +1,4 @@
-"""Melvor Idle equipment from the game's data packages."""
+"""Melvor Idle equipment and monsters from the game's data packages."""
 import json
 import urllib.request
 from dataclasses import dataclass
@@ -36,3 +36,12 @@ def load_equipment(cache_dir):
             if item.get("validSlots") and item.get("name"):
                 equipment.append(Equipment(f"{document['namespace']}:{item['id']}", item["name"], item["validSlots"][0], item.get("media", "").split("?", 1)[0], package))
     return equipment
+
+
+def load_attack_types(cache_dir):
+    attack_types = {}
+    for package in PACKAGES:
+        document = _package(package, cache_dir)
+        for monster in document["data"].get("monsters", []):
+            attack_types[f"{document['namespace']}:{monster['id']}"] = monster.get("attackType", "melee")
+    return attack_types

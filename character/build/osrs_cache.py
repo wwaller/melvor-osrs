@@ -55,6 +55,15 @@ class Reader:
     def big_smart(self):
         return self.i32() & 0x7FFFFFFF if self.peek() >= 128 else self.u16()
 
+    def big_smart2(self):
+        if self.peek() >= 128:
+            return self.i32() & 0x7FFFFFFF
+        value = self.u16()
+        return -1 if value == 32767 else value
+
+    def short_smart_minus_one(self):
+        return self.u8() - 1 if self.peek() < 128 else self.u16() - 32769
+
     def string(self):
         end = self.data.index(0, self.offset)
         text = self.data[self.offset:end].decode("latin-1")

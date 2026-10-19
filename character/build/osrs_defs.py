@@ -1,11 +1,13 @@
-"""Item, identity kit, sequence, frame and skeleton definitions from the OSRS cache, ported from RuneLite's loaders."""
+"""Item, identity kit, NPC, sequence, frame and skeleton definitions from the OSRS cache, ported from RuneLite's loaders."""
 from osrs_cache import Reader
 
 ANIMATIONS = 0
 SKELETONS = 1
 CONFIGS = 2
 IDENTKIT_GROUP = 3
+NPC_GROUP = 9
 ITEM_GROUP = 10
+TEXTURES = 9
 SEQUENCE_GROUP = 12
 
 
@@ -109,6 +111,84 @@ def kit(data):
             reader.i32()
         else:
             raise ValueError(f"unknown kit opcode {opcode}")
+    return definition
+
+
+def npc(data):
+    reader = Reader(data)
+    definition = {"name": "", "models": [], "size": 1, "stand": -1, "walk": -1, "combat": -1, "width_scale": 128, "height_scale": 128,
+                  "ambient": 0, "contrast": 0, "recolor": [], "retexture": []}
+    while (opcode := reader.u8()) != 0:
+        if opcode == 1:
+            definition["models"] = [reader.u16() for _ in range(reader.u8())]
+        elif opcode == 61:
+            definition["models"] = [reader.i32() for _ in range(reader.u8())]
+        elif opcode == 2:
+            definition["name"] = reader.string()
+        elif opcode == 12:
+            definition["size"] = reader.u8()
+        elif opcode in (13, 14):
+            definition["stand" if opcode == 13 else "walk"] = reader.u16()
+        elif opcode in (15, 16, 18, 42, 74, 75, 76, 77, 78, 79, 103, 114, 116, 124, 126, 146):
+            reader.u16()
+        elif opcode in (17, 115, 117):
+            values = [reader.u16() for _ in range(4)]
+            if opcode == 17:
+                definition["walk"] = values[0]
+        elif 30 <= opcode < 35:
+            reader.string()
+        elif opcode in (40, 41):
+            definition["recolor" if opcode == 40 else "retexture"] = _recolors(reader)
+        elif opcode == 60:
+            for _ in range(reader.u8()):
+                reader.u16()
+        elif opcode == 62:
+            for _ in range(reader.u8()):
+                reader.i32()
+        elif opcode == 95:
+            definition["combat"] = reader.u16()
+        elif opcode in (97, 98):
+            definition["width_scale" if opcode == 97 else "height_scale"] = reader.u16()
+        elif opcode in (100, 101):
+            definition["ambient" if opcode == 100 else "contrast"] = reader.i8()
+        elif opcode == 102:
+            bits = reader.u8()
+            for index in range(bits.bit_length()):
+                if bits & (1 << index):
+                    reader.big_smart2()
+                    reader.short_smart_minus_one()
+        elif opcode in (106, 118):
+            reader.u16()
+            reader.u16()
+            if opcode == 118:
+                reader.u16()
+            for _ in range(reader.u8() + 1):
+                reader.u16()
+        elif opcode in (93, 99, 107, 109, 111, 122, 123, 129, 130, 145, 147):
+            pass
+        elif opcode == 249:
+            _skip_params(reader)
+        elif opcode == 251:
+            reader.u8()
+            reader.u8()
+            reader.string()
+        elif opcode == 252:
+            reader.u8()
+            reader.u16()
+            reader.u16()
+            reader.i32()
+            reader.i32()
+            reader.string()
+        elif opcode == 253:
+            reader.u8()
+            reader.u16()
+            reader.u16()
+            reader.u16()
+            reader.i32()
+            reader.i32()
+            reader.string()
+        else:
+            raise ValueError(f"unknown npc opcode {opcode}")
     return definition
 
 

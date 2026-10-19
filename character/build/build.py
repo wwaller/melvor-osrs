@@ -1,9 +1,15 @@
 """Match Melvor equipment to OSRS items and export the models, body kits and pose the character renderer needs."""
 import argparse
-import json
 import io
+import json
+import npcs
+import osrs_defs
+import osrs_model
 import re
 import shutil
+import skillcape
+import sys
+import zipfile
 import urllib.parse
 import urllib.request
 import zipfile
@@ -12,20 +18,26 @@ from pathlib import Path
 
 from PIL import Image
 
+import npcs
 import osrs_defs
 import osrs_model
 import skillcape
-from melvor import load_equipment
+from melvor import load_attack_types, load_equipment
 from osrs_cache import Cache
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
+import core  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "build" / ".cache"
 MOD_DIR = ROOT / "mod"
 DATA_DIR = MOD_DIR / "data"
 DIST_DIR = ROOT / "dist"
-SPRITES_MAPPING = ROOT.parent / "melvor-osrs-sprites" / "mod" / "mapping.json"
-SPRITES_OVERRIDES = ROOT.parent / "melvor-osrs-sprites" / "build" / "overrides.json"
-SPRITES_ASSETS = ROOT.parent / "melvor-osrs-sprites" / "build" / "assets"
+SPRITES_MAPPING = ROOT.parent / "art" / "mod" / "mapping.json"
+SPRITES_OVERRIDES = ROOT.parent / "art" / "build" / "overrides.json"
+SPRITES_ASSETS = ROOT.parent / "art" / "build" / "assets"
+SPRITES_BUILD = ROOT.parent / "art" / "build"
+MONSTER_POSES = {"stand", "attack", "death"}
+FAINT_MONSTERS = {"melvorF:GreenGooMonster", "melvorF:PurpleGooMonster", "melvorF:ScatteredGooMonster"}
 SPRITE_PATH = re.compile(r"^sprites/(?:sprite/(?:item|icon)_|render/)(.+)\.png$")
 REPORT = ROOT / "build" / "report.md"
 MODELS = 7
@@ -245,6 +257,20 @@ def custom_skillcapes(cache):
     return files
 
 
+def monster_files(cache, model_cache):
+    exporter = npcs.Exporter(cache, fetch, model_cache, compact_model, pose)
+    matches, by_image, by_page = npcs.sprite_matches(SPRITES_BUILD)
+    attack_types = load_attack_types(CACHE)
+    files = {}
+    for monster_id, name, spec in matches:
+        exported = exporter.export(monster_id, attack_types.get(monster_id, "melee"), npcs.parts_of(spec), by_image, by_page, name)
+        if exported and MONSTER_POSES <= exported["npcs"][0]["poses"].keys() and monster_id not in FAINT_MONSTERS:
+            files[monster_id] = f"{slug(monster_id)}.json"
+            write_json(DATA_DIR / "monsters" / files[monster_id], exported)
+    write_json(DATA_DIR / "monsters.json", dict(sorted(files.items())))
+    return files
+
+
 def base_file(cache, model_cache):
     kits = cache.files(osrs_defs.CONFIGS, osrs_defs.IDENTKIT_GROUP)
     sequences = cache.files(osrs_defs.CONFIGS, osrs_defs.SEQUENCE_GROUP)
@@ -318,6 +344,7 @@ def main():
     index = {e.media: matches[e.id] for e in equipment if e.id in matches} | {e.media: custom[e.id] for e in equipment if e.id in custom} | events
     write_json(DATA_DIR / "index.json", dict(sorted(index.items())))
     write_report(equipment, matches, by_id, custom)
+    monsters = monster_files(cache, model_cache)
     icon = wiki_image(ICON)
     square(icon.resize((icon.width * 2, icon.height * 2), Image.NEAREST)).save(MOD_DIR / "icon.png")
     overheads = MOD_DIR / "overheads"
@@ -325,13 +352,14 @@ def main():
     for prayer, title in OVERHEAD_PRAYERS.items():
         wiki_image(title).save(overheads / f"{prayer}.png")
     DIST_DIR.mkdir(exist_ok=True)
+    core.bundle(ROOT)
     archive = DIST_DIR / "melvor-osrs-character.zip"
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as bundle:
         for path in sorted(MOD_DIR.rglob("*")):
             if path.is_file() and not any(part.startswith(".") for part in path.relative_to(MOD_DIR).parts):
                 bundle.write(path, path.relative_to(MOD_DIR).as_posix())
     data_size = sum(p.stat().st_size for p in DATA_DIR.rglob("*.json"))
-    print(f"{len(matches)} items matched, {len(custom)} built, {len(model_cache)} models, data {data_size / 1e6:.2f} MB, zip {archive.stat().st_size / 1e6:.2f} MB")
+    print(f"{len(matches)} items matched, {len(custom)} built, {len(monsters)} monsters animated, {len(model_cache)} models, data {data_size / 1e6:.2f} MB, zip {archive.stat().st_size / 1e6:.2f} MB")
 
 
 if __name__ == "__main__":

@@ -10,6 +10,12 @@ const MONSTER_SCALES = { XS: 0.4, S: 0.7, M: 1, L: 1.6, XL: 2.4 };
 const MONSTER_TOP_ROOM = 8;
 const MONSTER_SIDE_ROOM = 8;
 const SIZED_CLASS = 'osrs-character-sized';
+const BLOCK_DELAY_MS = 240;
+const CHATHEAD_SIZE = 160;
+const CHATHEAD_YAW = 256;
+const CHATHEAD_FRAME = 0.36;
+const CHATHEAD_DROP = 0.08;
+const API_VERSION = 1;
 const ART_ALPHA = 8;
 const FULL_ART = { top: 0, bottom: 1, left: 0, right: 1 };
 const OVERHEAD_PRAYERS = ['Protect_from_Melee', 'Protect_from_Ranged', 'Protect_from_Magic', 'Redemption', 'Retribution'];
@@ -65,12 +71,14 @@ const ATTACK_POSES = { cast: 711, bow: 426, crossbow: 4230, thrown: 929, punch: 
 const MELEE_WEAPON_POSES = [[/2h|godsword/i, 407], [/dagger/i, 376], [/axe/i, 395], [/mace|hammer|maul|flail/i, 401], [/spear|halberd/i, 386]];
 
 export async function setup(ctx) {
-  const { createRenderer, litPlayer, poseFrame, DEFAULT_COLORS, BODY_COLOR_COUNTS, STAND_POSE } = await ctx.loadModule('character.mjs');
-  const shared = await ctx.loadModule('overhaul.mjs');
+  const character = await ctx.loadModule('character.mjs');
+  const { createRenderer, litPlayer, poseFrame, DEFAULT_COLORS, BODY_COLOR_COUNTS, STAND_POSE } = character;
+  const { createMonsterStage } = await ctx.loadModule('monster.mjs');
+  const [shared, api] = await Promise.all([ctx.loadModule('core/overhaul.mjs'), ctx.loadModule('core/api.mjs')]);
   shared.offerOverhaul(ctx);
   shared.dropOrphanedSongs();
   ctx.loadStylesheet('style.css');
-  const [index, base, sizes] = await Promise.all([ctx.loadData('data/index.json'), ctx.loadData('data/base.json'), ctx.loadData('sizes.json')]);
+  const [index, base, sizes, monsterFiles] = await Promise.all([ctx.loadData('data/index.json'), ctx.loadData('data/base.json'), ctx.loadData('sizes.json'), ctx.loadData('data/monsters.json').catch(() => ({}))]);
   const monsterSizes = new Map(Object.entries(sizes).flatMap(([size, ids]) => ids.map((id) => [id, size])));
   const itemFiles = new Map();
   const loadItem = (osrsId) => {
@@ -81,6 +89,7 @@ export async function setup(ctx) {
   let panel = null;
   let sidebarCategory = null;
   let stageCanvas = null;
+  let monsterStage = null;
   let overhead = null;
   const views = [];
   let data = null;
@@ -201,6 +210,14 @@ export async function setup(ctx) {
       default: true,
       onChange: () => setTimeout(queuePaint),
     },
+    {
+      type: 'switch',
+      name: 'monster-models',
+      label: 'Monsters move',
+      hint: 'With the OSRS Art mod, monsters with OSRS art become their OSRS models in the combat view: standing, attacking, blocking your hits and dying with their own OSRS animations. Off keeps the pictures.',
+      default: true,
+      onChange: () => setTimeout(queuePaint),
+    },
   ]);
   const shownIn = (place) => ctx.settings.section(SECTION).get(place) !== false;
   const stageOn = () => shownIn('combat') && game.combat?.isActive === true;
@@ -237,8 +254,13 @@ export async function setup(ctx) {
     const poses = RECIPE_POSES[skillName];
     return poses.categories[game[skillName].activeRecipe?.category?.id] ?? poses.default;
   };
+  const registeredSkillPoses = new Map();
   const skillPose = () => {
     if (game.combat?.isActive) return STAND_POSE;
+    for (const [skillId, pose] of registeredSkillPoses) {
+      const skill = game.skills.getObjectByID(skillId);
+      if (skill?.isActive) return typeof pose === 'function' ? pose(skill) : pose;
+    }
     if (game.fishing?.isActive) return FISHING_POSES[game.fishing.activeFish?.product?.id] ?? ROD_POSE;
     if (game.woodcutting?.isActive) return toolPose('melvorD:Axe');
     if (game.mining?.isActive) return toolPose('melvorD:Pickaxe');
@@ -274,6 +296,7 @@ export async function setup(ctx) {
     const ticks = base.poses[pose].lengths.reduce((sum, length) => sum + Math.max(1, length), 0);
     attack = { pose, serial: (attack?.serial ?? 0) + 1, started: now, until: now + ticks * CLIENT_TICK_MS };
     if (rest && anyShown()) rebuild();
+    setTimeout(() => monsterStage?.block(), BLOCK_DELAY_MS);
   };
   const handItems = (poseId) => [base.poses[poseId].left, base.poses[poseId].right]
     .filter((value) => value >= HAND_ITEM_OFFSET)
@@ -321,19 +344,48 @@ export async function setup(ctx) {
     }
     return artBoxes.get(src);
   };
+  const modelFor = (monster) => {
+    const file = monster && monsterFiles[monster.id];
+    return file && spritesLoaded && ctx.settings.section(SECTION).get('monster-models') !== false && showsOsrsArt(monster) ? file : null;
+  };
+  const placeMonster = (view, monster, groundGap, character, enabled) => {
+    const body = monsterStage.body;
+    const size = monsterSizes.get(monster.id) ?? 'M';
+    const room = view.height - groundGap - MONSTER_TOP_ROOM;
+    const reach = (body.height + body.lift) / body.height;
+    const wanted = enabled ? character * MONSTER_SCALES[phone && size === 'XL' ? 'L' : size] : room / reach;
+    const holder = document.getElementById('combat-enemy-img');
+    const shrink = Math.min(1, room / (wanted * reach), (holder.clientWidth - MONSTER_SIDE_ROOM) / ((wanted * 2 * body.radius) / body.height));
+    monsterStage.place({ fit: (wanted * shrink) / body.height, groundGap, height: view.height });
+    return enabled ? shrink : 1;
+  };
   const sizeEnemy = (view, ground, head, ratio) => {
     const stage = view.canvas.parentElement;
     const holder = document.getElementById('combat-enemy-img');
     const image = holder?.querySelector('img');
-    const on = ctx.settings.section(SECTION).get('sizes') !== false && image?.naturalHeight > 0;
-    stage.classList.toggle(SIZED_CLASS, on);
-    if (!on) {
-      if (view.shrink !== undefined && view.shrink !== 1) {
-        view.shrink = 1;
+    const enabled = ctx.settings.section(SECTION).get('sizes') !== false;
+    const current = game.combat.enemy?.monster ?? game.combat.selectedMonster;
+    const file = monsterStage && modelFor(current);
+    if (file && monsterStage.monster !== current.id) monsterStage.show(current.id, file);
+    if (!file && monsterStage?.active) monsterStage.hide();
+    if (file && monsterStage.monster === current.id) {
+      stage.classList.remove(SIZED_CLASS);
+      const groundGap = (view.canvas.height - ground) / ratio;
+      const character = (ground - head.y) / ratio / (view.shrink ?? 1);
+      const shrink = placeMonster(view, current, groundGap, character, enabled);
+      if (Math.abs(shrink - (view.shrink ?? 1)) > 0.005) {
+        view.shrink = shrink;
         queuePaint();
       }
       return;
     }
+    const showing = enabled && image?.naturalHeight > 0;
+    stage.classList.toggle(SIZED_CLASS, showing);
+    if (!enabled && (view.shrink ?? 1) !== 1) {
+      view.shrink = 1;
+      queuePaint();
+    }
+    if (!showing) return;
     const box = artBox(image.src) ?? FULL_ART;
     const groundGap = (view.canvas.height - ground) / ratio;
     const character = (ground - head.y) / ratio / (view.shrink ?? 1);
@@ -385,6 +437,46 @@ export async function setup(ctx) {
     outfit++;
     rebuild();
   }
+  function look() {
+    const settings = ctx.settings.section(SECTION);
+    const female = settings.get('body') === 'female';
+    const styles = base.hair[female ? 'female' : 'male'];
+    const hairKit = styles[Math.min(Number(settings.get('hairStyle') ?? 0), styles.length - 1)];
+    const colors = DEFAULT_COLORS.slice();
+    colors[HAIR_PART] = Number(settings.get('hair') ?? colors[HAIR_PART]);
+    colors[SKIN_PART] = Number(settings.get('skin') ?? colors[SKIN_PART]);
+    return { female, kits: [hairKit], colors };
+  }
+
+  let chatheadCache = { key: null, url: null };
+  async function chathead() {
+    const osrsIds = wornOsrsIds();
+    const appearance = look();
+    const key = JSON.stringify([osrsIds, appearance]);
+    if (chatheadCache.key === key) return chatheadCache.url;
+    const files = await Promise.all(osrsIds.map(loadItem));
+    const worn = { ...base, items: {}, models: { ...base.models } };
+    files.forEach((file, i) => {
+      if (!file) return;
+      worn.items[osrsIds[i]] = file.item;
+      Object.assign(worn.models, file.models);
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = CHATHEAD_SIZE;
+    const renderer = createRenderer(canvas);
+    if (!renderer) return null;
+    const model = poseFrame(worn, litPlayer(worn, osrsIds, { ...appearance, pose: STAND_POSE }), STAND_POSE, 0);
+    const probe = renderer.draw(model, { yaw: CHATHEAD_YAW, place: { fit: 1, x: 0, ground: 0 } });
+    const height = Math.max(1, probe.ground - probe.top);
+    const fit = CHATHEAD_SIZE / (height * CHATHEAD_FRAME);
+    const centre = probe.head.y + height * CHATHEAD_DROP;
+    renderer.draw(model, { yaw: CHATHEAD_YAW, place: { fit, x: CHATHEAD_SIZE / 2 - probe.head.x * fit, ground: CHATHEAD_SIZE / 2 - centre * fit } });
+    const url = canvas.toDataURL('image/png');
+    canvas.getContext('webgl')?.getExtension('WEBGL_lose_context')?.loseContext();
+    chatheadCache = { key, url };
+    return url;
+  }
+
   async function rebuild() {
     clearTimeout(stepTimer);
     if (!views.some((view) => view.enabled())) {
@@ -410,16 +502,10 @@ export async function setup(ctx) {
       restCache.clear();
       restOutfit = outfit;
     }
-    const settings = ctx.settings.section(SECTION);
-    const female = settings.get('body') === 'female';
-    const styles = base.hair[female ? 'female' : 'male'];
-    const hairKit = styles[Math.min(Number(settings.get('hairStyle') ?? 0), styles.length - 1)];
-    const colors = DEFAULT_COLORS.slice();
-    colors[HAIR_PART] = Number(settings.get('hair') ?? colors[HAIR_PART]);
-    colors[SKIN_PART] = Number(settings.get('skin') ?? colors[SKIN_PART]);
+    const appearance = look();
     const litFor = (poseId) => {
       const hands = `${base.poses[poseId].left},${base.poses[poseId].right}`;
-      if (!restCache.has(hands)) restCache.set(hands, litPlayer(data, osrsIds, { female, kits: [hairKit], colors, pose: poseId }));
+      if (!restCache.has(hands)) restCache.set(hands, litPlayer(data, osrsIds, { ...appearance, pose: poseId }));
       return restCache.get(hands);
     };
     rest = litFor(pose);
@@ -515,6 +601,10 @@ export async function setup(ctx) {
     if (!stageCanvas) return;
     const wasShown = !stageCanvas.classList.contains('d-none');
     applyStage();
+    if (!stageOn()) {
+      for (const view of views) view.shrink = 1;
+      monsterStage?.hide();
+    }
     if (stageOn() !== wasShown) rebuild();
   };
 
@@ -560,6 +650,30 @@ export async function setup(ctx) {
     return result;
   });
 
+  api.publish(ctx, API_VERSION, {
+    chathead,
+    registerSkillPose(skillId, pose) {
+      if (registeredSkillPoses.has(skillId)) throw new Error(`osrsCharacter: an animation is already registered for ${skillId}`);
+      registeredSkillPoses.set(skillId, pose);
+      return () => registeredSkillPoses.delete(skillId);
+    },
+    poses: Object.freeze({ stand: STAND_POSE, fishing: ROD_POSE, herblore: HERBLORE_POSE, firemaking: FIREMAKING_POSE, pickpocket: PICKPOCKET_POSE, stunned: STUNNED_POSE, ...ATTACK_POSES }),
+    availablePoses: () => Object.keys(base.poses).map(Number),
+    hasMonsterModel: (monsterId) => Boolean(monsterFiles[monsterId]),
+  });
+
+  ctx.patch(Character, 'attack').after(function (_result, _target, attack) {
+    if (this === game.combat.enemy) monsterStage?.attack(attack !== game.normalAttack);
+  });
+  ctx.patch(Enemy, 'processDeath').after(function () {
+    if (this === game.combat.enemy) monsterStage?.die();
+  });
+  ctx.patch(BaseManager, 'spawnEnemy').after(function () {
+    if (this !== game.combat) return;
+    monsterStage?.spawn();
+    queuePaint();
+  });
+
   ctx.patch(Player, 'attack').replace(function (originalAttack, ...args) {
     const result = originalAttack(...args);
     if (this === game.combat.player) onPlayerAttack(this);
@@ -596,6 +710,7 @@ export async function setup(ctx) {
     if (!views.length) return;
     stageCanvas = createStage();
     const stageRenderer = stageCanvas && createRenderer(stageCanvas, { antialias: !phone });
+    if (stageRenderer) monsterStage = createMonsterStage({ character, loadData: (path) => ctx.loadData(path), stage: stageCanvas.parentElement, holder: document.getElementById('combat-enemy-img'), antialias: !phone, tickMs: CLIENT_TICK_MS, onReady: () => queuePaint() });
     if (stageRenderer) {
       views.push({ canvas: stageCanvas, renderer: stageRenderer, height: STAGE_HEIGHT, headroom: OVERHEAD_ROOM, yaw: () => STAGE_YAW, enabled: stageOn, onScreen: true });
       applyStage();

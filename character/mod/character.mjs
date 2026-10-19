@@ -447,7 +447,7 @@ export function createRenderer(canvas, { antialias = true } = {}) {
 
   return {
     // yaw and pitch are in OSRS angle units (2048 per turn).
-    draw(model, { yaw = 0, pitch = 96, padding = 0.06, headroom = 0, shrink = 1, reference = null } = {}) {
+    draw(model, { yaw = 0, pitch = 96, padding = 0.06, headroom = 0, shrink = 1, reference = null, place = null } = {}) {
       const vertexCount = model.vx.length;
       const screenX = new Float64Array(vertexCount), screenY = new Float64Array(vertexCount), depth = new Int32Array(vertexCount);
       const yawSin = SINE[yaw & 2047], yawCos = COSINE[yaw & 2047], pitchSin = SINE[pitch & 2047], pitchCos = COSINE[pitch & 2047];
@@ -483,9 +483,9 @@ export function createRenderer(canvas, { antialias = true } = {}) {
       if (reference) ({ minX, maxX, minY, maxY } = cylinderBounds(reference, pitchSin, pitchCos));
       const width = canvas.width, height = canvas.height;
       const full = Math.min((width * (1 - 2 * padding)) / (maxX - minX), (height * (1 - 2 * padding) - headroom) / (maxY - minY));
-      const fit = full * shrink;
-      const offsetX = width / 2 - ((minX + maxX) / 2) * fit;
-      const offsetY = (height + headroom) / 2 - ((minY + maxY) / 2) * full + lowest * (full - fit);
+      const fit = place ? place.fit : full * shrink;
+      const offsetX = place ? place.x : width / 2 - ((minX + maxX) / 2) * fit;
+      const offsetY = place ? place.ground - lowest * fit : (height + headroom) / 2 - ((minY + maxY) / 2) * full + lowest * (full - fit);
       const order = drawOrder(model, depth, radius, visible);
       const vertices = new Float32Array(order.length * 3 * 4);
       let at = 0;
@@ -526,4 +526,92 @@ export function poseFrame(data, model, pose, frame) {
 
 export function posedPlayer(data, itemIds, options = {}) {
   return poseFrame(data, litPlayer(data, itemIds, options), options.pose ?? STAND_POSE, options.frame ?? 0);
+}
+
+const OSRS_HUES = 64;
+const SHADOW_LIGHTNESS = 6;
+const SHADOW_FLOOR_SHARE = 0.9;
+const OSRS_SATURATIONS = 8;
+
+function osrsHueAndSaturation(hex) {
+  const [r, g, b] = [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16) / 255);
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), lightness = (max + min) / 2;
+  if (max === min) return [0, 0];
+  const range = max - min;
+  const saturation = lightness > 0.5 ? range / (2 - max - min) : range / (max + min);
+  const hue = max === r ? (g - b) / range + (g < b ? 6 : 0) : max === g ? (b - r) / range + 2 : (r - g) / range + 4;
+  return [Math.floor((hue / 6) * OSRS_HUES) % OSRS_HUES, Math.min(OSRS_SATURATIONS - 1, Math.floor(saturation * OSRS_SATURATIONS))];
+}
+
+function tint(model, { color, greys = false }) {
+  const [hue, saturation] = osrsHueAndSaturation(color);
+  for (let face = 0; face < model.colors.length; face++) {
+    const current = model.colors[face];
+    if (!greys && ((current >> 7) & 7) === 0) continue;
+    model.colors[face] = (hue << 10) | (saturation << 7) | (current & 127);
+  }
+}
+
+function untexture(model, colors) {
+  if (!model.textures) return;
+  for (let face = 0; face < model.textures.length; face++) {
+    const color = colors[model.textures[face]];
+    if (color === undefined) continue;
+    model.colors[face] = color;
+    model.textures[face] = -1;
+  }
+}
+
+function hideShadow(model) {
+  if (!model.alphas) return model;
+  let top = Infinity, ground = -Infinity;
+  for (const y of model.vy) {
+    top = Math.min(top, y);
+    ground = Math.max(ground, y);
+  }
+  for (let face = 0; face < model.colors.length; face++) {
+    if (!model.alphas[face] || (model.colors[face] & 127) > SHADOW_LIGHTNESS) continue;
+    const ys = [model.vy[model.fa[face]], model.vy[model.fb[face]], model.vy[model.fc[face]]];
+    if (Math.max(...ys) - Math.min(...ys) <= 1 && Math.min(...ys) - top >= SHADOW_FLOOR_SHARE * (ground - top)) model.colors3[face] = -2;
+  }
+  return model;
+}
+
+export function npcModel(data, npc) {
+  const model = partModel(data, npc.models, npc.recolor, npc.retexture);
+  untexture(model, data.textures ?? {});
+  if (npc.tint) tint(model, npc.tint);
+  const [ambient, contrast] = npc.light;
+  return hideShadow(light(model, [PLAYER_LIGHT[0] + ambient, PLAYER_LIGHT[1] + contrast * 5, PLAYER_LIGHT[2], PLAYER_LIGHT[3], PLAYER_LIGHT[4]]));
+}
+
+export function npcPose(data, npc, kind) {
+  return data.poses[npc.poses[kind] ?? npc.poses.stand] ?? null;
+}
+
+// OSRS scales an NPC after animating it, so the frames move the unscaled model.
+export function posedNpc(data, lit, npc, kind, frame) {
+  const pose = npcPose(data, npc, kind);
+  const posed = pose ? animate(lit, data.skeletons[pose.skeleton], pose.frames[frame % pose.frames.length]) : { ...lit, vx: lit.vx.slice(), vy: lit.vy.slice(), vz: lit.vz.slice() };
+  const [width, height] = npc.scale;
+  if (width !== 128 || height !== 128) {
+    for (let v = 0; v < posed.vx.length; v++) {
+      posed.vx[v] = (posed.vx[v] * width) >> 7;
+      posed.vy[v] = (posed.vy[v] * height) >> 7;
+      posed.vz[v] = (posed.vz[v] * width) >> 7;
+    }
+  }
+  return posed;
+}
+
+// A hovering NPC has a lone vertex on the ground below its body, so its height is measured from the body alone.
+export function bodyOf(model) {
+  const ys = Array.from(model.vy).sort((a, b) => a - b);
+  let gap = 0, at = 0;
+  for (let i = 0; i < ys.length - 1; i++) if (ys[i + 1] - ys[i] > gap) [gap, at] = [ys[i + 1] - ys[i], i];
+  const floating = ys.length > 1 && gap > 0.3 * (ys.at(-1) - ys[0]) && at + 1 > ys.length - at - 1;
+  const top = ys[0], bottom = floating ? ys[at] : ys.at(-1);
+  let radius = 0;
+  for (let v = 0; v < model.vx.length; v++) radius = Math.max(radius, Math.hypot(model.vx[v], model.vz[v]));
+  return { height: Math.max(1, bottom - top), lift: Math.max(0, ys.at(-1) - bottom), radius };
 }

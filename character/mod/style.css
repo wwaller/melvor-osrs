@@ -12,3 +12,7 @@
 .osrs-character-overhead { position: absolute; width: 50px; height: 50px; left: calc(var(--osrs-character-crown-x, 25%) - 25px); top: max(0px, calc(var(--osrs-character-crown, 56px) - 56px)); image-rendering: pixelated; pointer-events: none; }
 #osrs-character-combat-stage.osrs-character-sized > canvas:not(.d-none) + #combat-enemy-img { position: relative; }
 #osrs-character-combat-stage.osrs-character-sized > canvas:not(.d-none) + #combat-enemy-img > .combat-enemy-img { position: absolute; left: 50%; bottom: var(--osrs-enemy-bottom, 0px); width: auto; height: var(--osrs-enemy-height, auto); max-width: none; max-height: none; margin: 0; transform: translateX(var(--osrs-enemy-shift, -50%)); }
+#osrs-character-combat-stage.osrs-character-has-monster > canvas:not(.d-none) ~ #combat-enemy-img > * { visibility: hidden; }
+#osrs-character-combat-stage > .osrs-character-monster { position: absolute; top: 0; background: none; pointer-events: none; transition: opacity 350ms ease; }
+#osrs-character-combat-stage:not(.osrs-character-has-monster) > .osrs-character-monster, #osrs-character-combat-stage > canvas.d-none ~ .osrs-character-monster { display: none; }
+.osrs-character-monster.osrs-character-monster-gone { opacity: 0; }
