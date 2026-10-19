@@ -57,7 +57,6 @@ def square(image):
 
 
 def draw_logo():
-    """A sidebar with the learned skills up top and the locked ones gathered under an Unlearned heading."""
     logo = Image.new("RGBA", (1280, 720), BACKGROUND)
     pen = ImageDraw.Draw(logo)
     font = ImageFont.load_default_imagefont()

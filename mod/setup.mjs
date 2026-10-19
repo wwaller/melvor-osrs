@@ -34,7 +34,7 @@ export function setup(ctx) {
 
   const copyBefore = (key) => [...copies].filter((other) => ranks.get(other) > ranks.get(key)).sort((a, b) => ranks.get(a) - ranks.get(b))[0];
 
-  /** Each sidebar entry of a locked skill hides in place and a copy shows under Unlearned; clicking the copy clicks the original, so the game's own unlock prompt still opens. */
+  // The copy clicks the hidden original so the game's own unlock prompt still opens.
   const place = (skill) => {
     const navs = skillNav.navs.get(skill) || [];
     const pages = game.getPagesForSkill(skill) || [];
