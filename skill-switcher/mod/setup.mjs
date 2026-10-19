@@ -1,5 +1,6 @@
 const CATEGORIES = ['Combat', 'Passive', 'Non-Combat'];
 const COMBAT_PAGE = 'melvorD:Combat';
+const ENEMY_PANEL = 'combat-fight-container-enemy';
 const GRID_ICON = 'fas fa-th-large';
 const SHORTCUT_PAGES = ['melvorD:Bank', 'melvorD:Shop'];
 const ABOVE_SIDEBAR_CLASS = 'skill-switcher-above-sidebar';
@@ -43,6 +44,14 @@ function sidebarCategory(page) {
 }
 
 const isActive = (entry) => entry.page.action?.isActive === true;
+
+function showFight() {
+  const enemy = document.getElementById(ENEMY_PANEL);
+  if (!enemy) return;
+  const header = document.getElementById('page-header');
+  const covered = header && ['fixed', 'sticky'].includes(getComputedStyle(header).position) ? header.getBoundingClientRect().height : 0;
+  window.scrollTo({ top: enemy.getBoundingClientRect().top + window.scrollY - covered });
+}
 
 export function setup(ctx) {
   ctx.loadStylesheet('style.css');
@@ -106,6 +115,7 @@ export function setup(ctx) {
   const goTo = (entry) => {
     changePage(entry.page, -1, entry.skill, false, false);
     if (!window.matchMedia('(min-width: 992px)').matches && document.getElementById('page-container')?.classList.contains('sidebar-o-xs')) One.layout('sidebar_close');
+    if (entry.page.id === COMBAT_PAGE && isActive(entry)) showFight();
   };
 
   let tip = null;

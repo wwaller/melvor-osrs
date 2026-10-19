@@ -102,12 +102,15 @@ async function boot(values = {}, { interfaceReady = true, desktop = false, sideb
   const layouts = [];
   globalThis.One = { layout: (action) => layouts.push(action) };
   const scrolls = [];
-  globalThis.window = { matchMedia: (query) => ({ matches: query === '(min-width: 992px)' && desktop }), scrollTo: (options) => scrolls.push(options) };
+  globalThis.window = { matchMedia: (query) => ({ matches: query === '(min-width: 992px)' && desktop }), scrollTo: (options) => scrolls.push(options), scrollY: 300 };
+  globalThis.getComputedStyle = (node) => ({ position: node.position });
+  const header = { position: 'fixed', getBoundingClientRect: () => ({ height: 56 }) };
+  const enemyPanel = { getBoundingClientRect: () => ({ top: 600 }) };
   const pageContainer = element('div');
   if (sidebarOpen) pageContainer.classList.add('sidebar-o-xs');
   globalThis.sidebar = sidebarAPI;
   globalThis.game = { ...gameAPI, openPage: pages['melvorD:Woodcutting'] };
-  globalThis.document = { body, createElement: element, getElementById: (id) => ({ 'skill-footer-minibar-container': minibarContainer, 'page-container': sidebarOpen ? pageContainer : null })[id] ?? null };
+  globalThis.document = { body, createElement: element, getElementById: (id) => ({ 'skill-footer-minibar-container': minibarContainer, 'page-container': sidebarOpen ? pageContainer : null, 'page-header': header, 'combat-fight-container-enemy': enemyPanel })[id] ?? null };
   globalThis.changePage = (...args) => pageChanges.push(args);
   globalThis.tippy = (target, options) => (tip = { target, options, hidden: false, hide() { this.hidden = true; }, setContent(content) { this.content = content; } });
   globalThis.Minibar = class Minibar { setSkill() {} };
@@ -163,6 +166,20 @@ test('the button shows the active skill, and the flyout puts active skills in a 
   const fakeGame = { renderQueue: { activeSkills: true } };
   patches['Game.renderActiveSkills'].call(fakeGame, () => {});
   assert.ok(button.children[0].children[0].className.includes('fa-th-large'), 'nothing active shows the grid icon');
+});
+
+test('while you fight, Combat opens the fight itself: the page scrolls down to the enemy, just under the header', async () => {
+  const { pageChanges, pages, actions, scrolls, tip } = await boot();
+  tip().options.onShow(tip());
+  tip().content.children[0].children.find((t) => t.title === 'Combat').onclick();
+  assert.deepStrictEqual(pageChanges.map(([page]) => page), [pages['melvorD:Combat']]);
+  assert.deepStrictEqual(scrolls, [], 'not fighting: the Combat page opens at the top as before');
+
+  actions.combat.isActive = true;
+  tip().options.onShow(tip());
+  const [, activeRow] = tip().content.children;
+  activeRow.children.find((t) => t.title === 'Combat').onclick();
+  assert.deepStrictEqual(scrolls, [{ top: 600 + 300 - 56 }]);
 });
 
 test('with the option on, Bank and Shop join the bottom row to the left of the active skills', async () => {
