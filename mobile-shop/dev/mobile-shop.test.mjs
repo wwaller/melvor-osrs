@@ -191,3 +191,30 @@ test('Township, Atlas of Discovery, Into the Abyss and Abyssal Slayer only get b
   observe([{ isIntersecting: true }]);
   assert.deepStrictEqual(hidden(), [false, false, false, false], 'they appear the next time the shop opens');
 });
+
+test('the sidebar Shop entry shows your Slayer Coins in their own box left of the GP box, kept current by Melvor', async () => {
+  const { addSlayerCoins } = await import(`../mod/setup.mjs?${Math.random()}`);
+  const before = [];
+  const gpBox = { className: 'font-size-xs text-right lh-1-2 bg-dark rounded p-1', before: (node) => before.push(node) };
+  const byId = { 'nav-shop-currency-tooltip': { parentElement: gpBox } };
+  const doc = {
+    getElementById: (id) => byId[id] ?? null,
+    createElement: (tag) => {
+      const node = element(tag);
+      node.setAttribute = (name, value) => (node.attributes[name] = value);
+      return node;
+    },
+  };
+  let rendered = 0;
+  const coins = { id: 'melvorD:SlayerCoins', media: 'slayer_coins.png', renderQuantities: () => rendered++ };
+  const box = addSlayerCoins(doc, coins);
+  assert.deepStrictEqual(before, [box], 'just before the GP box');
+  assert.strictEqual(box.className, 'font-size-xs text-right lh-1-2 bg-dark rounded p-1 mr-1', 'styled like the GP box, with a small gap');
+  const [icon, amount] = box.children;
+  assert.strictEqual(icon.src, 'slayer_coins.png');
+  assert.deepStrictEqual(amount.attributes, { 'data-currency-quantity': 'melvorD:SlayerCoins', 'data-currency-highlight': 'true' }, 'Melvor fills in and updates any element tagged with its currency');
+  assert.strictEqual(rendered, 1, 'filled in straight away');
+  byId[box.id] = box;
+  assert.strictEqual(addSlayerCoins(doc, coins), null, 'added only once');
+  assert.strictEqual(addSlayerCoins({ getElementById: () => null }, coins), null, 'nothing to do without the sidebar GP box');
+});

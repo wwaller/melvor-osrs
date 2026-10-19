@@ -5,6 +5,7 @@ const LOCKED = 'mobile-shop-locked';
 const SELECTED = 'mobile-shop-selected';
 const UNAVAILABLE = 'mobile-shop-unavailable';
 const ABYSSAL_REALM = 'melvorItA:Abyssal';
+const SLAYER_COINS_BOX = 'mobile-shop-slayer-coins';
 const abyssUnlocked = () => Boolean(game.realms?.getObjectByID(ABYSSAL_REALM)?.isUnlocked);
 const UNLOCKED_BY = {
   'melvorF:Township': () => Boolean(game.township?.isUnlocked),
@@ -18,6 +19,25 @@ export function canBuy(shop, game, purchase) {
   if (!game.checkRequirements(purchase.purchaseRequirements, false)) return false;
   const quantity = purchase.allowQuantityPurchase ? shop.capPurchaseQuantity(purchase, shop.buyQuantity) : 1;
   return quantity > 0 && shop.getPurchaseCosts(purchase, quantity).checkIfOwned();
+}
+
+export function addSlayerCoins(doc, coins) {
+  const gp = doc.getElementById('nav-shop-currency-tooltip')?.parentElement;
+  if (!gp || !coins || doc.getElementById(SLAYER_COINS_BOX)) return null;
+  const icon = doc.createElement('img');
+  icon.className = 'skill-icon-xxs';
+  icon.src = coins.media;
+  const amount = doc.createElement('span');
+  amount.className = 'font-w600';
+  amount.setAttribute('data-currency-quantity', coins.id);
+  amount.setAttribute('data-currency-highlight', 'true');
+  const box = doc.createElement('div');
+  box.id = SLAYER_COINS_BOX;
+  box.className = `${gp.className} mr-1`;
+  box.append(icon, amount);
+  gp.before(box);
+  coins.renderQuantities();
+  return box;
 }
 
 export function setup(ctx) {
@@ -99,6 +119,7 @@ export function setup(ctx) {
   });
 
   ctx.onInterfaceReady(() => {
+    addSlayerCoins(document, game.slayerCoins);
     const shop = document.getElementById('new-shop');
     const list = document.getElementById('shop-tab-container');
     if (!shop || !list || typeof shopMenu === 'undefined') return;
