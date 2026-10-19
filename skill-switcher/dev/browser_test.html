@@ -1,0 +1,238 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://steam.melvoridle.com/assets/css/oneui.css"><link rel="stylesheet" href="https://steam.melvoridle.com/assets/css/game.css?12097">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<script src="https://steam.melvoridle.com/assets/js/oneui.core.min.js"></script><script src="https://steam.melvoridle.com/assets/js/oneui.app.min.js"></script>
+<script src="https://unpkg.com/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script><script src="https://unpkg.com/tippy.js@6.3.7/dist/tippy-bundle.umd.min.js"></script>
+<style>#sidebar { transition: none !important; }</style></head><body class="darkMode">
+<div id="page-container" class="sidebar-o sidebar-dark enable-page-overlay page-header-fixed-mobile"><nav id="sidebar">Sidebar</nav><main id="main-container">Page</main>
+<div class="sidemenu bg-white rounded" id="skill-footer-minibar-container">
+  <div id="skill-footer-minibar"><button class="btn btn-sm btn-light" style="width:42px; height:34px;">M</button></div>
+  <button class="btn btn-sm btn-light text-white" style="width:42px; height:34px;"><i class="si si-arrow-down"></i></button>
+</div></div>
+<pre id="result"></pre>
+<script type="module">
+const results = [];
+const check = (name, ok, detail = '') => results.push({ name, ok: Boolean(ok), detail: String(detail) });
+const report = () => (document.getElementById('result').textContent = JSON.stringify(results));
+addEventListener('error', (event) => {
+  check('the page runs to the end', false, event.error?.stack ?? event.message);
+  report();
+});
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const shown = (element) => getComputedStyle(element).display !== 'none';
+const melvorAccepts = (result) => typeof result !== 'string' && (result === undefined || Boolean(result));
+const centerOf = (element) => {
+  const box = element.getBoundingClientRect();
+  return [box.left + box.width / 2, box.top + box.height / 2];
+};
+const topAt = (element) => document.elementFromPoint(...centerOf(element));
+const tapAt = (element) => {
+  const hit = topAt(element);
+  hit.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  return hit;
+};
+
+const woodcuttingPage = { id: 'melvorD:Woodcutting', name: 'Woodcutting', media: '/mod/icon.png', action: { isActive: false } };
+const woodcutting = { id: 'melvorD:Woodcutting', name: 'Woodcutting', media: '/mod/icon.png' };
+window.sidebar = { category: (id) => ({ items: () => (id === 'Non-Combat' ? [{ id: woodcutting.id, rootEl: document.createElement('li') }] : []) }) };
+window.game = { pages: { getObjectByID: () => undefined }, skills: { getObjectByID: (id) => (id === woodcutting.id ? woodcutting : undefined) }, getPagesForSkill: () => [woodcuttingPage], openPage: undefined };
+const pageChanges = [];
+window.changePage = (...args) => pageChanges.push(args);
+window.Minibar = class Minibar { setSkill() {} };
+window.Game = class Game { renderActiveSkills() {} };
+const configs = {};
+const values = {};
+const choose = (name, value) => {
+  const result = configs[name].onChange?.(value, name in values ? values[name] : configs[name].default);
+  values[name] = value;
+  return result;
+};
+const patches = {};
+const stored = {};
+let ready;
+const ctx = {
+  loadStylesheet: (path) => document.head.insertAdjacentHTML('beforeend', `<link rel="stylesheet" href="/mod/${path}">`),
+  settings: { section: () => ({ add: (config) => [config].flat().forEach((each) => (configs[each.name] = each)), get: (name) => (name in values ? values[name] : configs[name]?.default) }) },
+  patch: (target, method) => ({ after: (fn) => (patches[`${target.name}.${method}`] = fn), replace: (fn) => (patches[`${target.name}.${method}`] = fn) }),
+  onInterfaceReady: (fn) => (ready = fn),
+  accountStorage: { getItem: (key) => stored[key], setItem: (key, value) => (stored[key] = value) },
+};
+const { setup } = await import('/mod/setup.mjs');
+const tipTimers = [];
+const realSetTimeout = window.setTimeout.bind(window);
+window.setTimeout = (fn, ms, ...rest) => (ms >= 60000 ? (tipTimers.push({ fn, ms }), 0) : realSetTimeout(fn, ms, ...rest));
+setup(ctx);
+ready();
+await wait(100);
+
+const page = document.getElementById('page-container');
+const minibar = document.getElementById('skill-footer-minibar-container');
+const sidebarEl = document.getElementById('sidebar');
+const menu = document.querySelector('.skill-switcher-menu');
+const switcher = document.querySelector('.skill-switcher-button');
+const topButton = document.querySelector('.skill-switcher-top');
+const openSidebar = async () => {
+  One.layout('sidebar_open');
+  await wait(600);
+};
+check('the window is phone sized, where the sidebar covers the page', innerWidth < 992 && sidebarEl.getBoundingClientRect().width >= document.documentElement.clientWidth, `${innerWidth} ${getComputedStyle(sidebarEl).width}`);
+check('the menu button is hidden by default', menu && !shown(menu));
+
+check('Melvor keeps the menu switch on when it is turned on', melvorAccepts(configs['menu-button'].onChange(true, false)));
+const a = menu.getBoundingClientRect();
+const b = switcher.getBoundingClientRect();
+check('turned on, the menu button shows', shown(menu));
+check('it sits directly above the switcher, same width and column', Math.abs(a.left - b.left) < 1 && Math.abs(a.width - b.width) < 1 && Math.abs(a.bottom - b.top) < 2, `menu ${a.left},${a.top}-${a.bottom} switcher ${b.left},${b.top}`);
+check('both sit in the bottom right corner', b.right > innerWidth - 50 && b.bottom > innerHeight - 120, `${b.right},${b.bottom} of ${innerWidth}x${innerHeight}`);
+check('the icon is a hamburger', getComputedStyle(menu.querySelector('i'), '::before').content.includes('\uf0c9'), getComputedStyle(menu.querySelector('i'), '::before').content);
+
+check('a tap on the menu button opens the sidebar', tapAt(menu).closest('.skill-switcher-menu') && page.classList.contains('sidebar-o-xs'), page.className);
+await wait(600);
+check('the over-the-sidebar setting is off by default', configs['above-sidebar'].default === false);
+check('so by default the open sidebar covers the buttons', sidebarEl.contains(topAt(menu)) && sidebarEl.contains(topAt(switcher)), `${topAt(menu).id || topAt(menu).className}`);
+
+check('Melvor keeps the over-the-sidebar switch on when it is turned on', melvorAccepts(configs['above-sidebar'].onChange(true, false)));
+check('turned on, the menu button and switcher show on top of the open sidebar', topAt(menu).closest('.skill-switcher-menu') === menu && topAt(switcher).closest('.skill-switcher-button') === switcher, `${topAt(menu).className} / ${topAt(switcher).className}`);
+check('a tap on the menu button there closes the sidebar', tapAt(menu).closest('.skill-switcher-menu') && !page.classList.contains('sidebar-o-xs'), page.className);
+await wait(600);
+check('with the sidebar closed the buttons sit at their usual layer', getComputedStyle(minibar).zIndex === '999', getComputedStyle(minibar).zIndex);
+
+await openSidebar();
+check('the switcher still opens its flyout over the open sidebar', tapAt(switcher).closest('.skill-switcher-button') && document.querySelector('.skill-switcher-tile'));
+await wait(100);
+const tile = document.querySelector('.skill-switcher-tile');
+check('and its skills can be tapped', tile && topAt(tile).closest('.skill-switcher-tile') === tile, tile && topAt(tile).className);
+tapAt(tile);
+await wait(600);
+check('picking a skill switches to it and closes the sidebar, so the page is not left hidden behind it', pageChanges.length === 1 && pageChanges[0][0] === woodcuttingPage && !page.classList.contains('sidebar-o-xs'), `${pageChanges.length} ${page.className}`);
+
+await openSidebar();
+check('Melvor keeps the over-the-sidebar switch off when it is turned off', melvorAccepts(configs['above-sidebar'].onChange(false, true)));
+check('turned off, the sidebar covers the buttons again', sidebarEl.contains(topAt(switcher)));
+check('Melvor keeps it on when it is turned back on', melvorAccepts(configs['above-sidebar'].onChange(true, false)));
+check('and the buttons are back on top', topAt(switcher).closest('.skill-switcher-button') === switcher);
+
+minibar.classList.add('d-none');
+patches['Minibar.setSkill']();
+await wait(100);
+const c = menu.getBoundingClientRect();
+const d = switcher.getBoundingClientRect();
+check('off the skill pages both float in the same corner, menu above the switcher', shown(menu) && Math.abs(c.left - d.left) < 1 && Math.abs(c.bottom - d.top) < 2 && d.right > innerWidth - 50 && d.bottom > innerHeight - 60, `menu ${c.left},${c.top}-${c.bottom} switcher ${d.left},${d.top}-${d.bottom}`);
+check('and stay on top of the open sidebar there too', topAt(menu).closest('.skill-switcher-menu') === menu && topAt(switcher).closest('.skill-switcher-button') === switcher);
+tapAt(menu);
+await wait(600);
+check('where the menu button closes it as well', !page.classList.contains('sidebar-o-xs'));
+
+check('Melvor keeps the menu switch off when it is turned off', melvorAccepts(configs['menu-button'].onChange(false, true)));
+check('turned off, the menu button hides again', !shown(menu));
+check('Melvor keeps the menu switch on when it is turned back on', melvorAccepts(configs['menu-button'].onChange(true, false)));
+check('and it shows again', shown(menu));
+
+const t = topButton.getBoundingClientRect();
+const m = menu.getBoundingClientRect();
+check('Jump to Top is on by default and shows as an up arrow', configs['top-button'].default === true && shown(topButton) && getComputedStyle(topButton.querySelector('i'), '::before').content.includes('\uf062'), getComputedStyle(topButton.querySelector('i'), '::before').content);
+check('it sits directly above the menu button, same width and column', Math.abs(t.left - m.left) < 1 && Math.abs(t.width - m.width) < 1 && Math.abs(t.bottom - m.top) < 2, `top ${t.left},${t.top}-${t.bottom} menu ${m.left},${m.top}`);
+document.body.style.minHeight = '3000px';
+window.scrollTo(0, 1200);
+const topScrolls = [];
+const realScrollTo = window.scrollTo.bind(window);
+window.scrollTo = (options) => {
+  topScrolls.push(options);
+  realScrollTo({ top: options.top, behavior: 'instant' });
+};
+const topHit = tapAt(topButton);
+window.scrollTo = realScrollTo;
+await wait(100);
+check('a tap on it scrolls smoothly back to the top of the page', topScrolls.length === 1 && topScrolls[0].top === 0 && topScrolls[0].behavior === 'smooth' && scrollY === 0, `${JSON.stringify(topScrolls)} ${scrollY} hit ${topHit.tagName}.${topHit.className}`);
+check('Melvor keeps the Jump to Top switch off when it is turned off', melvorAccepts(configs['top-button'].onChange(false, true)));
+check('turned off, it hides and the menu button is back on top', !shown(topButton) && shown(menu));
+check('Melvor keeps it on when it is turned back on', melvorAccepts(configs['top-button'].onChange(true, false)));
+check('and it is back', shown(topButton));
+configs['above-sidebar'].onChange(true, false);
+await openSidebar();
+check('with the over-the-sidebar setting on, it shows on top of the open phone sidebar too', topAt(topButton).closest('.skill-switcher-top') === topButton, topAt(topButton).className);
+One.layout('sidebar_close');
+await wait(600);
+
+const flyoutOpen = () => Boolean(document.querySelector('.skill-switcher-tile'));
+const tips = () => [...document.querySelectorAll('.skill-switcher-tip')];
+const press = async (ms) => {
+  switcher.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+  await wait(ms);
+  switcher.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+  switcher.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  await wait(50);
+};
+const training = (on) => {
+  woodcuttingPage.action.isActive = on;
+  patches['Game.renderActiveSkills'].call({ renderQueue: { activeSkills: true } }, () => {});
+};
+const fireTip = async () => {
+  tipTimers.shift()?.fn();
+  await wait(20);
+};
+check('the long press tip waits a random 2 to 10 minutes after the game loads', tipTimers.length === 1 && tipTimers[0].ms >= 120000 && tipTimers[0].ms <= 600000, tipTimers.map((timer) => timer.ms));
+training(false);
+await fireTip();
+check('if nothing is being trained when it comes up, it waits another random while instead', tips().length === 0 && tipTimers.length === 1 && !stored['long-press-tip-shown']);
+training(true);
+await press(50);
+await fireTip();
+check('nor while the switcher is open', tips().length === 0 && tipTimers.length === 1 && flyoutOpen(), `${tips().length} tips, ${tipTimers.length} timers, open ${flyoutOpen()}, state ${JSON.stringify(switcher._tippy?.state)}`);
+tippy.hideAll();
+await wait(50);
+await fireTip();
+const tip = tips()[0];
+const tipBox = tip?.getBoundingClientRect();
+const switcherBox = switcher.getBoundingClientRect();
+check('with a skill going and the switcher closed, yellow text says Try long pressing instead! just left of the switcher', tip && tip.textContent === 'Try long pressing instead!' && getComputedStyle(tip).color === 'rgb(255, 255, 0)' && Math.abs((tipBox.top + tipBox.bottom) / 2 - (switcherBox.top + switcherBox.bottom) / 2) < 2 && tipBox.right <= switcherBox.left && tipBox.right > switcherBox.left - 12 && tipBox.left >= 0, tip && `${tipBox.left}-${tipBox.right},${tipBox.top} switcher ${switcherBox.left},${switcherBox.top}`);
+check('only once, ever', stored['long-press-tip-shown'] === true && tipTimers.length === 0);
+await press(50);
+check('opening the switcher puts it away', tips().length === 0 && flyoutOpen());
+tippy.hideAll();
+await wait(50);
+
+pageChanges.length = 0;
+await press(700);
+check('holding the switcher goes straight to the skill you are training', pageChanges.length === 1 && pageChanges[0][0] === woodcuttingPage, JSON.stringify(pageChanges.map((change) => change[0].id)));
+check('without opening the switcher', !flyoutOpen());
+await press(50);
+check('a quick tap still opens the switcher', flyoutOpen() && pageChanges.length === 1);
+document.querySelector('.skill-switcher-tile').click();
+await wait(100);
+delete stored['long-press-tip-shown'];
+await press(700);
+check('a long press counts as knowing about it, so the tip will not show', stored['long-press-tip-shown'] === true);
+training(false);
+await press(700);
+check('with nothing being trained, holding it just opens the switcher', flyoutOpen() && pageChanges.length === 3, pageChanges.length);
+document.body.click();
+await wait(50);
+
+const caret = minibar.lastElementChild;
+const boxOf = (element) => element.getBoundingClientRect();
+check('Jump to Top position is a dropdown, above the menu button by default', configs['top-position'].type === 'dropdown' && configs['top-position'].default === 'stack' && JSON.stringify(configs['top-position'].options.map((option) => option.value)) === '["stack","arrow","side"]');
+tippy.hideAll();
+minibar.classList.remove('d-none');
+patches['Minibar.setSkill']();
+await wait(50);
+choose('top-position', 'arrow');
+await wait(50);
+check('above the down arrow, it sits between the switcher and the down arrow in the same column', boxOf(topButton).top >= boxOf(switcher).bottom - 2 && boxOf(topButton).bottom <= boxOf(caret).top + 2 && Math.abs(boxOf(topButton).left - boxOf(caret).left) < 1, `top ${boxOf(topButton).top}-${boxOf(topButton).bottom} switcher ${boxOf(switcher).bottom} arrow ${boxOf(caret).top}`);
+choose('top-position', 'side');
+await wait(50);
+check('to the side, on a skill page it sits right against the left of the down arrow, level with it, the same as the stack', Math.abs(boxOf(topButton).right - boxOf(caret).left) < 1 && Math.abs(boxOf(topButton).top - boxOf(caret).top) < 2 && Math.abs(boxOf(switcher).bottom - boxOf(caret).top) < 2, `top ${boxOf(topButton).left}-${boxOf(topButton).right},${boxOf(topButton).top} arrow ${boxOf(caret).left},${boxOf(caret).top}`);
+check('and can still be tapped', topAt(topButton).closest('.skill-switcher-top') === topButton, `${topAt(topButton).tagName}#${topAt(topButton).id}.${topAt(topButton).className} at ${centerOf(topButton)}`);
+minibar.classList.add('d-none');
+patches['Minibar.setSkill']();
+await wait(50);
+check('off the skill pages, with no down arrow, it sits right against the left of the switcher instead', Math.abs(boxOf(topButton).right - boxOf(switcher).left) < 1 && Math.abs(boxOf(topButton).top - boxOf(switcher).top) < 2, `top ${boxOf(topButton).right},${boxOf(topButton).top} switcher ${boxOf(switcher).left},${boxOf(switcher).top}`);
+choose('top-position', 'arrow');
+await wait(50);
+check('above the down arrow, off the skill pages it sits under the switcher', boxOf(topButton).top >= boxOf(switcher).bottom - 2 && Math.abs(boxOf(topButton).left - boxOf(switcher).left) < 1);
+choose('top-position', 'stack');
+await wait(50);
+check('back to the default, it is above the menu button again', Math.abs(boxOf(topButton).bottom - boxOf(menu).top) < 2 && Math.abs(boxOf(topButton).left - boxOf(menu).left) < 1);
+
+report();
+</script></body></html>
