@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
 import osrs  # noqa: E402
-from catalog import ITEMS, JINGLES, NPCS, QUEST_CAPE, QUEST_ICON, QUEST_START_ICON  # noqa: E402
+from catalog import ITEMS, JINGLES, NPCS, QUEST_ICON, QUEST_START_ICON  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 MOD_DIR = ROOT / "mod"
@@ -18,18 +18,17 @@ CHATHEAD_HEIGHT = 140
 BACKGROUND = (36, 31, 26, 255)
 YELLOW = (255, 255, 0, 255)
 ORANGE = (255, 152, 31, 255)
+LOGO_ICON_SCALE = 18
 
 
 def chathead_titles(names):
     return [f"File:{name} chathead.png" for name in names]
 
 
-def draw_logo(cape, icon):
+def draw_logo(icon):
     logo = Image.new("RGBA", (1280, 720), BACKGROUND)
-    height = 560
-    body = cape.resize((cape.width * height // cape.height, height), Image.NEAREST)
-    logo.alpha_composite(body, (300 - body.width // 2, (720 - height) // 2))
-    logo.alpha_composite(osrs.scaled(icon, 4), (1100, 80))
+    art = osrs.scaled(icon, LOGO_ICON_SCALE)
+    logo.alpha_composite(art, (280 - art.width // 2, (720 - art.height) // 2))
     font = ImageFont.load_default_imagefont()
 
     def text(line, left_edge, y, scale, fill):
@@ -50,7 +49,7 @@ def main():
     wiki = osrs.Wiki(ROOT / "build" / ".cache", USER_AGENT)
     titles = [title for _, names in NPCS.values() for title in chathead_titles(names)]
     titles += [f"File:{title}.png" for _, title, _ in ITEMS.values()]
-    titles += [QUEST_ICON, QUEST_START_ICON, QUEST_CAPE, *JINGLES]
+    titles += [QUEST_ICON, QUEST_START_ICON, *JINGLES]
     found = wiki.urls(titles)
     library = {"npcs": {}, "items": {}, "jingles": []}
     missing = []
@@ -92,7 +91,7 @@ def main():
     osrs.fonts(wiki, MOD_DIR / "fonts", FONTS)
     (MOD_DIR / "library.json").write_text(json.dumps(library, indent=1) + "\n")
     DIST_DIR.mkdir(exist_ok=True)
-    draw_logo(wiki.image(QUEST_CAPE), icon).convert("RGB").save(DIST_DIR / "logo.png", optimize=True)
+    draw_logo(icon).convert("RGB").save(DIST_DIR / "logo.png", optimize=True)
     archive = osrs.package(ROOT, "melvor-osrs-quests.zip")
     print(f"{len(library['npcs'])} talking heads, {len(library['items'])} items, {len(library['jingles'])} jingles; "
           f"missing {missing or 'nothing'}; {archive} ({archive.stat().st_size / 1e3:.0f} KB)")

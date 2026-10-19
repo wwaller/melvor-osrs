@@ -133,9 +133,13 @@ ITEMS = {
     "Cake": ("Cake", "Cake", "A plain sponge cake."),
     "Ashes": ("Ashes", "Ashes", "A heap of ashes."),
     "Clue_scroll_beginner": ("Clue scroll (beginner)", "Clue scroll (beginner)", "A clue!"),
+    "Goblin_mail": ("Goblin mail", "Goblin mail", "Armour designed to fit goblins."),
+    "Garlic": ("Garlic", "Garlic", "A clove of garlic."),
+    "Stake": ("Stake", "Stake", "A very pointy stick."),
+    "Hammer": ("Hammer", "Hammer", "Good for hitting things."),
+    "Anti_dragon_shield": ("Anti-dragon shield", "Anti-dragon shield", "This provides partial protection from dragon-breath attacks."),
 }
 
 QUEST_ICON = "File:Quest point icon.png"
 QUEST_START_ICON = "File:Quest start icon.png"
-QUEST_CAPE = "File:Quest point cape.png"
 JINGLES = ["File:Quest Complete 1.ogg", "File:Quest Complete 2.ogg", "File:Quest Complete 3.ogg"]

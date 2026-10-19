@@ -167,3 +167,83 @@ test('a trigger that throws is logged and does not stop other quests hearing the
   console.error = quiet;
   assert.deepStrictEqual(heard, [5]);
 });
+
+const QUEST_FILES = ['cooks-assistant', 'restless-ghost', 'rune-mysteries', 'dorics-quest', 'imp-catcher', 'vampyre-slayer', 'ernest-the-chicken', 'goblin-diplomacy', 'black-knights-fortress', 'dragon-slayer'];
+const allQuests = await Promise.all(QUEST_FILES.map(async (file) => (await import(`../mod/quests/${file}.mjs`)).quest));
+
+function anyGame() {
+  const game = makeGame();
+  const bank = game.bank.contents;
+  const items = new Map();
+  game.items = { getObjectByID: (id) => (items.has(id) ? items.get(id) : items.set(id, { id, name: id.split(':')[1].replace(/_/g, ' '), media: `${id}.png` }).get(id)) };
+  const skills = new Map();
+  game.skills = { getObjectByID: (id) => (skills.has(id) ? skills.get(id) : skills.set(id, { id, name: id.split(':')[1], level: 99, xp: 0, addXP(amount) { this.xp += amount; } }).get(id)) };
+  game.bank.getQty = (item) => bank.get(item.id) ?? 0;
+  return game;
+}
+
+test('every quest uses talking heads and quest items that the library has', async () => {
+  const { readFileSync } = await import('node:fs');
+  const library = JSON.parse(readFileSync(new URL('../mod/library.json', import.meta.url)));
+  for (const quest of allQuests) {
+    for (const [key, npc] of Object.entries(quest.cast ?? {})) assert.ok(npc.replace('osrsQuests:', '') in library.npcs, `${quest.name}: no talking head for ${key} (${npc})`);
+    const source = readFileSync(new URL(`../mod/quests/${QUEST_FILES[allQuests.indexOf(quest)]}.mjs`, import.meta.url), 'utf8');
+    for (const [, item] of source.matchAll(/'osrsQuests:([A-Z]\w+)'/g)) assert.ok(item in library.items, `${quest.name}: no quest item ${item}`);
+  }
+});
+
+test('every quest registers, and every stage has a journal and talk scripts that compile', () => {
+  const { engine } = makeEngine({ game: anyGame() });
+  for (const id of new Set(allQuests.flatMap((quest) => Object.values(quest.cast ?? {})))) if (!engine.npcs.get(id)) engine.npcs.register({ id, name: id, chathead: `${id.split(':')[1]}.png` });
+  for (const quest of allQuests) engine.quests.register(quest);
+  assert.strictEqual(engine.quests.list().length, allQuests.length);
+  assert.strictEqual(engine.maxQuestPoints(), 22);
+  for (const quest of allQuests) {
+    const q = engine.handle(quest.id);
+    for (const [name, stage] of Object.entries(quest.stages)) {
+      if (name !== 'start') q.setStage(name);
+      const journal = engine.journal(quest.id);
+      assert.ok(journal.lines.length > 0, `${quest.name} ${name}: empty journal`);
+      for (const [cast, script] of Object.entries(stage.talk ?? {})) {
+        assert.ok(engine.npc(cast, quest), `${quest.name} ${name}: ${cast} is not in the cast`);
+        dialog.compile(typeof script === 'function' ? script(q) : script);
+      }
+    }
+  }
+});
+
+test('Cook\'s Assistant: farm drops and a pickpocketed farmer fill the Cook\'s list', async () => {
+  const game = anyGame();
+  const { engine, completed } = makeEngine({ game });
+  const cooks = allQuests.find((quest) => quest.id === 'osrsQuests:cooks_assistant');
+  engine.quests.register(cooks);
+  engine.npcs.register({ id: 'osrsQuests:cook', name: 'Cook', chathead: 'cook.png' });
+  await play(engine.talk(cooks.id, 'cook'), ['What\'s wrong?', 'I\'m always happy to help a cook in distress.']);
+  assert.strictEqual(engine.handle(cooks.id).stage, 'ingredients');
+  await engine.dispatch('monsterKilled', { monster: { id: 'melvorD:Chicken' }, area: { id: 'melvorD:Farmlands' } });
+  await engine.dispatch('monsterKilled', { monster: { id: 'melvorD:Cow' }, area: { id: 'melvorD:Farmlands' } });
+  const waiting = await play(engine.talk(cooks.id, 'cook'), []);
+  assert.ok(waiting.includes('Cook: Please hurry! I still need a pot of flour.'));
+  await engine.dispatch('skillAction', { skill: { id: 'melvorD:Thieving' }, event: { npc: { id: 'melvorF:BOB_THE_FARMER' } } });
+  await play(engine.talk(cooks.id, 'cook'), []);
+  assert.strictEqual(engine.status(cooks.id), COMPLETED);
+  assert.deepStrictEqual(completed.at(-1).summary.lines, ['1 Quest Point', '300 Cooking XP', 'Permission to use the Cook\'s range']);
+});
+
+test('Goblin Diplomacy: the generals turn down orange and blue before settling on brown', async () => {
+  const game = anyGame();
+  const { engine, completed } = makeEngine({ game });
+  const goblins = allQuests.find((quest) => quest.id === 'osrsQuests:goblin_diplomacy');
+  engine.quests.register(goblins);
+  for (const [id, name] of [['general_wartface', 'General Wartface'], ['general_bentnoze', 'General Bentnoze'], ['aggie', 'Aggie']]) engine.npcs.register({ id: `osrsQuests:${id}`, name, chathead: `${id}.png` });
+  await play(engine.talk(goblins.id, 'wartface'), ['Do you want me to pick an armour colour for you?']);
+  for (let kill = 0; kill < 5; kill++) await engine.dispatch('monsterKilled', { monster: { id: 'melvorD:Golbin' }, area: { id: 'melvorD:Goblin_Village' } });
+  assert.strictEqual(game.bank.contents.get('osrsQuests:Goblin_mail'), 3, 'no more than three mail');
+  const early = await play(engine.talk(goblins.id, 'wartface'), ['Not yet.']);
+  assert.ok(!early.some((line) => line.includes('orange armour')), 'orange is hidden until you have the dyes');
+  await play(engine.talk(goblins.id, 'aggie'), []);
+  const shown = await play(engine.talk(goblins.id, 'wartface'), ['I have some orange armour here.', 'I have some blue armour here.', 'I have some brown armour here.']);
+  assert.ok(shown.includes('General Bentnoze: Ooh, brown. That good colour.'));
+  assert.strictEqual(engine.status(goblins.id), COMPLETED);
+  assert.strictEqual(completed.at(-1).quest.id, goblins.id);
+});

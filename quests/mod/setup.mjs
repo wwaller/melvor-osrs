@@ -1,5 +1,8 @@
 const API_VERSION = 1;
-const QUEST_FILES = ['quests/imp-catcher.mjs'];
+const QUEST_FILES = [
+  'quests/cooks-assistant.mjs', 'quests/restless-ghost.mjs', 'quests/rune-mysteries.mjs', 'quests/dorics-quest.mjs', 'quests/imp-catcher.mjs',
+  'quests/vampyre-slayer.mjs', 'quests/ernest-the-chicken.mjs', 'quests/goblin-diplomacy.mjs', 'quests/black-knights-fortress.mjs', 'quests/dragon-slayer.mjs',
+];
 const CORE_FILES = ['core/overhaul.mjs', 'core/dialog.mjs', 'core/registry.mjs', 'core/api.mjs', 'core/fonts.mjs'];
 const SECTION = 'Quests';
 const SIDEBAR_CATEGORY = 'Quests';
@@ -165,7 +168,7 @@ export async function setup(ctx) {
   });
 
   ctx.onInterfaceReady(() => {
-    const category = sidebar.category(SIDEBAR_CATEGORY, { before: 'Modding' });
+    const category = sidebar.category(SIDEBAR_CATEGORY, { before: 'Combat' });
     refreshSidebar = () => category.item(SIDEBAR_ITEM, {
       icon: media('img/quest-point.png'),
       aside: `${engine.questPoints()} QP`,
