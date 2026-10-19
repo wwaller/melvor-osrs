@@ -3,15 +3,18 @@ const MEDIA_PATH = /assets\/media\/[^?#"']+/;
 const ITEM_MEDIA = 'assets/media/bank/';
 const SETTINGS_ICON = 'assets/media/main/settings_header.png';
 const MODDED = 'mod:';
+const API_VERSION = 1;
+const EXTERNAL_URL = /^(blob:|data:|https?:)/;
 
 export async function setup(ctx) {
   const { settings, entries } = await ctx.loadData('mapping.json');
-  const shared = await ctx.loadModule('overhaul.mjs');
+  const [shared, api] = await Promise.all([ctx.loadModule('core/overhaul.mjs'), ctx.loadModule('core/api.mjs')]);
   shared.offerOverhaul(ctx);
   shared.dropOrphanedSongs();
   const sectionOf = new Map(settings.map((s) => [s.name, s.section]));
   const urls = new Map();
   const spriteUrl = (sprite) => {
+    if (EXTERNAL_URL.test(sprite)) return sprite;
     if (!urls.has(sprite)) urls.set(sprite, ctx.getResourceUrl(sprite));
     return urls.get(sprite);
   };
@@ -22,6 +25,7 @@ export async function setup(ctx) {
   let active = new Map();
   let choices = loadChoices(ctx);
   const moddedUrls = new Map();
+  const added = new Map();
 
   const pick = (entry, followCategories) => {
     if (!entry || (followCategories && !entry.t.every(isOn))) return undefined;
@@ -40,6 +44,7 @@ export async function setup(ctx) {
       const sprite = pick(entry, true);
       if (sprite) active.set(media, sprite);
     }
+    for (const [key, url] of added) active.set(key, url);
   };
   const refreshVisible = () => {
     document.querySelectorAll('bank-item-icon').forEach((icon) => {
@@ -175,6 +180,26 @@ export async function setup(ctx) {
     row.querySelector('input').checked = enabled && (choice === undefined ? active.has(pathOf(item._media)) : choice);
     row.querySelector('.osrs-sprites-note').textContent = choice === undefined ? 'Following Mod Settings.' : 'Set for this item only.';
     row.querySelector('a').classList.toggle('d-none', choice === undefined);
+  });
+
+  api.publish(ctx, API_VERSION, {
+    setArt(target, url) {
+      const key = target.includes('/') ? pathOf(target) : MODDED + target;
+      added.set(key, url);
+      onChange();
+      return () => {
+        if (added.get(key) !== url) return;
+        added.delete(key);
+        onChange();
+      };
+    },
+    artFor(object) {
+      if (!enabled || !object) return null;
+      const sprite = object.isModded ? active.get(MODDED + object.id) : spriteFor(object, String(object._media || ''));
+      return sprite ? spriteUrl(sprite) : null;
+    },
+    enabled: () => enabled,
+    refresh: onChange,
   });
 
   console.log(`[OSRS Sprites] ${active.size} of ${Object.keys(entries).length} images replaced`);

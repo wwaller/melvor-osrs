@@ -1,7 +1,9 @@
 import argparse
+import images
 import json
 import re
 import shutil
+import sys
 import zipfile
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -11,6 +13,8 @@ from categories import settings_list, tags_for
 from melvor import PAGE_HEADERS, SKILL_ICONS, Entity, load_entities, melvor_bytes
 from naming import item_candidates, lookup_key, monster_candidates
 from wiki import Wiki
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
+import core  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 BUILD_DIR = ROOT / "build"
@@ -390,6 +394,7 @@ def main():
     icon = MOD_DIR / SPRITE_DIR / "sprite" / "item_Dragon_scimitar.png"
     if icon.exists():
         shutil.copy2(icon, MOD_DIR / "icon.png")
+    core.bundle(ROOT)
     archive = ROOT / "dist" / "melvor-osrs-sprites.zip"
     archive.parent.mkdir(exist_ok=True)
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as bundle:
