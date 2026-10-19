@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { parseRetryAfter, songRetryDelay, trackTitle } from '../mod/setup.mjs';
-import { createHistory as createHistoryFor, modChanges } from '../mod/overhaul.mjs';
+import { createHistory as createHistoryFor, modChanges } from '../../core/overhaul.mjs';
 
 const createHistory = (idb, options) => createHistoryFor(idb, 'osrs-sounds-history', options);
 
@@ -105,6 +105,7 @@ async function boot({ mobile = false, header = false, account = {} } = {}) {
   globalThis.Skill = class Skill { onLevelUp() {} };
   globalThis.PetManager = class PetManager { unlockPet() {} };
   globalThis.Player = class Player { togglePrayer() {} eatFood() {} };
+  globalThis.Character = class Character { attack() {} };
   globalThis.Bank = class Bank { buryItemOnClick() {} };
   globalThis.BaseManager = class BaseManager { onPlayerDeath() {} };
   delete globalThis.game;
@@ -114,6 +115,7 @@ async function boot({ mobile = false, header = false, account = {} } = {}) {
   const characterStored = {};
   const configs = {};
   const sections = [];
+  const published = {};
   const ctx = {
     loadData: async () => audio,
     loadStylesheet() {},
@@ -128,11 +130,12 @@ async function boot({ mobile = false, header = false, account = {} } = {}) {
     onInterfaceReady: (fn) => (hooks.ready = fn),
     onCharacterSelectionLoaded: (fn) => (hooks.select = fn),
     loadModule: (path) => import(`../mod/${path}`),
+    api: (endpoints) => (published.api = endpoints),
   };
   const { setup } = await import(`../mod/setup.mjs?${Math.random()}`);
   await setup(ctx);
   const tick = async () => { intervals.forEach((fn) => fn()); await new Promise((r) => setTimeout(r, 0)); };
-  return { log, listeners, settings, hooks, fetched, patches, tick, topBar, stored, characterStored, toasts, configs, sections };
+  return { log, listeners, settings, hooks, fetched, patches, tick, topBar, stored, characterStored, toasts, configs, sections, api: published.api };
 }
 
 test('failed song downloads back off from 3s, doubling to a 10 minute cap, and a 429 or 503 waits at least its Retry-After', () => {
@@ -557,6 +560,54 @@ test('prayers, eating, attacks, skilling and your death all layer instead of cut
   await tick();
   assert.strictEqual(log.started.length, started + 5, 'all five sounds started');
   assert.strictEqual(log.stopped.length, stopped, 'none of them cut another');
+});
+
+test('an enemy special attack plays its sound once, on its first hit, and the player and normal attacks play none', async () => {
+  const { log, hooks, patches, tick } = await boot();
+  const enemy = { attackCount: 0 };
+  globalThis.game = { activeAction: undefined, skills: [], combat: { player: { on() {} }, enemy, on() {} }, farming: { on() {} }, on() {}, _isInOnlineLoop: true };
+  hooks.character();
+  hooks.ready();
+  await tick();
+  const before = log.started.length;
+  const breath = { id: 'melvorD:LesserDragonbreath' };
+  for (let hit = 1; hit <= 20; hit++) {
+    enemy.attackCount = hit;
+    patches['Character.attack'].call(enemy, 0, {}, breath);
+  }
+  enemy.attackCount = 1;
+  patches['Character.attack'].call(enemy, 0, {}, { id: 'melvorD:Normal' });
+  patches['Character.attack'].call({ attackCount: 1 }, 0, {}, breath);
+  await tick();
+  assert.strictEqual(log.started.length, before + 1, 'one sound for the whole 20-hit breath');
+  assert.match(log.started.at(-1).buffer.url, /dragonslayer_dragonbreath/, 'and it is the OSRS dragon breath');
+});
+
+test('other mods can play sounds and give their own monsters and attacks OSRS sounds', async () => {
+  const { log, hooks, patches, tick, api, settings } = await boot();
+  const enemy = { attackCount: 1 };
+  globalThis.game = { activeAction: undefined, skills: [], combat: { player: { on() {} }, enemy, on() {} }, farming: { on() {} }, on() {}, _isInOnlineLoop: true };
+  hooks.character();
+  hooks.ready();
+  await tick();
+  assert.strictEqual(api.version, 1);
+  assert.ok(api.soundKinds.includes('enemyAttack') && api.categories.includes('combat'));
+  const undo = api.setSound('enemyAttack', 'otherMod:Fireball', 'blob:other/fireball.ogg');
+  const before = log.started.length;
+  patches['Character.attack'].call(enemy, 0, {}, { id: 'otherMod:Fireball' });
+  api.playJingle('https://example.invalid/quest-complete.ogg');
+  await tick();
+  assert.strictEqual(log.started.length, before + 2);
+  settings['Sound effects:combat'] = false;
+  api.playEffect('blob:other/hit.ogg', { category: 'combat' });
+  await tick();
+  assert.strictEqual(log.started.length, before + 2, 'a category the player turned off stays quiet');
+  undo();
+  settings['Sound effects:combat'] = true;
+  patches['Character.attack'].call(enemy, 0, {}, { id: 'otherMod:Fireball' });
+  await tick();
+  assert.strictEqual(log.started.length, before + 2, 'undoing setSound removes it');
+  assert.throws(() => api.setSound('sneeze', 'x', 'y'), /unknown sound kind "sneeze"/);
 });
 
 test('when too many sounds overlap, the oldest is cut to make room', async () => {

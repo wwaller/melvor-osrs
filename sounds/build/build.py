@@ -4,6 +4,7 @@ import json
 import re
 import shutil
 import subprocess
+import sys
 import zipfile
 from pathlib import Path
 
@@ -13,12 +14,14 @@ from melvor import BASE_PACKAGES, EXPANSION_PACKAGES, load_package
 from osrs_cache import Cache
 from synth import render, write_wav
 from wiki import Wiki
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
+import core  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 BUILD_DIR = ROOT / "build"
 MOD_DIR = ROOT / "mod"
 CACHE = BUILD_DIR / ".cache"
-SPRITES_BUILD = Path.home() / "Projects/melvor-osrs-sprites/build"
+SPRITES_BUILD = ROOT.parent / "art" / "build"
 
 SKILL_ACTIONS = {
     "melvorD:Woodcutting": "synth:woodchop",
@@ -92,6 +95,53 @@ WEAPONS = {
     "unarmed": "File:Unarmed attack (punch).wav",
     "staff": "File:Staff attack (stab).wav",
 }
+ENEMY_ATTACK_RULES = [(re.compile(pattern), sound) for pattern, sound in (
+    (r"(poison|toxic|venom).*breath", "synth:toxicbreath"),
+    (r"(ice|frost|freez|cold).*breath", "synth:kingicebreath"),
+    (r"(lightning|thunder|shock).*breath", "synth:lightningbreath"),
+    (r"torrential|stone breath", "synth:dragonslayer_dragonbreath"),
+    (r"breath|dragonfire", "synth:dragonslayer_dragonbreath"),
+    (r"heal|regenerat|restor|mend|rejuvenat|recover", "synth:heal"),
+    (r"summon|call of|reinforce|minion|spawn", "synth:summon_npc"),
+    (r"roar|scream|howl|shriek|screech|bellow|wail|terror|fear|horror|intimidat|cry\b", "synth:cave_horror_howl"),
+    (r"barrier|shield|ward\b|protect|harden|fortif|defen|guard|armou?r|bulwark|aegis|carapace|shell", "synth:steel_skin"),
+    (r"root|vine|grasp|entangl|bind|snare|trap|tendril|web|\bnet\b|grip|clutch", "Entangle"),
+    (r"stun|daze|concuss", "Stun"),
+    (r"curse|hex|jinx|doom|bane", "Curse"),
+    (r"weaken|wither|enfeeble|decay|frail", "Enfeeble"),
+    (r"silence|vulnerab|expose|sunder", "Vulnerability"),
+    (r"blind|gaze|confus|mind|madness|insan|whisper|nightmare|dream|illusion|hypno|eye", "Confuse"),
+    (r"seismic|quake|stomp|tremor", "synth:toa_akka_attack_stomp_01"),
+    (r"(?<!frost)bite|fang|chomp|gnaw|\bmaw|\bjaw", "synth:bite"),
+    (r"claw|scratch|\brake|talon|\brend|maul", WEAPONS["claw"]),
+    (r"whip|\blash|\btail|flail", "synth:whip"),
+    (r"arrow|shot|volley|\bbow|archer|snipe|hunter|huntsman|quiver|marksman", WEAPONS["bow"]),
+    (r"toss|throw|hurl|javelin|dagger|knife|dart|fling|\blob\b", WEAPONS["thrown"]),
+    (r"stab|spike|pierc|impale|spear|thrust|sting|horn|gore|lance|needle|spine|quill|skewer|punctur", WEAPONS["stab"]),
+    (r"\baxe", WEAPONS["axe"]),
+    (r"slash|blade|cleave|lacerat|sever|sword|scimitar|swipe|\bcut|slic|scythe|reap|carve|hack|chop", WEAPONS["slash"]),
+    (r"slam|crush|smash|pound|bash|hammer|club|headbutt|tackle|trample|\bram\b|punch|fist|batter", WEAPONS["crush"]),
+    (r"lightning|thunder|shock|static|electr|spark|volt", "Saradomin Strike"),
+    (r"fireball|meteor", "Fire Blast"),
+    (r"fire|flame|(?<!frost)burn|infern|blaze|lava|magma|scorch|ember|heat|solar|\bsun|pyre|ignit|combust|explo", "Fire Wave"),
+    (r"\bice|frost|freez|frozen|frigid|snow|blizzard|hail|glaci|chill|cold|icicle|winter", "Ice Barrage"),
+    (r"water|wave|tidal|torrent|aqua|tsunami|flood|bubble|splash|\brain|\bsea\b|ocean|drown", "Water Wave"),
+    (r"wind|\bair\b|gust|tornado|feather|cyclone|gale|\bsky|(?<!sand)storm", "Wind Wave"),
+    (r"spore", "synth:zygo_spore_cast_and_fire"),
+    (r"poison|toxic|venom|blight|smog|smoke|mist|\bgas|acid|plague|\brot|miasma|pestil|fung|ooze|sludge|slime|disease", "Smoke Barrage"),
+    (r"blood|drain|siphon|leech|vampir|\blife|feast|devour|bleed|hemo|sangu", "Blood Barrage"),
+    (r"earth|rock|stone|boulder|crystal|shard|sand|\bmud|dust|petrif|pebble|avalanche|landslide|\bgem", "Earth Wave"),
+    (r"shadow|dark|void|abyss|eldritch|hollow|phantom|ghost|spirit|soul|death|necro|undead|grave|night|umbra|wraith|spectr|corrupt", "Shadow Barrage"),
+    (r"holy|divine|\blight\b|radiant|celestial|angel|smite|judg|sacred|bless|purif", "Saradomin Strike"),
+    (r"\bbolt", WEAPONS["crossbow"]),
+    (r"strike|\bhit|charge|impact|break|blow|knock", WEAPONS["crush"]),
+    (r"beam|pulse|blast|burst|power|\borb|missile|\bray\b|arcane|magic|mana|energy|surge|nova", "Iban Blast"),
+)]
+ENEMY_ATTACK_EFFECTS = [(re.compile(pattern), sound) for pattern, sound in (
+    (r"burn", "Fire Wave"), (r"poison|venom", "Smoke Barrage"), (r"frost|freez|frozen", "Ice Barrage"), (r"stun", "Stun"),
+    (r"bleed", "Blood Barrage"), (r"sleep", "Confuse"), (r"slow", "Bind"), (r"curse", "Curse"), (r"silence", "Vulnerability"),
+)]
+ENEMY_ATTACK_STYLES = {"melee": WEAPONS["slash"], "ranged": WEAPONS["bow"], "magic": "Iban Blast"}
 SPELL_SOUNDS = {
     "melvorTotH:PoisonPods": "File:Smoke Burst.ogg",
     "melvorTotH:GiantFireball": "File:Fire Surge.ogg",
@@ -130,7 +180,7 @@ ABYSSAL_SPELL_TIERS = {
 }
 SPELL_TIERS = ("Blast", "Wave", "Surge", "Eruption")
 NUMERAL = re.compile(r"\s+(I|II|III|IV|V)$")
-SFX_GROUPS = ("spells", "monsters", "skills", "categories", "prayers", "levelUps", "levelUpsHigh", "weapons")
+SFX_GROUPS = ("spells", "monsters", "skills", "categories", "prayers", "levelUps", "levelUpsHigh", "weapons", "enemyAttacks")
 SINGLE_SOUNDS = ("levelUpFallback", "pet", *EVENT_SOUNDS)
 SFX_BITRATE = "48k"
 DEATH_SUFFIXES = [" death", " death 01", " death01"]
@@ -186,10 +236,21 @@ def find_sound(available, names, suffixes):
     return None
 
 
+def enemy_attack_sound(available, attack, style):
+    words = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", attack["id"])
+    text = f"{attack.get('name', '')} {words}".lower()
+    effects = " ".join(effect.get("effectID", "") for effect in attack.get("prehitEffects", []) + attack.get("onhitEffects", [])).lower()
+    sound = next((sound for pattern, sound in ENEMY_ATTACK_RULES if pattern.search(text)), None)
+    sound = sound or next((sound for pattern, sound in ENEMY_ATTACK_EFFECTS if pattern.search(effects)), None)
+    sound = sound or ENEMY_ATTACK_STYLES.get(style, ENEMY_ATTACK_STYLES["melee"])
+    return sound if sound.startswith(("synth:", "File:")) else find_sound(available, [sound], [""])
+
+
 def sfx_plan():
     available = sfx_titles()
     names = synth_names(Wiki(CACHE))
     spells, monsters, prayers, spell_stems, unmatched_spells = {}, {}, {}, {}, []
+    attacks, attack_styles = {}, {}
     spell_picks, monster_picks = sprite_picks("spell"), sprite_picks("monster")
     for package in BASE_PACKAGES + EXPANSION_PACKAGES:
         document = load_package(package, CACHE)
@@ -218,7 +279,10 @@ def sfx_plan():
         for prayer in data.get("prayers", []):
             if prayer["name"] in PRAYER_SOUNDS:
                 prayers[f"{ns}:{prayer['id']}"] = f"synth:{PRAYER_SOUNDS[prayer['name']]}"
+        attacks.update({f"{ns}:{attack['id']}": attack for attack in data.get("attacks", [])})
         for monster in data.get("monsters", []):
+            for attack_id in monster.get("specialAttacks", []):
+                attack_styles.setdefault(attack_id, monster.get("attackType", "melee"))
             melvor_id = f"{ns}:{monster['id']}"
             candidates = [n for n in (monster["name"].strip(), monster_picks.get(melvor_id)) if n]
             words = list(reversed(re.split(r"[\s,]+", monster["name"].strip())))
@@ -229,6 +293,7 @@ def sfx_plan():
     for melvor_id, stem in unmatched_spells:
         if stem in spell_stems:
             spells[melvor_id] = spell_stems[stem]
+    enemy_attacks = {attack_id: enemy_attack_sound(available, attacks[attack_id], style) for attack_id, style in attack_styles.items() if attack_id in attacks}
     level_ups, level_ups_high = {}, {}
     for skill_id, osrs_skill in LEVEL_UP_SKILLS.items():
         if osrs_skill in LEVEL_UP_BANDED:
@@ -239,7 +304,7 @@ def sfx_plan():
     return {
         "spells": spells, "monsters": monsters, "skills": SKILL_ACTIONS, "categories": RECIPE_CATEGORY_ACTIONS, "prayers": prayers,
         "levelUps": level_ups, "levelUpsHigh": level_ups_high, "levelUpFallback": LEVEL_UP_FALLBACK, "pet": PET_UNLOCK,
-        "weapons": WEAPONS, **EVENT_SOUNDS,
+        "weapons": WEAPONS, "enemyAttacks": enemy_attacks, **EVENT_SOUNDS,
     }
 
 
@@ -348,6 +413,8 @@ def main():
     (MOD_DIR / "audio.json").write_text(json.dumps(audio, indent=1) + "\n")
     icon = Image.open(io.BytesIO(wiki.download(wiki.image_info(["File:Music.png"])["File:Music.png"]["url"]))).convert("RGBA")
     square(icon.resize((icon.width * 2, icon.height * 2), Image.NEAREST)).save(MOD_DIR / "icon.png")
+
+    core.bundle(ROOT)
 
     archive = ROOT / "dist" / "melvor-osrs-sounds.zip"
     archive.parent.mkdir(exist_ok=True)

@@ -2,6 +2,9 @@ const CHECK_MS = 1000;
 const IDLE_SUSPEND_MS = 5000;
 const FADE_MS = 1500;
 const MAX_SFX = 8;
+const API_VERSION = 1;
+const EXTERNAL_URL = /^(blob:|data:|https?:)/;
+const SOUND_KINDS = { monsterDeath: 'monsters', enemyAttack: 'enemyAttacks', spell: 'spells', skill: 'skills', recipeCategory: 'categories', prayer: 'prayers' };
 const MAX_DECODES = 4;
 const FADE_OUT_MS = 60;
 const DEBUG_LOG_SIZE = 200;
@@ -72,7 +75,7 @@ const WEAPON_PATTERNS = [
 export async function setup(ctx) {
   ctx.loadStylesheet('style.css');
   const audio = await ctx.loadData('audio.json');
-  const shared = await ctx.loadModule('overhaul.mjs');
+  const [shared, api] = await Promise.all([ctx.loadModule('core/overhaul.mjs'), ctx.loadModule('core/api.mjs')]);
   shared.offerOverhaul(ctx);
   const music = ctx.settings.section('Music');
   const effects = ctx.settings.section('Sound effects');
@@ -123,7 +126,7 @@ export async function setup(ctx) {
     { type: 'switch', name: 'effects-enabled', label: 'Play OSRS sound effects', hint: 'Nothing plays during offline progress.', default: true },
     { type: 'number', name: 'effects-volume', label: 'Sound effect volume', hint: '0 to 100', default: 40, min: 0, max: 100, onChange: later(applyVolume) },
     { type: 'switch', name: 'levelups', label: 'Level-up jingles', hint: 'Music dips while the jingle plays.', default: true },
-    { type: 'switch', name: 'combat', label: 'Weapon sounds', hint: 'One sound per attack, matched to your weapon type.', default: true },
+    { type: 'switch', name: 'combat', label: 'Attack sounds', hint: 'One sound per attack, matched to your weapon type, and one for each enemy special attack.', default: true },
     { type: 'switch', name: 'spells', label: 'Spell sounds', hint: 'Combat spells and Alt. Magic.', default: true },
     { type: 'switch', name: 'deaths', label: 'Death sounds', hint: 'The "You Are Dead!" jingle, and monster deaths that have an OSRS sound.', default: true },
     { type: 'switch', name: 'skilling', label: 'Skilling sounds', hint: 'The sound OSRS plays for each action, like the axe chop, the anvil or the furnace.', default: true },
@@ -1517,7 +1520,7 @@ export async function setup(ctx) {
   function loadBuffer(path) {
     if (!buffers.has(path)) {
       bufferStatus.set(path, 'loading');
-      buffers.set(path, whenDecoderFree(() => fetch(ctx.getResourceUrl(path))
+      buffers.set(path, whenDecoderFree(() => fetch(EXTERNAL_URL.test(path) ? path : ctx.getResourceUrl(path))
         .then(checkedBytes)
         .then((data) => engine.decodeAudioData(data)))
         .then((buffer) => {
@@ -1547,7 +1550,8 @@ export async function setup(ctx) {
   function playEffect(path, category, channel = category, onEnded = null) {
     if (!path) return skipEffect('no OSRS sound for it');
     if (!ready) return skipEffect('game still loading');
-    if (!effects.get('effects-enabled') || !effects.get(category)) return skipEffect(`${category} turned off`);
+    if (!effects.get('effects-enabled')) return skipEffect('effects turned off');
+    if (category && !effects.get(category)) return skipEffect(`${category} turned off`);
     if (typeof game === 'undefined' || !game._isInOnlineLoop) return skipEffect('offline progress');
     wake();
     loadBuffer(path).then((buffer) => {
@@ -1669,6 +1673,29 @@ export async function setup(ctx) {
     return result;
   });
 
+  api.publish(ctx, API_VERSION, {
+    playEffect: (url, { category = null, channel = 'api' } = {}) => playEffect(url, category, channel),
+    playJingle: (url, { category = null } = {}) => playJingle(url, category),
+    setSound(kind, id, url) {
+      const group = SOUND_KINDS[kind];
+      if (!group) throw new TypeError(`osrsSounds: unknown sound kind "${kind}", expected one of ${Object.keys(SOUND_KINDS).join(', ')}`);
+      audio.sfx[group] ??= {};
+      const previous = audio.sfx[group][id];
+      audio.sfx[group][id] = url;
+      return () => {
+        if (audio.sfx[group][id] !== url) return;
+        if (previous === undefined) delete audio.sfx[group][id];
+        else audio.sfx[group][id] = previous;
+      };
+    },
+    soundKinds: Object.keys(SOUND_KINDS),
+    categories: effectsSettings.filter((setting) => setting.type === 'switch' && setting.name !== 'effects-enabled').map((setting) => setting.name),
+  });
+
+  ctx.patch(Character, 'attack').after(function (_result, _target, attack) {
+    const sound = audio.sfx.enemyAttacks?.[attack.id];
+    if (sound && this === game.combat.enemy && this.attackCount === 1) playEffect(sound, 'combat', 'enemyAttack');
+  });
   ctx.patch(BaseManager, 'onPlayerDeath').after(() => {
     if (isOffline()) missed.death = true;
     else playJingle(audio.sfx.playerDeath, 'deaths');
