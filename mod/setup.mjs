@@ -1,10 +1,17 @@
 const SECTION = 'Character Preview';
 const SPRITES_NAMESPACE = 'osrsSprites';
+const OSRS_ART_NAMESPACES = new Set([SPRITES_NAMESPACE, 'osrsRandomEvents']);
 const CANVAS_HEIGHT = 320;
 const DEFAULT_YAW = 128;
 const STAGE_YAW = 1664;
 const STAGE_HEIGHT = 260;
 const OVERHEAD_ROOM = 30;
+const MONSTER_SCALES = { XS: 0.4, S: 0.7, M: 1, L: 1.6, XL: 2.4 };
+const MONSTER_TOP_ROOM = 8;
+const MONSTER_SIDE_ROOM = 8;
+const SIZED_CLASS = 'osrs-character-sized';
+const ART_ALPHA = 8;
+const FULL_ART = { top: 0, bottom: 1, left: 0, right: 1 };
 const OVERHEAD_PRAYERS = ['Protect_from_Melee', 'Protect_from_Ranged', 'Protect_from_Magic', 'Redemption', 'Retribution'];
 const SHADOW_WIDTH = 90;
 const DRAG_TURN = 4;
@@ -59,9 +66,12 @@ const MELEE_WEAPON_POSES = [[/2h|godsword/i, 407], [/dagger/i, 376], [/axe/i, 39
 
 export async function setup(ctx) {
   const { createRenderer, litPlayer, poseFrame, DEFAULT_COLORS, BODY_COLOR_COUNTS, STAND_POSE } = await ctx.loadModule('character.mjs');
-  (await ctx.loadModule('overhaul.mjs')).offerOverhaul(ctx);
+  const shared = await ctx.loadModule('overhaul.mjs');
+  shared.offerOverhaul(ctx);
+  shared.dropOrphanedSongs();
   ctx.loadStylesheet('style.css');
-  const [index, base] = await Promise.all([ctx.loadData('data/index.json'), ctx.loadData('data/base.json')]);
+  const [index, base, sizes] = await Promise.all([ctx.loadData('data/index.json'), ctx.loadData('data/base.json'), ctx.loadData('sizes.json')]);
+  const monsterSizes = new Map(Object.entries(sizes).flatMap(([size, ids]) => ids.map((id) => [id, size])));
   const itemFiles = new Map();
   const loadItem = (osrsId) => {
     if (!itemFiles.has(osrsId)) itemFiles.set(osrsId, ctx.loadData(`data/items/${osrsId}.json`).catch(() => null));
@@ -183,6 +193,14 @@ export async function setup(ctx) {
         rebuild();
       }),
     },
+    {
+      type: 'switch',
+      name: 'sizes',
+      label: 'Monsters at their size',
+      hint: 'In the combat view, each monster stands at its size next to your character: a Chicken comes up to your knee and a dragon towers over you, shrinking your character to fit. Off, the monster fills its half of the view as usual.',
+      default: true,
+      onChange: () => setTimeout(queuePaint),
+    },
   ]);
   const shownIn = (place) => ctx.settings.section(SECTION).get(place) !== false;
   const stageOn = () => shownIn('combat') && game.combat?.isActive === true;
@@ -197,7 +215,7 @@ export async function setup(ctx) {
   const showsOsrsArt = (item) => {
     if (!spritesLoaded) return true;
     try {
-      return mod.getContext({ url: item.media.split('#', 1)[0] }).namespace === SPRITES_NAMESPACE;
+      return OSRS_ART_NAMESPACES.has(mod.getContext({ url: item.media.split('#', 1)[0] }).namespace);
     } catch {
       return false;
     }
@@ -274,7 +292,7 @@ export async function setup(ctx) {
       const height = Math.round(view.height * ratio);
       if (view.canvas.width !== width) view.canvas.width = width;
       if (view.canvas.height !== height) view.canvas.height = height;
-      const { ground, origin, scale, tilt, top, head } = view.renderer.draw(posed, { yaw: view.yaw(), headroom: (view.headroom ?? 0) * ratio, reference });
+      const { ground, origin, scale, tilt, top, head } = view.renderer.draw(posed, { yaw: view.yaw(), headroom: (view.headroom ?? 0) * ratio, shrink: view.shrink ?? 1, reference });
       const pixels = (value) => `${Math.round(value / ratio)}px`;
       setStyleVariables(view.canvas.parentElement, {
         '--osrs-character-ground': pixels(view.canvas.height - ground),
@@ -285,6 +303,55 @@ export async function setup(ctx) {
         '--osrs-character-crown': pixels(head.y),
         '--osrs-character-crown-x': `${Math.round(view.canvas.offsetLeft + head.x / ratio)}px`,
       });
+      if (view.canvas === stageCanvas) sizeEnemy(view, ground, head, ratio);
+    }
+  };
+  const artBoxes = new Map();
+  const artBox = (src) => {
+    if (!artBoxes.has(src)) {
+      artBoxes.set(src, null);
+      const probe = new Image();
+      probe.crossOrigin = 'anonymous';
+      probe.onload = () => {
+        artBoxes.set(src, measureArt(probe));
+        queuePaint();
+      };
+      probe.onerror = () => artBoxes.set(src, FULL_ART);
+      probe.src = src;
+    }
+    return artBoxes.get(src);
+  };
+  const sizeEnemy = (view, ground, head, ratio) => {
+    const stage = view.canvas.parentElement;
+    const holder = document.getElementById('combat-enemy-img');
+    const image = holder?.querySelector('img');
+    const on = ctx.settings.section(SECTION).get('sizes') !== false && image?.naturalHeight > 0;
+    stage.classList.toggle(SIZED_CLASS, on);
+    if (!on) {
+      if (view.shrink !== undefined && view.shrink !== 1) {
+        view.shrink = 1;
+        queuePaint();
+      }
+      return;
+    }
+    const box = artBox(image.src) ?? FULL_ART;
+    const groundGap = (view.canvas.height - ground) / ratio;
+    const character = (ground - head.y) / ratio / (view.shrink ?? 1);
+    const monster = game.combat.enemy?.monster ?? game.combat.selectedMonster;
+    const size = monsterSizes.get(monster?.id) ?? 'M';
+    const wanted = character * MONSTER_SCALES[phone && size === 'XL' ? 'L' : size];
+    const share = box.bottom - box.top;
+    const widthPerHeight = ((box.right - box.left) * image.naturalWidth) / (share * image.naturalHeight);
+    const shrink = Math.min(1, (view.height - groundGap - MONSTER_TOP_ROOM) / wanted, (holder.clientWidth - MONSTER_SIDE_ROOM) / (wanted * widthPerHeight));
+    const imageHeight = (wanted * shrink) / share;
+    setStyleVariables(stage, {
+      '--osrs-enemy-height': `${imageHeight.toFixed(1)}px`,
+      '--osrs-enemy-bottom': `${(groundGap - (1 - box.bottom) * imageHeight).toFixed(1)}px`,
+      '--osrs-enemy-shift': `${(-50 * (box.left + box.right)).toFixed(2)}%`,
+    });
+    if (Math.abs(shrink - (view.shrink ?? 1)) > 0.005) {
+      view.shrink = shrink;
+      queuePaint();
     }
   };
   const queuePaint = () => {
@@ -563,6 +630,31 @@ function blockSidebarSwipe(blocked) {
 function onPhone() {
   if (typeof nativeManager !== 'undefined' && nativeManager.isMobile) return true;
   return typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+}
+
+function measureArt(image) {
+  const canvas = document.createElement('canvas');
+  const width = (canvas.width = image.naturalWidth);
+  const height = (canvas.height = image.naturalHeight);
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  context.drawImage(image, 0, 0);
+  let pixels;
+  try {
+    pixels = context.getImageData(0, 0, width, height).data;
+  } catch {
+    return FULL_ART;
+  }
+  let minX = width, minY = height, maxX = -1, maxY = -1;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (pixels[(y * width + x) * 4 + 3] <= ART_ALPHA) continue;
+      minX = Math.min(minX, x);
+      maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y);
+      maxY = Math.max(maxY, y);
+    }
+  }
+  return maxX < 0 ? FULL_ART : { top: minY / height, bottom: (maxY + 1) / height, left: minX / width, right: (maxX + 1) / width };
 }
 
 function setStyleVariables(element, variables) {

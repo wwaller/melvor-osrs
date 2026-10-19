@@ -447,7 +447,7 @@ export function createRenderer(canvas, { antialias = true } = {}) {
 
   return {
     // yaw and pitch are in OSRS angle units (2048 per turn).
-    draw(model, { yaw = 0, pitch = 96, padding = 0.06, headroom = 0, reference = null } = {}) {
+    draw(model, { yaw = 0, pitch = 96, padding = 0.06, headroom = 0, shrink = 1, reference = null } = {}) {
       const vertexCount = model.vx.length;
       const screenX = new Float64Array(vertexCount), screenY = new Float64Array(vertexCount), depth = new Int32Array(vertexCount);
       const yawSin = SINE[yaw & 2047], yawCos = COSINE[yaw & 2047], pitchSin = SINE[pitch & 2047], pitchCos = COSINE[pitch & 2047];
@@ -482,8 +482,10 @@ export function createRenderer(canvas, { antialias = true } = {}) {
       const head = headPoint(reference ?? model, yawSin, yawCos, pitchSin, pitchCos) ?? { x: 0, y: minY };
       if (reference) ({ minX, maxX, minY, maxY } = cylinderBounds(reference, pitchSin, pitchCos));
       const width = canvas.width, height = canvas.height;
-      const fit = Math.min((width * (1 - 2 * padding)) / (maxX - minX), (height * (1 - 2 * padding) - headroom) / (maxY - minY));
-      const offsetX = width / 2 - ((minX + maxX) / 2) * fit, offsetY = (height + headroom) / 2 - ((minY + maxY) / 2) * fit;
+      const full = Math.min((width * (1 - 2 * padding)) / (maxX - minX), (height * (1 - 2 * padding) - headroom) / (maxY - minY));
+      const fit = full * shrink;
+      const offsetX = width / 2 - ((minX + maxX) / 2) * fit;
+      const offsetY = (height + headroom) / 2 - ((minY + maxY) / 2) * full + lowest * (full - fit);
       const order = drawOrder(model, depth, radius, visible);
       const vertices = new Float32Array(order.length * 3 * 4);
       let at = 0;

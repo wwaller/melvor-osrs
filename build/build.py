@@ -80,6 +80,17 @@ WORN_STAND_INS = {
     "melvorF:Book_Of_Scholars": "Mage's book",
     "melvorAoD:Torch": "Bruma torch (off-hand)",
 }
+# Costume pieces the OSRS Random Events mod registers; Melvor keeps a mod item's media as this mod-relative path.
+RANDOM_EVENT_ITEMS = {
+    "img/costume/frog-mask.png": "Frog mask",
+    "img/costume/royal-frog-tunic.png": "Royal frog tunic",
+    "img/costume/royal-frog-leggings.png": "Royal frog leggings",
+    "img/costume/royal-frog-blouse.png": "Royal frog blouse",
+    "img/costume/royal-frog-skirt.png": "Royal frog skirt",
+    "img/costume/camo-top.png": "Camo top",
+    "img/costume/camo-helmet.png": "Camo helmet",
+    "img/costume/camo-bottoms.png": "Camo bottoms",
+}
 MELVOR_SLOTS = {"Helmet": 0, "Cape": 1, "Amulet": 2, "Weapon": 3, "Platebody": 4, "Shield": 5, "Platelegs": 7, "Gloves": 9, "Boots": 10}
 
 
@@ -185,6 +196,16 @@ def match(equipment, sprite_entries, by_slug, by_id):
     return matches
 
 
+def random_event_items(by_slug):
+    found = {}
+    for media, name in RANDOM_EVENT_ITEMS.items():
+        candidates = by_slug.get(slug(name))
+        if not candidates:
+            raise SystemExit(f"random event item {name!r} is not wearable")
+        found[media] = candidates[0]
+    return found
+
+
 def worn_parts(osrs_id, definition):
     # Drops parts the Melvor icon omits (Desert disguise beard) and recolours the Bruma torch flame.
     if osrs_id in WORN_RECOLORS:
@@ -282,6 +303,7 @@ def main():
     equipment = load_equipment(CACHE)
     by_slug, by_id = worn_items(cache)
     matches = match(equipment, json.loads(args.sprites_mapping.read_text())["entries"], by_slug, by_id)
+    events = random_event_items(by_slug)
     shutil.rmtree(DATA_DIR, ignore_errors=True)
     model_cache = {}
     base = base_file(cache, model_cache)
@@ -290,10 +312,10 @@ def main():
     hand_items = {value - HAND_ITEM_OFFSET for p in base["poses"].values() for value in (p["left"], p["right"]) if value >= HAND_ITEM_OFFSET}
     for osrs_id in sorted(hand_items):
         write_json(DATA_DIR / "items" / f"{osrs_id}.json", item_file(cache, osrs_defs.item(all_items[osrs_id]), model_cache))
-    for osrs_id in sorted(set(matches.values())):
+    for osrs_id in sorted(set(matches.values()) | set(events.values())):
         write_json(DATA_DIR / "items" / f"{osrs_id}.json", item_file(cache, worn_parts(osrs_id, by_id[osrs_id]), model_cache))
     custom = custom_skillcapes(cache)
-    index = {e.media: matches[e.id] for e in equipment if e.id in matches} | {e.media: custom[e.id] for e in equipment if e.id in custom}
+    index = {e.media: matches[e.id] for e in equipment if e.id in matches} | {e.media: custom[e.id] for e in equipment if e.id in custom} | events
     write_json(DATA_DIR / "index.json", dict(sorted(index.items())))
     write_report(equipment, matches, by_id, custom)
     icon = wiki_image(ICON)
