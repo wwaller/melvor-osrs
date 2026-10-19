@@ -38,17 +38,23 @@ class Wiki:
         found = {}
         titles = sorted(set(titles))
         for start in range(0, len(titles), TITLES_PER_QUERY):
-            batch = titles[start:start + TITLES_PER_QUERY]
-            query = urllib.parse.urlencode({"action": "query", "titles": "|".join(batch), "prop": "imageinfo", "iiprop": "url",
-                                            "redirects": "1", "format": "json", "formatversion": "2"})
-            result = json.loads(self.fetch(f"{API_URL}?{query}"))["query"]
-            aliases = {entry["to"]: entry["from"] for key in ("normalized", "redirects") for entry in result.get(key, [])}
-            for page in result.get("pages", []):
-                if page.get("imageinfo"):
-                    title = page["title"]
-                    while title in aliases:
-                        title = aliases[title]
-                    found[title] = page["imageinfo"][0]["url"]
+            params = {"action": "query", "titles": "|".join(titles[start:start + TITLES_PER_QUERY]), "prop": "imageinfo", "iiprop": "url",
+                      "redirects": "1", "format": "json", "formatversion": "2"}
+            while True:
+                response = json.loads(self.fetch(f"{API_URL}?{urllib.parse.urlencode(params)}"))
+                result = response["query"]
+                aliases = {entry["to"]: entry["from"] for key in ("normalized", "redirects") for entry in result.get(key, [])}
+                for page in result.get("pages", []):
+                    if page.get("imageinfo"):
+                        title = page["title"]
+                        while title in aliases:
+                            title = aliases[title]
+                        found.setdefault(title, page["imageinfo"][0]["url"])
+                # "iicontinue" means the batch's remaining files come in another part; any other "continue" only pages through older file versions.
+                # Its parameters go first so the cache name, cut at 200 characters, still tells the parts apart.
+                if "iicontinue" not in response.get("continue", {}):
+                    break
+                params = {**response["continue"], **{key: value for key, value in params.items() if key not in response["continue"]}}
         return found
 
     def file(self, title):
