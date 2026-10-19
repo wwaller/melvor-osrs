@@ -1,0 +1,1109 @@
+{
+  "item": {
+    "melvorD:Chicken": "Cooked chicken",
+    "melvorD:Chicken_Perfect": "Cooked chicken",
+    "melvorD:Beef": "Cooked meat",
+    "melvorD:Beef_Perfect": "Cooked meat",
+    "melvorD:Bird_Nest": "File:Bird nest (empty).png",
+    "melvorD:Ancient_Shield": "Ancient kiteshield",
+    "melvorD:Rangers_Hat": "Robin hood hat",
+    "melvorAoD:Crystal_Ball": "File:Crystal ball (Aris).png",
+    "melvorAoD:Crystal": "File:Crystal shard.png",
+    "melvorTotH:Mushrooms": "Mushroom",
+    "melvorD:Ancient_Shield_T_G": "Ancient kiteshield",
+    "melvorD:Ancient_Shield_T_S": "Ancient kiteshield",
+    "melvorD:Lemonade": "Fruit blast",
+    "melvorD:Gingerbread_House": "Bird house",
+    "melvorF:Summoning_Familiar_Octopus": {
+      "tablet": "File:Pet Kraken.png"
+    },
+    "melvorAoD:Bell": null,
+    "melvorF:Summoning_Familiar_Bear": {
+      "tablet": "File:Callisto cub.png"
+    },
+    "melvorF:Summoning_Familiar_Centaur": {
+      "tablet": "File:Centaur (male).png"
+    },
+    "melvorF:Summoning_Familiar_Crow": {
+      "tablet": "File:Crow.png"
+    },
+    "melvorF:Summoning_Familiar_Cyclops": {
+      "tablet": "File:Cyclops.png"
+    },
+    "melvorF:Summoning_Familiar_Devil": {
+      "tablet": "File:Lesser demon.png"
+    },
+    "melvorF:Summoning_Familiar_Dragon": {
+      "tablet": "File:Prince Black Dragon.png"
+    },
+    "melvorF:Summoning_Familiar_Ent": {
+      "tablet": "File:Ent (lv 86).png"
+    },
+    "melvorF:Summoning_Familiar_Golbin_Thief": {
+      "tablet": "File:Goblin.png"
+    },
+    "melvorF:Summoning_Familiar_Leprechaun": {
+      "tablet": "File:Tool Leprechaun.png"
+    },
+    "melvorF:Summoning_Familiar_Minotaur": {
+      "tablet": "File:Minotaur.png"
+    },
+    "melvorF:Summoning_Familiar_Mole": {
+      "tablet": "File:Baby Mole.png"
+    },
+    "melvorF:Summoning_Familiar_Monkey": {
+      "tablet": "File:Monkey (Monkey Madness I).png"
+    },
+    "melvorF:Summoning_Familiar_Occultist": {
+      "tablet": "File:Cultist.png"
+    },
+    "melvorF:Summoning_Familiar_Pig": {
+      "tablet": "File:Pig.png"
+    },
+    "melvorF:Summoning_Familiar_Salamander": {
+      "tablet": "File:Orange salamander.png"
+    },
+    "melvorF:Summoning_Familiar_Unicorn": {
+      "tablet": "File:Unicorn.png"
+    },
+    "melvorF:Summoning_Familiar_Witch": {
+      "tablet": "File:Witch (historical).png"
+    },
+    "melvorF:Summoning_Familiar_Wolf": {
+      "tablet": "File:Wolf.png"
+    },
+    "melvorF:Summoning_Familiar_Yak": {
+      "tablet": "File:Yak.png"
+    },
+    "melvorF:Thievers_Cape": "Black cape",
+    "melvorD:Signet_Ring_Half_A": null,
+    "melvorD:Signet_Ring_Half_B": null,
+    "melvorF:Necromancer_Hat": "File:Ghostly hood.png",
+    "melvorF:Necromancer_Robes": "File:Ghostly robe (top).png",
+    "melvorF:Necromancer_Bottoms": "File:Ghostly robe (bottom).png",
+    "melvorF:Necromancer_Boots": "File:Ghostly boots.png",
+    "melvorTotH:Slayer_Torch": "Lit torch",
+    "melvorTotH:Mystic_Lantern": "File:Oil lantern (lit).png",
+    "melvorTotH:Magma_Fish": "Infernal eel",
+    "melvorTotH:Static_Jellyfish": "File:Jellyfish.png",
+    "melvorTotH:Slayer_Upgrade_Kit_Legendary": {
+      "base": "File:Lava staff upgrade kit.png",
+      "recolor": {
+        "color": "#303036"
+      }
+    },
+    "melvorTotH:Slayer_Upgrade_Kit_Mythical": {
+      "base": "File:Lava staff upgrade kit.png",
+      "recolor": {
+        "color": "#2f48c8"
+      }
+    },
+    "melvorF:Summoning_Skillcape": {
+      "cape": "File:Agility cape.png",
+      "emblem": "asset:summoning_icon_2008.png",
+      "color": "#404850"
+    },
+    "melvorF:Astrology_Skillcape": {
+      "cape": "File:Agility cape.png",
+      "emblem": "asset:astrology_icon.png",
+      "color": "#78b8e8"
+    },
+    "melvorF:Township_Skillcape": "File:Construct. cape.png",
+    "melvorAoD:Cartography_Skillcape": "File:Sailing cape.png",
+    "melvorAoD:Archaeology_Skillcape": {
+      "cape": "File:Agility cape.png",
+      "emblem": "asset:archaeology_icon_rs3.png",
+      "color": "#404040"
+    },
+    "melvorAoD:Aranite_Trowel": {
+      "base": "File:Trowel.png",
+      "recolor": {
+        "color": "#b86850",
+        "greys": true
+      }
+    },
+    "melvorAoD:Aranite_Brush": {
+      "base": "File:Specimen brush.png",
+      "recolor": {
+        "color": "#b86850",
+        "greys": true
+      }
+    },
+    "melvorAoD:Aranite_Shovel": {
+      "base": "File:Spade.png",
+      "recolor": {
+        "color": "#b86850",
+        "greys": true
+      }
+    },
+    "melvorAoD:Aranite_Sieve": {
+      "base": "File:Panning tray.png",
+      "recolor": {
+        "color": "#b86850",
+        "greys": true
+      }
+    },
+    "melvorAoD:Ancient_Trowel": {
+      "base": "File:Trowel.png",
+      "recolor": {
+        "color": "#b0b890",
+        "greys": true
+      }
+    },
+    "melvorAoD:Ancient_Brush": {
+      "base": "File:Specimen brush.png",
+      "recolor": {
+        "color": "#b0b890",
+        "greys": true
+      }
+    },
+    "melvorAoD:Ancient_Shovel": {
+      "base": "File:Spade.png",
+      "recolor": {
+        "color": "#b0b890",
+        "greys": true
+      }
+    },
+    "melvorAoD:Ancient_Sieve": {
+      "base": "File:Panning tray.png",
+      "recolor": {
+        "color": "#b0b890",
+        "greys": true
+      }
+    },
+    "melvorAoD:Relic_Trowel": {
+      "base": "File:Trowel.png",
+      "recolor": {
+        "color": "#604860",
+        "greys": true
+      }
+    },
+    "melvorAoD:Relic_Brush": {
+      "base": "File:Specimen brush.png",
+      "recolor": {
+        "color": "#604860",
+        "greys": true
+      }
+    },
+    "melvorAoD:Relic_Shovel": {
+      "base": "File:Spade.png",
+      "recolor": {
+        "color": "#604860",
+        "greys": true
+      }
+    },
+    "melvorAoD:Relic_Sieve": {
+      "base": "File:Panning tray.png",
+      "recolor": {
+        "color": "#604860",
+        "greys": true
+      }
+    },
+    "melvorAoD:Golden_Trowel": {
+      "base": "File:Trowel.png",
+      "recolor": {
+        "color": "#c8a030",
+        "greys": true
+      }
+    },
+    "melvorAoD:Archaeologist_Hat": "Pith helmet",
+    "melvorAoD:Archaeologist_Body": "Desert camo top",
+    "melvorAoD:Archaeologist_Leggings": "Desert camo legs",
+    "melvorAoD:Archaeologist_Boots": "Leather boots",
+    "melvorAoD:Archaeologist_Gloves": "Leather gloves",
+    "melvorAoD:Archaeologists_Whip": "Abyssal whip",
+    "melvorTotH:Labyrinth_Clue_1": {
+      "base": "File:Map part (Lozar).png",
+      "label": "1"
+    },
+    "melvorTotH:Labyrinth_Clue_2": {
+      "base": "File:Map part (Lozar).png",
+      "label": "2"
+    },
+    "melvorTotH:Labyrinth_Clue_3": {
+      "base": "File:Map part (Lozar).png",
+      "label": "3"
+    },
+    "melvorTotH:Labyrinth_Clue_4": {
+      "base": "File:Map part (Lozar).png",
+      "label": "4"
+    },
+    "melvorTotH:Labyrinth_Clue_5": {
+      "base": "File:Map part (Lozar).png",
+      "label": "5"
+    },
+    "melvorAoD:Magic_Anvil": {
+      "base": "File:Anvil.png",
+      "recolor": {
+        "color": "#3858e8",
+        "greys": true
+      }
+    },
+    "melvorTotH:Slayer_Helmet_Legendary": "File:Hydra slayer helmet.png",
+    "melvorTotH:Slayer_Helmet_Mythical": "File:Tzkal slayer helmet.png",
+    "melvorTotH:Slayer_Platebody_Legendary": "File:Torva platebody.png",
+    "melvorTotH:Slayer_Platebody_Mythical": "File:Sanguine torva platebody.png",
+    "melvorTotH:Slayer_Cowl_Legendary": "File:Armadyl helmet.png",
+    "melvorTotH:Slayer_Leather_Body_Legendary": "File:Armadyl chestplate.png",
+    "melvorTotH:Slayer_Cowl_Mythical": "File:Masori mask (f).png",
+    "melvorTotH:Slayer_Leather_Body_Mythical": "File:Masori body (f).png",
+    "melvorTotH:Slayer_Wizard_Hat_Legendary": "File:Virtus mask.png",
+    "melvorTotH:Slayer_Wizard_Robes_Legendary": "File:Virtus robe top.png",
+    "melvorTotH:Slayer_Wizard_Hat_Mythical": "File:Ancestral hat.png",
+    "melvorTotH:Slayer_Wizard_Robes_Mythical": "File:Ancestral robe top.png",
+    "melvorF:Almighty_Lute": "File:Enchanted lyre.png",
+    "melvorF:Fishing_Hook": "File:Crabclaw hook.png",
+    "melvorD:Raw_Whale": {
+      "base": "File:Narwhal.png",
+      "erase_hue": [
+        20,
+        60
+      ],
+      "inflate": 1.5,
+      "rotate": 38,
+      "outline": 4
+    },
+    "melvorD:Whale": {
+      "base": "File:Narwhal.png",
+      "erase_hue": [
+        20,
+        60
+      ],
+      "inflate": 1.5,
+      "rotate": 38,
+      "recolor": {
+        "color": "#b0805a"
+      },
+      "outline": 4
+    },
+    "melvorD:Burnt_Whale": {
+      "base": "File:Narwhal.png",
+      "erase_hue": [
+        20,
+        60
+      ],
+      "inflate": 1.5,
+      "rotate": 38,
+      "recolor": {
+        "color": "#4a3424"
+      },
+      "outline": 4
+    },
+    "melvorD:Whale_Perfect": {
+      "base": "File:Narwhal.png",
+      "erase_hue": [
+        20,
+        60
+      ],
+      "inflate": 1.5,
+      "rotate": 38,
+      "recolor": {
+        "color": "#b0805a"
+      },
+      "outline": 4
+    }
+  },
+  "monster": {
+    "melvorD:BlackKnight": "File:Black Knight (male).png",
+    "melvorD:Skeleton": "File:Skeleton (level 21, 1).png",
+    "melvorD:Zombie": "File:Zombie (Tarn's Lair, Level 40).png",
+    "melvorF:Thief": "File:Thief (Varrock, 1).png",
+    "melvorF:Statue": "Gargoyle",
+    "melvorF:StoneSnake": "Earthen Nagua",
+    "melvorF:SpikedRedClaw": "Scorpion",
+    "melvorF:SandBeast": "Desert Lizard",
+    "melvorD:WetMonster": "Waterfiend",
+    "melvorD:MoistMonster": "Minotaur",
+    "melvorD:SweatyMonster": "Giant frog",
+    "melvorF:ManyEyedMonster": "File:Eyes (Abyss).png",
+    "melvorF:StrangeEyedMonster": "Eye (Abyssal Nexus)",
+    "melvorF:Pegasus": "Unicorn",
+    "melvorF:Angel": "Commander Zilyana",
+    "melvorF:Priest": "High Priest (Entrana)",
+    "melvorF:Phoenix": "File:Phoenix (follower).png",
+    "melvorD:Chick": {
+      "base": "File:Chicken (1).png",
+      "recolor": {
+        "color": "#f2d040",
+        "greys": true
+      },
+      "shrink": 0.6
+    },
+    "melvorF:MioliteSprig": {
+      "base": "File:Jellyfish.png",
+      "recolor": {
+        "color": "#38c8e8"
+      }
+    },
+    "melvorF:MioliteTrio": {
+      "cluster": [
+        {
+          "base": "File:Jellyfish.png",
+          "share": 0.7,
+          "at": [
+            0.5,
+            0.0
+          ],
+          "recolor": {
+            "color": "#38c8e8"
+          }
+        },
+        {
+          "base": "File:Jellyfish.png",
+          "share": 0.5,
+          "at": [
+            0.2,
+            0.3
+          ],
+          "recolor": {
+            "color": "#5a8cf0"
+          }
+        },
+        {
+          "base": "File:Jellyfish.png",
+          "share": 0.46,
+          "at": [
+            0.8,
+            0.8
+          ],
+          "recolor": {
+            "color": "#9a5ad8"
+          }
+        }
+      ]
+    },
+    "melvorF:MioliteWarden": {
+      "base": "File:Jellyfish.png",
+      "recolor": {
+        "color": "#9a5ad8"
+      },
+      "top": {
+        "split": 0.32,
+        "scale": 1.7
+      }
+    },
+    "melvorF:MioliteMonarch": {
+      "local": "rs3/jellyfish_giant.png"
+    },
+    "melvorF:SuperiorEyedMonster": {
+      "cluster": [
+        {
+          "base": "File:Eye (Abyssal Nexus, green).png",
+          "share": 0.52,
+          "at": [
+            0.08,
+            0.42
+          ]
+        },
+        {
+          "base": "File:Eye (Abyssal Nexus, green).png",
+          "share": 0.52,
+          "at": [
+            0.92,
+            0.42
+          ]
+        },
+        {
+          "base": "File:Eye (Abyssal Nexus, green).png",
+          "share": 0.8,
+          "at": [
+            0.5,
+            0.72
+          ]
+        }
+      ]
+    },
+    "melvorF:NoxiousSerpent": "File:Swamp snake.png"
+  },
+  "npc": {
+    "melvorF:GOLBIN": "File:Goblin.png",
+    "melvorTotH:ADVENTURER": null
+  },
+  "rock": {
+    "melvorD:Dragonite_Ore": "File:Blood crystal (small).png"
+  },
+  "prayer": {
+    "melvorF:Protect_from_Ranged": "File:Protect from Missiles.png"
+  },
+  "spell": {
+    "melvorF:Confusion": "Confuse",
+    "melvorF:SuperheatI": "Superheat Item",
+    "melvorF:SuperheatII": "Superheat Item",
+    "melvorF:SuperheatIII": "Superheat Item",
+    "melvorF:SuperheatIV": "Superheat Item",
+    "melvorF:WeakeningI": "Weaken",
+    "melvorF:WeakeningII": "Weaken",
+    "melvorF:WeakeningIII": "Weaken"
+  },
+  "shop": {
+    "melvorD:Normal_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Logs.png"
+    },
+    "melvorD:Oak_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Oak logs.png"
+    },
+    "melvorD:Willow_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Willow logs.png"
+    },
+    "melvorD:Teak_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Teak logs.png"
+    },
+    "melvorD:Maple_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Maple logs.png"
+    },
+    "melvorD:Mahogany_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Mahogany logs.png"
+    },
+    "melvorD:Yew_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Yew logs.png"
+    },
+    "melvorD:Magic_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Magic logs.png"
+    },
+    "melvorD:Redwood_Cooking_Fire": {
+      "base": "File:Fire.png",
+      "badge": "File:Redwood logs.png"
+    },
+    "melvorD:Multi_Tree": {
+      "row": [
+        "File:Oak tree.png",
+        "File:Willow tree.png",
+        "File:Maple tree.png"
+      ]
+    },
+    "melvorAoD:IronTrowel": {
+      "base": "File:Trowel.png",
+      "recolor": {
+        "color": "#404040",
+        "greys": true
+      }
+    },
+    "melvorAoD:IronBrush": {
+      "base": "File:Specimen brush.png",
+      "recolor": {
+        "color": "#404040",
+        "greys": true
+      }
+    },
+    "melvorAoD:IronShovel": {
+      "base": "File:Spade.png",
+      "recolor": {
+        "color": "#404040",
+        "greys": true
+      }
+    },
+    "melvorAoD:IronSieve": {
+      "base": "File:Panning tray.png",
+      "recolor": {
+        "color": "#404040",
+        "greys": true
+      }
+    },
+    "melvorAoD:SteelTrowel": {
+      "base": "File:Trowel.png",
+      "recolor": {
+        "color": "#909090",
+        "greys": true
+      }
+    },
+    "melvorAoD:SteelBrush": {
+      "base": "File:Specimen brush.png",
+      "recolor": {
+        "color": "#909090",
+        "greys": true
+      }
+    },
+    "melvorAoD:SteelShovel": {
+      "base": "File:Spade.png",
+      "recolor": {
+        "color": "#909090",
+        "greys": true
+      }
+    },
+    "melvorAoD:SteelSieve": {
+      "base": "File:Panning tray.png",
+      "recolor": {
+        "color": "#909090",
+        "greys": true
+      }
+    },
+    "melvorAoD:MithrilTrowel": {
+      "base": "File:Trowel.png",
+      "recolor": {
+        "color": "#102078",
+        "greys": true
+      }
+    },
+    "melvorAoD:MithrilBrush": {
+      "base": "File:Specimen brush.png",
+      "recolor": {
+        "color": "#102078",
+        "greys": true
+      }
+    },
+    "melvorAoD:MithrilShovel": {
+      "base": "File:Spade.png",
+      "recolor": {
+        "color": "#102078",
+        "greys": true
+      }
+    },
+    "melvorAoD:MithrilSieve": {
+      "base": "File:Panning tray.png",
+      "recolor": {
+        "color": "#102078",
+        "greys": true
+      }
+    },
+    "melvorAoD:AraniteTrowel": {
+      "base": "File:Trowel.png",
+      "recolor": {
+        "color": "#b86850",
+        "greys": true
+      }
+    },
+    "melvorAoD:AraniteBrush": {
+      "base": "File:Specimen brush.png",
+      "recolor": {
+        "color": "#b86850",
+        "greys": true
+      }
+    },
+    "melvorAoD:AraniteShovel": {
+      "base": "File:Spade.png",
+      "recolor": {
+        "color": "#b86850",
+        "greys": true
+      }
+    },
+    "melvorAoD:AraniteSieve": {
+      "base": "File:Panning tray.png",
+      "recolor": {
+        "color": "#b86850",
+        "greys": true
+      }
+    },
+    "melvorAoD:AdamantTrowel": {
+      "base": "File:Trowel.png",
+      "recolor": {
+        "color": "#187818",
+        "greys": true
+      }
+    },
+    "melvorAoD:AdamantBrush": {
+      "base": "File:Specimen brush.png",
+      "recolor": {
+        "color": "#187818",
+        "greys": true
+      }
+    },
+    "melvorAoD:AdamantShovel": {
+      "base": "File:Spade.png",
+      "recolor": {
+        "color": "#187818",
+        "greys": true
+      }
+    },
+    "melvorAoD:AdamantSieve": {
+      "base": "File:Panning tray.png",
+      "recolor": {
+        "color": "#187818",
+        "greys": true
+      }
+    },
+    "melvorAoD:RuneTrowel": {
+      "base": "File:Trowel.png",
+      "recolor": {
+        "color": "#186078",
+        "greys": true
+      }
+    },
+    "melvorAoD:RuneBrush": {
+      "base": "File:Specimen brush.png",
+      "recolor": {
+        "color": "#186078",
+        "greys": true
+      }
+    },
+    "melvorAoD:RuneShovel": {
+      "base": "File:Spade.png",
+      "recolor": {
+        "color": "#186078",
+        "greys": true
+      }
+    },
+    "melvorAoD:RuneSieve": {
+      "base": "File:Panning tray.png",
+      "recolor": {
+        "color": "#186078",
+        "greys": true
+      }
+    },
+    "melvorAoD:DragonTrowel": {
+      "base": "File:Trowel.png",
+      "recolor": {
+        "color": "#a81818",
+        "greys": true
+      }
+    },
+    "melvorAoD:DragonBrush": {
+      "base": "File:Specimen brush.png",
+      "recolor": {
+        "color": "#a81818",
+        "greys": true
+      }
+    },
+    "melvorAoD:DragonShovel": {
+      "base": "File:Spade.png",
+      "recolor": {
+        "color": "#a81818",
+        "greys": true
+      }
+    },
+    "melvorAoD:DragonSieve": {
+      "base": "File:Panning tray.png",
+      "recolor": {
+        "color": "#a81818",
+        "greys": true
+      }
+    },
+    "melvorAoD:AncientTrowel": {
+      "base": "File:Trowel.png",
+      "recolor": {
+        "color": "#b0b890",
+        "greys": true
+      }
+    },
+    "melvorAoD:AncientBrush": {
+      "base": "File:Specimen brush.png",
+      "recolor": {
+        "color": "#b0b890",
+        "greys": true
+      }
+    },
+    "melvorAoD:AncientShovel": {
+      "base": "File:Spade.png",
+      "recolor": {
+        "color": "#b0b890",
+        "greys": true
+      }
+    },
+    "melvorAoD:AncientSieve": {
+      "base": "File:Panning tray.png",
+      "recolor": {
+        "color": "#b0b890",
+        "greys": true
+      }
+    },
+    "melvorAoD:DarkSteelTrowel": {
+      "base": "File:Trowel.png",
+      "recolor": {
+        "color": "#282828",
+        "greys": true
+      }
+    },
+    "melvorAoD:DarkSteelBrush": {
+      "base": "File:Specimen brush.png",
+      "recolor": {
+        "color": "#282828",
+        "greys": true
+      }
+    },
+    "melvorAoD:DarkSteelShovel": {
+      "base": "File:Spade.png",
+      "recolor": {
+        "color": "#282828",
+        "greys": true
+      }
+    },
+    "melvorAoD:DarkSteelSieve": {
+      "base": "File:Panning tray.png",
+      "recolor": {
+        "color": "#282828",
+        "greys": true
+      }
+    },
+    "melvorAoD:CrystalTrowel": {
+      "base": "File:Trowel.png",
+      "recolor": {
+        "color": "#801848",
+        "greys": true
+      }
+    },
+    "melvorAoD:CrystalBrush": {
+      "base": "File:Specimen brush.png",
+      "recolor": {
+        "color": "#801848",
+        "greys": true
+      }
+    },
+    "melvorAoD:CrystalShovel": {
+      "base": "File:Spade.png",
+      "recolor": {
+        "color": "#801848",
+        "greys": true
+      }
+    },
+    "melvorAoD:CrystalSieve": {
+      "base": "File:Panning tray.png",
+      "recolor": {
+        "color": "#801848",
+        "greys": true
+      }
+    },
+    "melvorAoD:RelicTrowel": {
+      "base": "File:Trowel.png",
+      "recolor": {
+        "color": "#604860",
+        "greys": true
+      }
+    },
+    "melvorAoD:RelicBrush": {
+      "base": "File:Specimen brush.png",
+      "recolor": {
+        "color": "#604860",
+        "greys": true
+      }
+    },
+    "melvorAoD:RelicShovel": {
+      "base": "File:Spade.png",
+      "recolor": {
+        "color": "#604860",
+        "greys": true
+      }
+    },
+    "melvorAoD:RelicSieve": {
+      "base": "File:Panning tray.png",
+      "recolor": {
+        "color": "#604860",
+        "greys": true
+      }
+    },
+    "melvorAoD:Blessed_Bone_Offering": "Bones",
+    "melvorF:Perpetual_Haste": {
+      "group": [
+        "File:Hammer.png",
+        "File:Chisel.png",
+        "File:Rune arrow.png"
+      ]
+    },
+    "melvorF:Master_of_Nature": {
+      "group": [
+        "File:Rune axe.png",
+        "File:Rune pickaxe.png"
+      ]
+    },
+    "melvorF:Art_of_Control": {
+      "group": [
+        "File:Tinderbox.png",
+        "File:Chef's hat.png",
+        "File:Steel bar.png"
+      ]
+    },
+    "melvorTotH:Plentiful_Resupply": "Infernal eel",
+    "melvorTotH:Bountiful_Resupply": "File:Jellyfish.png",
+    "melvorD:Extra_Bank_Slot": "File:Bank chest.png",
+    "melvorItA:Extra_Bank_Slot": "File:Bank chest.png",
+    "melvorF:ExtraBankTab": {
+      "base": "File:Bank chest.png",
+      "badge": "File:Bank key.png"
+    },
+    "melvorItA:ExtraBankTab1": {
+      "base": "File:Bank chest.png",
+      "badge": "File:Bank key.png"
+    },
+    "melvorItA:ExtraBankTab2": {
+      "base": "File:Bank chest.png",
+      "badge": "File:Bank key.png"
+    },
+    "melvorItA:ExtraBankTab3": {
+      "base": "File:Bank chest.png",
+      "badge": "File:Bank key.png"
+    },
+    "melvorItA:ExtraBankTab4": {
+      "base": "File:Bank chest.png",
+      "badge": "File:Bank key.png"
+    },
+    "melvorItA:ExtraBankTab5": {
+      "base": "File:Bank chest.png",
+      "badge": "File:Bank key.png"
+    },
+    "melvorAoD:ShipUpgrade1": "File:Pirate ship (Feldip Gulf).png",
+    "melvorAoD:ExtraArchaeologyMapSlot1": "File:Crandor map.png",
+    "melvorAoD:ExtraArchaeologyMapSlot2": "File:Crandor map.png",
+    "melvorAoD:ExtraArchaeologyMapSlot3": "File:Crandor map.png",
+    "melvorTotH:Labyrinth_Solution": {
+      "base": "File:Treasure map.png",
+      "recolor": {
+        "color": "#d8b030"
+      }
+    },
+    "melvorTotH:SummonersAltar": "File:Gilded altar built.png",
+    "melvorTotH:Linden_Boat": "File:Raft icon.png",
+    "melvorTotH:Golden_Compass": {
+      "base": "File:Compass.png",
+      "recolor": {
+        "color": "#c8a030",
+        "greys": true
+      }
+    },
+    "melvorTotH:Golden_Shard": {
+      "base": "File:Ancient shard.png",
+      "recolor": {
+        "color": "#d8b030"
+      }
+    },
+    "melvorAoD:Superior_Cauldron": "File:Cauldron of Thunder.png",
+    "melvorAoD:Superior_Cooking_Pot": {
+      "base": "File:Cooking pot (unobtainable item).png",
+      "recolor": {
+        "color": "#383850",
+        "greys": true
+      }
+    },
+    "melvorAoD:Summoners_Pack_I": {
+      "group": [
+        "File:Red crystal (Mourning's End Part II).png",
+        "File:Green crystal (Mourning's End Part II).png"
+      ]
+    },
+    "melvorAoD:Summoners_Pack_II": {
+      "group": [
+        "File:Red crystal (Mourning's End Part II).png",
+        "File:Green crystal (Mourning's End Part II).png",
+        "File:Blue crystal (Mourning's End Part II).png",
+        "File:Hallowed crystal shard.png"
+      ]
+    },
+    "melvorAoD:Summoners_Pack_III": {
+      "group": [
+        "File:Red crystal (Mourning's End Part II).png",
+        "File:Green crystal (Mourning's End Part II).png",
+        "File:Blue crystal (Mourning's End Part II).png",
+        "File:Hallowed crystal shard.png",
+        "File:Yellow crystal (Mourning's End Part II).png",
+        "File:Black crystal.png"
+      ]
+    },
+    "melvorAoD:MagicAnvil": {
+      "base": "File:Anvil.png",
+      "recolor": {
+        "color": "#3858e8",
+        "greys": true
+      }
+    }
+  },
+  "media": {
+    "assets/media/main/coins.png": "File:Coins 10000.png",
+    "assets/media/main/shop_header.png": "File:General store icon.png",
+    "assets/media/main/bank_header.png": "File:Bank icon.png",
+    "assets/media/main/completionLog_header.png": "File:Collection log.png",
+    "assets/media/main/completion_log.png": "File:Collection log.png",
+    "assets/media/main/lore_header.png": "File:Quest point icon.png",
+    "assets/media/main/lore.png": "File:Manual.png",
+    "assets/media/main/statistics_header.png": "File:Stats icon.png",
+    "assets/media/main/settings_header.png": "File:Settings.png",
+    "assets/media/main/announcement.png": "File:Newspaper.png",
+    "assets/media/main/slayer_coins.png": "File:Enchanted gem.png",
+    "assets/media/skills/summoning/summoning.png": {
+      "asset": "summoning_icon_2008.png"
+    },
+    "assets/media/skills/astrology/astrology.png": {
+      "asset": "astrology_icon.png"
+    },
+    "assets/media/skills/township/township.png": "File:Construction icon.png",
+    "assets/media/skills/cartography/cartography.png": "File:Sailing icon.png",
+    "assets/media/skills/archaeology/archaeology.png": {
+      "asset": "archaeology_icon_rs3.png"
+    },
+    "assets/media/skills/harvesting/harvesting.png": {
+      "base": "File:Magic secateurs.png",
+      "recolor": {
+        "color": "#c02828"
+      }
+    },
+    "assets/media/skills/corruption/corruption.png": "File:Blood shard.png",
+    "assets/media/main/summoning_header.png": {
+      "asset": "summoning_icon_2008.png"
+    },
+    "assets/media/main/astrology_header.png": {
+      "asset": "astrology_icon.png"
+    },
+    "assets/media/main/township_header.png": "File:Construction icon.png",
+    "assets/media/main/xp.png": "File:XP drops icon.png",
+    "assets/media/main/timer.png": "File:Hourglass (Recruitment Drive).png",
+    "assets/media/main/double.png": {
+      "asset": "drawn/double.png"
+    },
+    "assets/media/main/preservation.png": {
+      "asset": "drawn/preservation.png"
+    },
+    "assets/media/skills/cooking/perfect.png": {
+      "asset": "drawn/perfect.png"
+    },
+    "assets/media/main/tick.png": "File:Checkmark green.png",
+    "assets/media/main/additionalResource.png": {
+      "asset": "drawn/extra_resource.png"
+    },
+    "assets/media/main/costReduction.png": {
+      "asset": "drawn/cost_reduction.png"
+    },
+    "assets/media/main/mastery_header.png": {
+      "asset": "drawn/mastery_lamp.png"
+    },
+    "assets/media/main/mastery_pool.png": {
+      "asset": "drawn/mastery_pool.png"
+    },
+    "assets/media/main/milestones_header.png": "File:Achievement Diaries icon.png",
+    "assets/media/main/discord.svg": {
+      "asset": "drawn/discord.png"
+    },
+    "assets/media/main/reddit.svg": {
+      "asset": "drawn/reddit.png"
+    },
+    "assets/media/main/bluesky.svg": {
+      "asset": "drawn/bluesky.png"
+    },
+    "assets/media/main/x.svg": {
+      "asset": "drawn/x.png"
+    },
+    "assets/media/skills/combat/spellbook.png": "File:Magic icon.png",
+    "mod:multiplayer:Chat": "File:Chat-channel.png",
+    "mod:multiplayer:Guild": "File:Your Clan icon.png",
+    "mod:multiplayer:Transfer_Items": "File:Inventory.png",
+    "mod:multiplayer:Multiplayer_Market": "File:Grand Exchange icon.png",
+    "mod:multiplayer:Expedition": "File:Dungeon icon.png",
+    "mod:multiplayer:Guild_Raid": "File:Raids icon.png",
+    "mod:multiplayer:Updates": "File:Newspaper.png",
+    "assets/media/skills/summoning/synergy.png": {
+      "asset": "drawn/preservation.png"
+    }
+  },
+  "area": {
+    "melvorF:Shrouded_Badlands": "File:Vyrewatch.png",
+    "melvorF:UnhallowedWasteland": "File:Skeletal Wyvern.png",
+    "melvorF:Miolite_Caves": {
+      "base": "File:Jellyfish.png",
+      "recolor": {
+        "color": "#38c8e8"
+      }
+    },
+    "melvorF:Into_the_Mist": "File:Mysterious Figure.png",
+    "melvorF:Impending_Darkness": "File:The Nightmare.png",
+    "melvorTotH:JungleLabyrinth": "File:Jungle horror.png",
+    "melvorTotH:LavaLake": "File:Lava dragon.png",
+    "melvorTotH:ForsakenTundra": "File:Ice troll male.png",
+    "melvorTotH:FoggyLake": "File:The Leviathan.png",
+    "melvorTotH:AfflictedCity": "File:Mourner.png",
+    "melvorTotH:MidnightValley": "File:Ankou.png",
+    "melvorTotH:GoldenCloudMountains": "File:Kree'arra.png",
+    "melvorTotH:MillenniumGate": "File:Tekton.png",
+    "melvorTotH:Ancient_Sanctuary": "File:Hespori.png",
+    "melvorTotH:Underground_Lava_Lake": "File:Lava beast.png",
+    "melvorTotH:Lightning_Region": "File:Tempoross.png",
+    "melvorTotH:Lair_of_the_Spider_Queen": "File:Sarachnis.png",
+    "melvorTotH:Cursed_Forest": "File:Ent (lv 86).png",
+    "melvorTotH:Necromancers_Palace": "File:Necromancer.png",
+    "melvorTotH:Throne_of_the_Herald": "File:Elidinis' Warden.png",
+    "melvorAoD:EyeConicCave": "File:Eye (Abyssal Nexus, green).png",
+    "melvorAoD:MuckyCave": "File:Cave slime.png",
+    "melvorAoD:RitualSite": "File:Dark wizard.png",
+    "melvorAoD:CollapsedCity": "File:Ancient Zygomite.png",
+    "melvorAoD:LostTemple": "File:The Mimic.png",
+    "melvorAoD:ShipwreckCove": "File:Ghost captain.png",
+    "melvorAoD:UnderwaterRuins": "File:Enormous Tentacle.png",
+    "melvorAoD:TreeOvergrowth": "File:Tree spirit.png",
+    "melvorAoD:CrystalCaves": "File:Crystalline Hunllef.png",
+    "melvorAoD:CrystalDepths": "File:Corrupted Hunllef.png",
+    "melvorAoD:DarkQuarry": "File:Rock golem.png",
+    "melvorAoD:Golem_Territory": "File:Zalcano.png",
+    "melvorAoD:Unholy_Forest": {
+      "cluster": [
+        {
+          "base": "File:Dead tree.png",
+          "share": 0.62,
+          "at": [
+            0.0,
+            0.6
+          ],
+          "recolor": {
+            "color": "#4a3c5a"
+          }
+        },
+        {
+          "base": "File:Undead tree.png",
+          "share": 0.66,
+          "at": [
+            1.0,
+            0.55
+          ],
+          "recolor": {
+            "color": "#4a3c5a"
+          }
+        },
+        {
+          "base": "File:Dead tree (Draynor Manor).png",
+          "share": 0.95,
+          "at": [
+            0.5,
+            0.2
+          ],
+          "recolor": {
+            "color": "#4a3c5a"
+          }
+        },
+        {
+          "base": "File:Ghost.png",
+          "share": 0.42,
+          "at": [
+            0.22,
+            1.0
+          ]
+        }
+      ]
+    },
+    "melvorAoD:Trickery_Temple": "File:Imp.png",
+    "melvorAoD:Cult_Grounds": "File:Skotizo.png",
+    "melvorAoD:Underwater_City": "File:Cave kraken.png",
+    "melvorItA:AbyssalFarmlands": "File:Scarecrow.png",
+    "melvorItA:DarkDescent": "File:Abyssal leech.png",
+    "melvorItA:SmoggyPlain": "File:Smoke devil.png",
+    "melvorItA:BlightedMarsh": "File:Kalphite Soldier.png",
+    "melvorItA:LightlessCave": "File:Shade.png",
+    "melvorItA:DreadedCrossing": "File:Revenant knight.png",
+    "melvorItA:FracturedPlains": "File:Spitting Wyvern.png",
+    "melvorItA:WitheringBastion": "File:Calvar'ion.png",
+    "melvorItA:MurmuringForest": "File:Tanglefoot.png",
+    "melvorItA:WhisperwindCove": "File:Gemstone Crab.png",
+    "melvorItA:EldritchDomain": "File:Phantom Muspah (ranged).png",
+    "melvorItA:VoidConflux": "File:Ravager.png",
+    "melvorItA:CrimsonForest": "File:Bloodveld.png",
+    "melvorItA:TangledGrove": "File:Kurask.png",
+    "melvorItA:ToxicWastes": "File:Venenatis.png",
+    "melvorItA:BlightedReach": "File:Drake.png",
+    "melvorItA:ParanoiaPit": "File:Ankou.png",
+    "melvorItA:PetrifiedLair": "File:Basilisk Knight.png",
+    "melvorItA:FracturedSpires": "File:Aviansie (level 131).png",
+    "melvorItA:WitheringCatacombs": "File:Deviant spectre.png",
+    "melvorItA:EchoMire": "File:The Whisperer.png",
+    "melvorItA:WhisperingSea": "File:Great white shark.png",
+    "melvorItA:EldritchChasm": "File:Tormented Demon (1).png",
+    "melvorItA:TendrilHollow": "File:Abyssal Sire.png",
+    "melvorItA:VoidEnclave": "File:Abyssal demon.png",
+    "melvorItA:VoidNexus": "File:Duke Sucellus.png",
+    "melvorItA:The_Abyssal_Approach": "File:Abyssal walker.png",
+    "melvorItA:Into_The_Abyss": "File:Abyssal leech.png",
+    "melvorItA:StrongholdOfBlight": "File:Vardorvis.png",
+    "melvorItA:StrongholdOfFear": "File:Cerberus.png",
+    "melvorItA:StrongholdOfNightmares": "File:The Nightmare.png",
+    "melvorItA:StrongholdOfTheOverlords": "File:Yama.png"
+  }
+}

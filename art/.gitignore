@@ -1,0 +1,13 @@
+__pycache__/
+build/.cache/
+build/report.md
+mod/sprites/
+mod/mapping.json
+mod/icon.png
+dist/
+dev/last-run.json
+.DS_Store
+dev/loader.log
+build/review/*
+!build/review/template.html
+!build/review/decisions.json
