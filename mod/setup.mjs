@@ -186,13 +186,13 @@ function starter(spec) {
   return {
     show(cards, skill, last) {
       if (skill.isActive || !last) {
-        section?.classList.add('d-none');
+        section?.classList.toggle('d-none', true);
         return;
       }
       if (!section) build();
       place(cards);
       start.show(last);
-      section.classList.remove('d-none');
+      section.classList.toggle('d-none', false);
     },
   };
 }
@@ -370,8 +370,8 @@ export function setup(ctx) {
       (document.getElementById('page-container') ?? document.body).append(cornerFloat);
     }
     if (game.openPage?.id !== 'melvorD:Combat') {
-      corner.classList.add('d-none');
-      cornerFloat.classList.add('d-none');
+      corner.classList.toggle('d-none', true);
+      cornerFloat.classList.toggle('d-none', true);
       return;
     }
     const switcher = skillSwitcher();
@@ -386,7 +386,7 @@ export function setup(ctx) {
       before = minibar.lastElementChild;
     }
     if (corner.parentElement !== parent || corner.nextElementSibling !== before) parent.insertBefore(corner, before);
-    corner.classList.remove('d-none');
+    corner.classList.toggle('d-none', false);
     cornerFloat.classList.toggle('d-none', parent !== cornerFloat);
     const player = fighter();
     for (const { menu, button, icon, count } of cornerMenus) {
@@ -468,6 +468,19 @@ export function setup(ctx) {
       card.classList.toggle(UNMET_CARD_CLASS, Boolean(card.entryRequirements?.querySelector('.text-danger') || (card.lockedContainer && !card.lockedContainer.classList.contains('d-none'))));
       card.areaName?.parentElement?.classList.toggle(AREA_TITLE_CLASS, true);
       card.unlockedContainer?.classList.toggle(AREA_DETAILS_CLASS, true);
+      shortenDifficulty(card, document.body.classList.contains(AREA_GRID_CLASS) && card.isOpen !== true);
+    }
+  };
+
+  const shortenDifficulty = (card, short) => {
+    for (const badge of card.areaName?.parentElement?.querySelectorAll('.badge') ?? []) {
+      const full = badge.dataset.mobileCombatFull ?? badge.textContent.trim();
+      if (!full) continue;
+      if (badge.dataset.mobileCombatFull !== full) badge.dataset.mobileCombatFull = full;
+      const text = short ? Array.from(full)[0] : full;
+      if (badge.textContent !== text) badge.textContent = text;
+      const title = short ? full : '';
+      if (badge.title !== title) badge.title = title;
     }
   };
 

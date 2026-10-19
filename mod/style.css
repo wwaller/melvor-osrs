@@ -23,6 +23,9 @@ body:not(.mobile-combat-jump-on) .mobile-combat-jump { display: none !important;
 .mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) > .block > .media > .mr-3 { margin-right: 8px !important; flex-shrink: 0; }
 .mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) > .block > .media .shop-img { width: 32px !important; height: 32px !important; margin: 0; object-fit: contain; }
 .mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) .mobile-combat-area-details > :not(.mobile-combat-area-title) { display: none !important; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) .mobile-combat-area-title { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 3px; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) .mobile-combat-area-title > :first-child { flex: 0 0 100%; }
+.mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) .mobile-combat-area-title > .badge { margin: 0 !important; }
 .mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open) > .block > .media > .media-body:not(.mobile-combat-area-details) { font-size: 0.8rem; }
 .mobile-combat-area-grid-on .mobile-combat-compact-areas > combat-area-menu:not(.mobile-combat-area-open).mobile-combat-area-unmet > .block > .media { opacity: 0.5; }
 body:not(.mobile-combat-styles-on) .mobile-combat-styles-section { display: none !important; }
