@@ -1,0 +1,50 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://steam.melvoridle.com/assets/css/oneui.css"><link rel="stylesheet" href="https://steam.melvoridle.com/assets/css/game.css?12097"><link rel="stylesheet" href="https://steam.melvoridle.com/assets/css/themes/amethyst.min.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<script src="https://steam.melvoridle.com/assets/js/oneui.core.min.js"></script>
+<style>body{background:#1f2329;margin:0} #page-header{background:#2b3039;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 12px}</style></head>
+<body class="darkMode">
+<header id="page-header"><div class="text-white">Woodcutting</div>
+  <div class="d-flex align-items-right">
+    <div class="dropdown d-inline-block"><button type="button" class="btn btn-sm btn-dual text-combat-smoke" id="page-header-potions-dropdown"><img class="skill-icon-xxs" src="https://steam.melvoridle.com/assets/media/skills/herblore/potion_empty.png"></button></div>
+    <div class="dropdown d-inline-block ml-1"><button type="button" class="btn btn-sm btn-dual text-combat-smoke"><img class="skill-icon-xxs" src="https://steam.melvoridle.com/assets/media/bank/armour_helmet.png"></button></div>
+  </div>
+</header>
+<script type="module">
+for (const name of ['Skill', 'Player', 'Bank', 'BaseManager', 'PetManager']) window[name] = class { onLevelUp() {} togglePrayer() {} eatFood() {} buryItemOnClick() {} onPlayerDeath() {} unlockPet() {} };
+const params = new URLSearchParams(location.search);
+window.nativeManager = { isIOS: false, isAndroid: false };
+const values = { 'animated-icon': params.get('animated') !== 'off' };
+const hooks = {};
+const stored = {};
+const tracks = ['Scape_Main', 'Harmony', 'Flute_Salad'].map((name) => `${location.origin}/dev/preview/tracks/${name}.ogg`);
+const ctx = {
+  loadData: (path) => fetch(`/mod/${path}`).then((r) => r.json()).then((audio) => {
+    for (const key of Object.keys(audio.music)) audio.music[key] = audio.music[key].map((url, i) => (i < tracks.length ? tracks[i] : url));
+    return audio;
+  }),
+  loadStylesheet: (path) => document.head.insertAdjacentHTML('beforeend', `<link rel="stylesheet" href="/mod/${path}">`),
+  getResourceUrl: (path) => `/mod/${path}`,
+  characterStorage: { getItem: (key) => stored[key], setItem: (key, value) => (stored[key] = value) },
+  accountStorage: { getItem: (key) => stored[key], setItem: (key, value) => (stored[key] = value) },
+  settings: { section: () => ({ add(list) { list.forEach((c) => (values[c.name] ??= c.default)); }, get: (name) => values[name] }) },
+  patch: () => ({ after() {}, replace() {} }),
+  onCharacterLoaded: (fn) => (hooks.character = fn),
+  onInterfaceReady: (fn) => (hooks.ready = fn),
+  onCharacterSelectionLoaded: () => {},
+  loadModule: (path) => import(`/mod/${path}`),
+};
+const { setup } = await import('/mod/setup.mjs');
+await setup(ctx);
+hooks.ready();
+window.player = {
+  button: () => document.querySelector('.osrs-music-button'),
+  open: () => $(document.querySelector('.osrs-music-button')).dropdown('toggle'),
+  press: (action) => document.querySelector(`[data-action="${action}"]`).click(),
+  state: () => ({
+    playing: document.querySelector('.osrs-music-button').classList.contains('is-playing'),
+    label: document.querySelector('.osrs-music-label').textContent,
+    title: document.querySelector('.osrs-music-title').textContent,
+    open: document.querySelector('.osrs-music-panel').classList.contains('show'),
+  }),
+};
+</script></body></html>
