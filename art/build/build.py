@@ -214,6 +214,8 @@ def spec_titles(spec):
 def spec_slug(spec):
     titles = spec.get("row") or spec.get("group") or [part["base"] for part in spec.get("cluster", [])] or [spec.get(k) for k in ("base", "badge", "inset", "tablet")]
     parts = (["tablet"] if spec.get("tablet") else []) + (["cluster"] if spec.get("cluster") else []) + [slug(t) for t in titles if t]
+    if spec.get("backing"):
+        parts.append(re.sub(r"[^A-Za-z0-9]+", "_", spec["backing"].rsplit(".", 1)[0]).strip("_"))
     if spec.get("asset") or spec.get("local"):
         parts.append(re.sub(r"[^A-Za-z0-9]+", "_", (spec.get("asset") or spec["local"]).rsplit(".", 1)[0]).strip("_"))
     if spec.get("cape"):
@@ -267,7 +269,7 @@ def process(entity, spec, info, wiki):
     if spec.get("row"):
         return "render", images.row([fetch(t) for t in spec["row"]], grounded=grounded, recolor=spec.get("recolor"))
     if spec.get("tablet"):
-        return "render", images.tablet(BLANK_TABLET.read_bytes(), fetch(spec["tablet"]))
+        return "render", images.tablet((ASSET_DIR / spec["backing"] if spec.get("backing") else BLANK_TABLET).read_bytes(), fetch(spec["tablet"]))
     if spec.get("group"):
         return "sprite", images.group([fetch(t) for t in spec["group"]])
     if spec.get("local"):

@@ -3385,76 +3385,100 @@
   "melvorItA:Stoneskin_Pike_Perfect": "File:Pike.png",
   "melvorItA:Strange_Sword": "File:Emberlight.png",
   "melvorItA:Summoning_Familiar_Abyssal_Bear": {
-   "tablet": "File:Corrupted Bear.png"
+   "tablet": "File:Corrupted Bear.png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Centaur": {
-   "tablet": "File:Centaur (male).png"
+   "tablet": "File:Centaur (male).png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Crow": {
-   "tablet": "File:Webbed-winged Crow.png"
+   "tablet": "File:Webbed-winged Crow.png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Cyclops": {
-   "tablet": "File:Cyclops (GWD, 2).png"
+   "tablet": "File:Cyclops (GWD, 2).png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Devil": {
-   "tablet": "File:Scarred lesser demon (level 121, melee).png"
+   "tablet": "File:Scarred lesser demon (level 121, melee).png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Dragon": {
-   "tablet": "File:Corrupted Dragon.png"
+   "tablet": "File:Corrupted Dragon.png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Ent": {
-   "tablet": "File:Ent (lv 86).png"
+   "tablet": "File:Ent (lv 86).png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Golbin_Thief": {
-   "tablet": "File:Goblin.png"
+   "tablet": "File:Goblin.png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Leprechaun": {
-   "tablet": "File:Tool Leprechaun.png"
+   "tablet": "File:Tool Leprechaun.png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Minotaur": {
-   "tablet": "File:Minotaur (Fortis Colosseum).png"
+   "tablet": "File:Minotaur (Fortis Colosseum).png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Mole": {
-   "tablet": "File:Giant Mole (LANScape, Zamorak).png"
+   "tablet": "File:Giant Mole (LANScape, Zamorak).png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Monkey": {
-   "tablet": "File:Demonic gorilla.png"
+   "tablet": "File:Demonic gorilla.png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Occultist": {
-   "tablet": "File:Dark Mage (Abyss).png"
+   "tablet": "File:Dark Mage (Abyss).png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Octopus": {
-   "tablet": "File:Vampyre kraken.png"
+   "tablet": "File:Vampyre kraken.png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Pig": {
-   "tablet": "File:Sourhog.png"
+   "tablet": "File:Sourhog.png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Salamander": {
-   "tablet": "File:Red salamander.png"
+   "tablet": "File:Red salamander.png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Unicorn": {
-   "tablet": "File:Corrupted Unicorn.png"
+   "tablet": "File:Corrupted Unicorn.png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Witch": {
-   "tablet": "File:Witch (historical).png"
+   "tablet": "File:Witch (historical).png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Wolf": {
-   "tablet": "File:Corrupted Wolf.png"
+   "tablet": "File:Corrupted Wolf.png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Abyssal_Yak": {
-   "tablet": "File:Yak.png"
+   "tablet": "File:Yak.png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Eldritch_Eyeball": {
-   "tablet": "File:Eye (Abyssal Nexus, green).png"
+   "tablet": "File:Eye (Abyssal Nexus, green).png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Golem": {
-   "tablet": "File:Chaos Golem.png"
+   "tablet": "File:Chaos Golem.png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Imp": {
-   "tablet": "File:Scarred imp.png"
+   "tablet": "File:Scarred imp.png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Summoning_Familiar_Void_Wisp": {
-   "tablet": "File:Wisp.png"
+   "tablet": "File:Wisp.png",
+   "backing": "melvor_tablet_blank_abyssal.png"
   },
   "melvorItA:Toxic_Blast_Crossbow": "File:Dragon hunter crossbow (b).png",
   "melvorItA:Toxic_Fumes_Wand": "File:Warped sceptre.png",
