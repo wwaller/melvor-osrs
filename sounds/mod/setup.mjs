@@ -116,7 +116,10 @@ export async function setup(ctx) {
       onChange: later(reshuffle),
     },
     { type: 'number', name: 'volume', label: 'Music volume', hint: '0 to 100', default: 30, min: 0, max: 100, onChange: later(applyVolume) },
-    { type: 'switch', name: 'save-songs', label: 'Play downloaded songs from this device', hint: 'Songs downloaded to this device play from it instead of the OSRS Wiki, and each new song is kept the first time it plays, so it never downloads again. Every song together takes about 1 GB.', default: false, onChange: later(refreshStorage) },
+    { type: 'switch', name: 'save-songs', label: 'Play downloaded songs from this device', hint: 'Songs downloaded to this device play from it instead of the OSRS Wiki, and each new song is kept the first time it plays, so it never downloads again. Every song together takes about 1 GB. Turned off, no more songs download, and the ones already here stay until you clear them.', default: true, onChange: (on) => setTimeout(() => {
+      if (!on && bulk) bulk.stopped = true;
+      refreshStorage();
+    }) },
     { type: 'button', name: 'download-all', display: 'Download every song now', color: 'primary', onClick: () => offerDownloadAll() },
     { type: 'button', name: 'clear-songs', display: 'Clear downloaded songs', color: 'danger', onClick: () => offerClearSongs() },
     { type: 'switch', name: 'animated-icon', label: 'Animated music button', hint: 'The music button in the top bar shows moving bars while a song plays. Off always shows the harp.', default: true, onChange: later(renderPlayer) },
@@ -407,6 +410,10 @@ export async function setup(ctx) {
       if (await ask({ title: 'Downloading Every Song', text: `${bulk.done} of ${bulk.missing} songs downloaded so far. Stop downloading the rest?`, confirmButtonText: 'Stop', cancelButtonText: 'Keep going' })) bulk.stopped = true;
       return;
     }
+    if (!playingDownloaded()) {
+      ask({ title: 'Downloading Is Off', text: 'Turn on "Play downloaded songs from this device" to download songs. Songs already on this device stay until you clear them.', showCancelButton: false, confirmButtonText: 'OK' });
+      return;
+    }
     const summary = await storageSummary().catch(storeFailed('count'));
     if (!summary) return;
     const have = new Set(await songStore.keys());
@@ -416,7 +423,7 @@ export async function setup(ctx) {
       return;
     }
     const perSong = summary.count ? summary.bytes / summary.count : TYPICAL_SONG_BYTES;
-    const text = `${summary.text}. The other ${missing.length} will download one at a time from the OSRS Wiki, about ${megabytes(perSong * missing.length)} more. You can keep playing while they download.${playingDownloaded() ? '' : ' They play from this device once "Play downloaded songs from this device" is on.'}`;
+    const text = `${summary.text}. The other ${missing.length} will download one at a time from the OSRS Wiki, about ${megabytes(perSong * missing.length)} more. You can keep playing while they download.`;
     if (await ask({ title: 'Download Every Song?', text, confirmButtonText: `Download ${missing.length} songs`, cancelButtonText: 'Cancel' })) downloadAllSongs(missing);
   }
 

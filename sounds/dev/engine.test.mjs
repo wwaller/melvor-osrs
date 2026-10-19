@@ -228,12 +228,13 @@ function fakeIndexedDB() {
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 10));
 
-test('songs are only kept on the device when that setting is on, which it is not by default', async () => {
+test('songs are kept on the device by default, and nothing new is kept with the setting off', async () => {
   globalThis.indexedDB = fakeIndexedDB();
-  const { configs, fetched, tick } = await boot();
+  const { configs, settings, fetched, tick } = await boot();
+  assert.strictEqual(configs['save-songs'].default, true);
+  settings['Music:save-songs'] = false;
   await tick();
   await settle();
-  assert.strictEqual(configs['save-songs'].default, false);
   assert.match(fetched[0], /Scape_Main/);
   assert.strictEqual(globalThis.indexedDB.tables.get('songs'), undefined, 'nothing saved');
   delete globalThis.indexedDB;
@@ -282,22 +283,32 @@ test('songs the mod no longer uses are dropped when the game starts, and turning
   delete globalThis.indexedDB;
 });
 
-test('Download every song now downloads every song from the wiki one at a time, even with the setting off, and Clear downloaded songs frees them', async () => {
+test('Download every song now downloads every song from the wiki one at a time, turning the setting off stops it, and Clear downloaded songs frees them', async () => {
   globalThis.indexedDB = fakeIndexedDB();
   const asked = [];
   globalThis.SwalLocale = { fire: async (options) => (asked.push(options), { isConfirmed: true }) };
-  const { configs, fetched, tick, toasts } = await boot();
+  const { configs, settings, fetched, tick, toasts } = await boot();
   await tick();
   await settle();
   const before = fetched.length;
-  await configs['download-all'].onClick();
   const wiki = [...new Set(Object.values(audio.music).flat())].filter((url) => url.startsWith('http'));
-  assert.match(asked[0].text, new RegExp(`^0 of ${wiki.length} songs downloaded to this device, using 0 MB\\. The other ${wiki.length} will download one at a time`), asked[0].text);
+  settings['Music:save-songs'] = false;
+  await configs['download-all'].onClick();
+  assert.strictEqual(asked.at(-1).title, 'Downloading Is Off');
+  await settle();
+  assert.strictEqual(fetched.length, before, 'nothing downloads with the setting off');
+
+  settings['Music:save-songs'] = true;
+  await configs['download-all'].onClick();
+  const kept = globalThis.indexedDB.tables.get('songs').size;
+  assert.match(asked.at(-1).text, new RegExp(`^${kept} of ${wiki.length} songs downloaded to this device, using \\d+ MB\\. The other ${wiki.length - kept} will download one at a time`), asked.at(-1).text);
   await new Promise((resolve) => setTimeout(resolve, 50));
   assert.ok(fetched.length > before, 'downloads started');
   assert.ok(fetched.slice(before).every((url) => wiki.includes(url)), 'only wiki songs');
   await configs['download-all'].onClick();
   assert.match(asked.at(-1).text, /songs downloaded so far\. Stop downloading the rest\?$/, 'pressing it again shows how far along it is');
+  settings['Music:save-songs'] = false;
+  configs['save-songs'].onChange(false);
   await new Promise((resolve) => setTimeout(resolve, 1100));
   const saved = globalThis.indexedDB.tables.get('songs').size;
   assert.ok(saved > 0 && saved < wiki.length, 'stopped partway');
