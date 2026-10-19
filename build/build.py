@@ -161,7 +161,7 @@ def match_entities(entities, pools, overrides):
 
 
 def superior_capes(matches, misses):
-    """Melvor's superior skillcapes are its skillcapes with a gold trim: the trimmed OSRS cape, or the cape itself when OSRS has no trimmed one."""
+    """Superior skillcapes are the trimmed OSRS cape, or the plain cape when OSRS has no trimmed one."""
     by_name = {entity.name: (entity, osrs_name, title) for entity, osrs_name, title, _ in matches}
     for entity, reason in list(misses):
         name = SUPERIOR_NAME.match(entity.name)
@@ -289,7 +289,7 @@ VARIANT_KEYS = {"numerals": "label", "stars": "star", "decals": "decal"}
 
 
 def variants_of(spec):
-    """Optional extras on this image, each with its own switch; composites have no plain fallback."""
+    """Composites have no plain fallback, so they get a single switch."""
     if spec.get("row") or spec.get("tablet") or spec.get("badge") or spec.get("group") or spec.get("cape"):
         return ["composites"]
     return sorted(name for name, key in VARIANT_KEYS.items() if spec.get(key))

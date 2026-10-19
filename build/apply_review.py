@@ -1,9 +1,4 @@
-"""Turn review decisions into build/guesses.json.
-
-Input is a JSON object {melvor_id: {"v": "approve"|"reject", "note": "..."}} (an export of the
-review page's decisions). Approved picks are written as wiki file titles; rejected picks and
-notes are listed for follow-up.
-"""
+"""Turn exported review decisions into build/guesses.json."""
 import argparse
 import json
 from collections import defaultdict

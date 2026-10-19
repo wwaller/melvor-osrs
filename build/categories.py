@@ -65,7 +65,6 @@ def clean(label):
 
 
 def tags_for(entity, thematic_ids):
-    """(section, name, label) for each switch that must be on for this entity's art to show."""
     tags = []
     if entity.package in PACKS:
         name, label = PACKS[entity.package]

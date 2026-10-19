@@ -61,7 +61,6 @@ def paint(image, mask, color, highlight=0.12, shadow=0.16):
 
 
 def outline(image):
-    """A one-pixel black edge around everything drawn, as on OSRS sprites."""
     pixels = image.load()
     filled = {(x, y) for y in range(image.height) for x in range(image.width) if pixels[x, y][3]}
     for y in range(image.height):
@@ -72,7 +71,7 @@ def outline(image):
 
 
 def layered(size, layers):
-    """Draw (mask or draw function, colour[, outlined]) layers in order, each outlined so parts read separately, then crop to the art."""
+    """Layers are (mask or draw function, colour[, outlined]), painted in order."""
     image = Image.new("RGBA", size)
     for mask, color, *rest in layers:
         layer = paint(Image.new("RGBA", size), mask if isinstance(mask, set) else shape(size, mask), color)
@@ -81,7 +80,6 @@ def layered(size, layers):
 
 
 def double_arrows():
-    """One stem splitting into two arrows pointing up, like Melvor's doubling icon."""
     def draw(pen):
         pen.rectangle((11, 16, 14, 25), fill=1)
         pen.polygon([(11, 17), (14, 17), (8, 11), (5, 11)], fill=1)
@@ -101,7 +99,6 @@ def down_arrow():
 
 
 def cost_reduction(coins):
-    """OSRS coins with a green arrow pointing down, for Melvor's cheaper-cost icon."""
     arrow = down_arrow()
     canvas = Image.new("RGBA", (coins.width + 3, coins.height + 5))
     canvas.alpha_composite(coins, (0, 0))
@@ -110,7 +107,7 @@ def cost_reduction(coins):
 
 
 def plus_from_checkmark(checkmark):
-    """The OSRS green checkmark with its tick painted out and a white plus in its place, for Melvor's extra-resource icon."""
+    """Repaints the checkmark's tick green and draws a white plus over it."""
     image = checkmark.copy()
     pixels = image.load()
     green = (107, 199, 31, 255)
@@ -135,12 +132,10 @@ def discord():
 
 
 def gold_lamp(lamp):
-    """The OSRS Antique lamp recoloured gold, for Melvor's mastery trophy."""
     return tint(lamp.copy(), LAMP_GOLD)
 
 
 def lamp_pool(lamp):
-    """Melvor's mastery pool ring in gold around the OSRS Antique lamp, gold too."""
     lamp = gold_lamp(lamp)
     side = lamp.width + 9
     inset = 4
@@ -157,7 +152,6 @@ def lamp_pool(lamp):
 
 
 def cycle_arrows():
-    """Two green arrows chasing each other round a circle, for Melvor's preservation icon."""
     size, centre, outer, inner = (27, 27), 13.5, 10.5, 6.5
     point = lambda radius, degrees, k: (k * (centre + radius * math.cos(math.radians(degrees))), k * (centre + radius * math.sin(math.radians(degrees))))
 
@@ -170,7 +164,6 @@ def cycle_arrows():
 
 
 def gold_star():
-    """A plump five-point gold star with rounded points, like Melvor's perfect cook icon."""
     size, cx, cy, rounding = (27, 26), 13.5, 14.2, 2.2
     corners = [(cx + (11 if i % 2 == 0 else 5.6) * math.cos(math.radians(-90 + 36 * i)), cy + (11 if i % 2 == 0 else 5.6) * math.sin(math.radians(-90 + 36 * i))) for i in range(10)]
 
@@ -184,7 +177,6 @@ def gold_star():
 
 
 def reddit():
-    """Snoo: a white alien head with antenna on an orange disc."""
     def disc(pen):
         pen.ellipse((0, 0, 24, 24), fill=1)
 
@@ -202,7 +194,6 @@ def reddit():
 
 
 def bluesky():
-    """The Bluesky butterfly: two big upper wings and two small lower wings meeting in the middle."""
     def wings(pen):
         pen.polygon([(12, 12), (6, 4), (2, 2), (1, 5), (2, 11), (7, 14), (11, 14)], fill=1)
         pen.polygon([(13, 12), (19, 4), (23, 2), (24, 5), (23, 11), (18, 14), (14, 14)], fill=1)
@@ -212,7 +203,6 @@ def bluesky():
 
 
 def x_logo():
-    """The X logo: one heavy stroke and one light stroke crossing."""
     def heavy(pen):
         pen.polygon([(1, 1), (7, 1), (23, 22), (17, 22)], fill=1)
 

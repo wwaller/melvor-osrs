@@ -68,7 +68,6 @@ def _stamp(image, label, scale):
 
 
 def _star(image, scale):
-    """Pixel star in the top-right corner, outlined in black like OSRS sprites."""
     size = len(STAR_SHAPE) + 2
     star = Image.new("RGBA", (size, size))
     filled = {(x + 1, y + 1) for y, line in enumerate(STAR_SHAPE) for x, c in enumerate(line) if c == "#"}
@@ -84,7 +83,6 @@ def _star(image, scale):
 
 
 def _decal(image, icon_data, fraction=0.36):
-    """Small skill icon in the bottom-right corner so a generic sprite says what it is for."""
     icon = _trim(_open(icon_data))
     side = round(image.width * fraction)
     if max(icon.width, icon.height) > side:
@@ -122,7 +120,6 @@ def tint(image, color, greys_only=False):
 
 
 def gold_trim(image):
-    """A one-pixel gold edge just inside the black outline, for Melvor's superior skillcapes."""
     pixels = image.load()
     def edge(x, y):
         if not (0 <= x < image.width and 0 <= y < image.height):
@@ -144,7 +141,6 @@ def _crisp(image, canvas):
 
 
 def group(datas):
-    """Two to six OSRS item sprites overlapped on one canvas, for Melvor art that pictures several tools or a bundle."""
     parts = [_trim(_open(data)) for data in datas]
     side = max([GROUP_CANVAS] + [max(part.size) for part in parts])
     canvas = Image.new("RGBA", (side, side))
@@ -154,7 +150,6 @@ def group(datas):
 
 
 def _emblem(icon, size):
-    """A skill icon shrunk to an OSRS cape emblem, in its own colours with hard edges."""
     icon = _trim(icon)
     icon.thumbnail((size, size), Image.LANCZOS)
     pixels = icon.load()
@@ -166,7 +161,6 @@ def _emblem(icon, size):
 
 
 def skillcape(template_data, emblem_data, color, trim=None):
-    """A skillcape for a skill OSRS lacks: an OSRS cape recoloured to the Melvor cape's colour, its emblem redrawn small from the skill icon."""
     cape = _trim(_open(template_data))
     pixels = cape.load()
     top = cape.height // 4
@@ -189,7 +183,6 @@ def skillcape(template_data, emblem_data, color, trim=None):
 
 
 def pixel_sprite(data, canvas=0, label=None, star=False, decal=None, recolor=None, trim=None):
-    """Center on a square canvas (item art trimmed first, canvas as a floor), then integer nearest-neighbor upscale so pixels stay crisp."""
     image = _trim(_open(data)) if canvas else _open(data)
     if recolor:
         tint(image, recolor["color"], recolor.get("greys", False))
@@ -228,7 +221,6 @@ def _finish_render(image, label=None, badge=None, grounded=False, recolor=None, 
 
 
 def erase_hue(image, low, high, min_saturation=0.15, min_alpha=32):
-    """Clear the pixels of one colour range from a render (the Narwhal's tusk, to leave a whale), and the faint fringe around it so the crop closes in."""
     pixels = image.load()
     for y in range(image.height):
         for x in range(image.width):
@@ -240,7 +232,6 @@ def erase_hue(image, low, high, min_saturation=0.15, min_alpha=32):
 
 
 def big_top(image, split, scale, stack=1, overlap=0.45):
-    """Enlarge the part of a render above split (a jellyfish's bell) over the rest, and stack smaller copies of it upward, for Melvor monsters drawn mostly as head."""
     cut = round(image.height * split)
     top, rest = image.crop((0, 0, image.width, cut)), image.crop((0, cut, image.width, image.height))
     tiers = [top.resize((max(1, round(top.width * scale * 0.78 ** i)), max(1, round(top.height * scale * 0.78 ** i))), Image.LANCZOS) for i in range(stack)]
@@ -258,7 +249,6 @@ def big_top(image, split, scale, stack=1, overlap=0.45):
 
 
 def render(data, label=None, badge=None, grounded=False, recolor=None, shrink=None, top=None, star=False, rotate=None, erase=None, inflate=None, outline=None):
-    """Grounded renders sit on the bottom edge, so a creature stands where Melvor's own monster art does; shrink draws it smaller in the same frame (a chick from a chicken), inflate makes it taller (a chubby whale from a narwhal), and rotate tilts a long render to fill the square."""
     image = _trim(_open(data))
     if erase:
         image = erase_hue(image, *erase)
@@ -270,7 +260,6 @@ def render(data, label=None, badge=None, grounded=False, recolor=None, shrink=No
 
 
 def row(datas, overlap=0.25, grounded=False, recolor=None):
-    """Line several renders up side by side at a shared height, overlapping a little."""
     height = RENDER_SIZE
     parts = []
     for data in datas:
@@ -287,7 +276,7 @@ def row(datas, overlap=0.25, grounded=False, recolor=None):
 
 
 def cluster(parts, grounded=False):
-    """Several renders at their own size and spot in one frame, drawn back to front, for groups like the Miolite Trio. Each part is (data, size as a share of the frame, (x, y) as shares of the free space, recolor)."""
+    """Parts are (data, size as a share of the frame, (x, y) as shares of the free space, recolor)."""
     side = RENDER_SIZE * 2
     canvas = Image.new("RGBA", (side, side))
     for data, share, (fx, fy), recolor in parts:
@@ -301,7 +290,6 @@ def cluster(parts, grounded=False):
 
 
 def tablet(blank, creature_data, fill=0.7):
-    """Put an OSRS creature on Melvor's blank summoning tablet, large enough to read at icon size."""
     slab = _open(blank)
     box = round(slab.width * fill)
     creature = _trim(_open(creature_data))
@@ -315,7 +303,6 @@ def tablet(blank, creature_data, fill=0.7):
 
 
 def _outline(image, width, color=LABEL_SHADOW):
-    """Dark stroke around the silhouette, like the outline on OSRS sprites."""
     padded = Image.new("RGBA", (image.width + 2 * width, image.height + 2 * width))
     padded.paste(image, (width, width))
     solid = padded.getchannel("A").point(lambda a: 255 if a > 96 else 0)

@@ -6,7 +6,9 @@ const MODDED = 'mod:';
 
 export async function setup(ctx) {
   const { settings, entries } = await ctx.loadData('mapping.json');
-  (await ctx.loadModule('overhaul.mjs')).offerOverhaul(ctx);
+  const shared = await ctx.loadModule('overhaul.mjs');
+  shared.offerOverhaul(ctx);
+  shared.dropOrphanedSongs();
   const sectionOf = new Map(settings.map((s) => [s.name, s.section]));
   const urls = new Map();
   const spriteUrl = (sprite) => {
@@ -57,7 +59,7 @@ export async function setup(ctx) {
     }
     return itemsByMedia && itemsByMedia.get(media);
   };
-  /** Icons Melvor puts straight into <img> tags (skill icons, the enemy panel's stats, the combat menu's tabs) never pass through getMediaURL; item pictures among them follow that item's own choice. */
+  // Icons Melvor puts straight into <img> tags never pass through getMediaURL.
   const swapImage = (image) => {
     if (!enabled) return;
     const src = image.getAttribute('src');
@@ -128,7 +130,7 @@ export async function setup(ctx) {
       }
     }
     if (enabled && !this.isModded && typeof media === 'string') {
-      /** A page's sidebar icon can be other art than its header (the Shop's is the GP coin); give both the header's OSRS art. */
+      // A page's sidebar icon can differ from its header (the Shop's is the GP coin); both get the header's art.
       const headerMedia = this.sidebarItem && media === this.sidebarItem.icon ? this._media : undefined;
       const sprite = (headerMedia && spriteFor(this, headerMedia)) || spriteFor(this, media);
       if (sprite) return spriteUrl(sprite);
@@ -137,11 +139,10 @@ export async function setup(ctx) {
   });
 
   ctx.onInterfaceReady(() => {
-    /** Mod Settings shows a gear glyph rather than an image; give it the Settings page's OSRS wrench. */
     const sprite = enabled && active.get(SETTINGS_ICON);
     const modding = sprite && sidebar.category('Modding');
     if (modding && modding.items().some((item) => item.id === 'Mod Settings')) modding.item('Mod Settings', { icon: spriteUrl(sprite) });
-    /** Mapped pages of other mods (Multiplayer) reuse their bundled icons elsewhere, such as Mod Settings; reading each page's media records those icons' URLs so every copy is swapped. */
+    // Reading each modded page's media records its icon URLs so copies elsewhere (Mod Settings) get swapped too.
     for (const key of Object.keys(entries)) {
       const page = key.startsWith(MODDED) && game.pages.getObjectByID(key.slice(MODDED.length));
       if (page) page.getMediaURL(page._media);

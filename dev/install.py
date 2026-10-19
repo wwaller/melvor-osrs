@@ -1,9 +1,4 @@
-"""Hook the OSRS sprites mod into the Steam (NW.js) build of Melvor Idle for local testing.
-
-The Steam client is a thin wrapper page that loads the game in an iframe. This adds a
-script to that wrapper which injects mod/setup.mjs into the game frame on every load,
-reading sprites straight from this repo, so a rebuild only needs a game restart.
-"""
+"""Hook the OSRS sprites mod into the Steam (NW.js) build of Melvor Idle for local testing."""
 import argparse
 import json
 import shutil
