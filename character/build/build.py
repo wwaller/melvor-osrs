@@ -1,5 +1,6 @@
 """Match Melvor equipment to OSRS items and export the models, body kits and pose the character renderer needs."""
 import argparse
+import colorsys
 import io
 import json
 import npcs
@@ -34,6 +35,9 @@ DATA_DIR = MOD_DIR / "data"
 DIST_DIR = ROOT / "dist"
 SPRITES_MAPPING = ROOT.parent / "art" / "mod" / "mapping.json"
 SPRITES_OVERRIDES = ROOT.parent / "art" / "build" / "overrides.json"
+SPRITES_GUESSES = ROOT.parent / "art" / "build" / "guesses.json"
+METAL_SATURATION = 1
+RENDER_BRIGHTNESS = 0.6
 SPRITES_ASSETS = ROOT.parent / "art" / "build" / "assets"
 SPRITES_BUILD = ROOT.parent / "art" / "build"
 MONSTER_POSES = {"stand", "attack", "death"}
@@ -238,6 +242,60 @@ def item_file(cache, definition, model_cache):
     return {"item": item, "models": {model_id: model_cache[model_id] for model_id in model_ids}}
 
 
+def osrs_hsl(hex_colour):
+    red, green, blue = ((int(hex_colour[i:i + 2], 16) / 255) ** (1 / RENDER_BRIGHTNESS) for i in (1, 3, 5))
+    hue, lightness, saturation = colorsys.rgb_to_hls(red, green, blue)
+    return int(hue * 64) % 64, min(7, int(saturation * 8)), round(lightness * 127)
+
+
+def metal_recolors(definition, model_colors, colour):
+    """The item's colour swaps with its metal, the near-grey colours, shifted to `colour`, keeping each shade's lightness relative to the rest like the Art mod's tint."""
+    final = {color: dict(definition["recolor"]).get(color, color) for color in model_colors}
+    picked = {color for color in final.values() if ((color >> 7) & 7) <= METAL_SATURATION}
+    if not picked:
+        return definition["recolor"]
+    hue, saturation, lightness = osrs_hsl(colour)
+    mean = sum(color & 127 for color in picked) / len(picked)
+    tinted = {color: (hue << 10) | (saturation << 7) | max(0, min(127, round((color & 127) * lightness / mean))) for color in picked}
+    return [[original, tinted.get(color, color)] for original, color in final.items() if tinted.get(color, color) != original]
+
+
+def item_specs():
+    specs = {}
+    for source in (SPRITES_GUESSES, SPRITES_OVERRIDES):
+        specs.update({key: spec for key, spec in json.loads(source.read_text())["item"].items() if isinstance(spec, dict) and spec.get("base")})
+    return specs
+
+
+def worn_base(spec, slot, by_slug, by_id):
+    title = spec["base"].removeprefix("File:").removesuffix(".png")
+    return next((item_id for item_id in by_slug.get(slug(title), []) if by_id[item_id]["wear_pos"][0] == slot), None)
+
+
+def labelled_matches(equipment, specs, by_slug, by_id):
+    found = {}
+    for entry in equipment:
+        spec, slot = specs.get(entry.id), MELVOR_SLOTS.get(entry.slot)
+        if spec and not spec.get("recolor") and slot is not None and (osrs_id := worn_base(spec, slot, by_slug, by_id)) is not None:
+            found[entry.id] = osrs_id
+    return found
+
+
+def recoloured_items(cache, equipment, specs, by_slug, by_id, model_cache):
+    files = {}
+    for entry in equipment:
+        spec, slot = specs.get(entry.id), MELVOR_SLOTS.get(entry.slot)
+        if not spec or not spec.get("recolor") or slot is None or (osrs_id := worn_base(spec, slot, by_slug, by_id)) is None:
+            continue
+        definition = worn_parts(osrs_id, by_id[osrs_id])
+        colors = {color for model_id in set(definition["male"] + definition["female"]) if model_id != -1 for color in osrs_model.decode(cache.group(MODELS, model_id))["colors"]}
+        recolored = {**definition, "recolor": metal_recolors(definition, colors, spec["recolor"]["color"])}
+        name = slug(entry.id.split(":", 1)[1])
+        write_json(DATA_DIR / "items" / f"{name}.json", item_file(cache, recolored, model_cache))
+        files[entry.id] = name
+    return files
+
+
 def custom_skillcapes(cache):
     overrides = json.loads(SPRITES_OVERRIDES.read_text())["item"]
     base = osrs_defs.item(cache.files(osrs_defs.CONFIGS, osrs_defs.ITEM_GROUP)[skillcape.BASE_CAPE])
@@ -328,7 +386,8 @@ def main():
     cache = Cache(CACHE)
     equipment = load_equipment(CACHE)
     by_slug, by_id = worn_items(cache)
-    matches = match(equipment, json.loads(args.sprites_mapping.read_text())["entries"], by_slug, by_id)
+    specs = item_specs()
+    matches = labelled_matches(equipment, specs, by_slug, by_id) | match(equipment, json.loads(args.sprites_mapping.read_text())["entries"], by_slug, by_id)
     events = random_event_items(by_slug)
     shutil.rmtree(DATA_DIR, ignore_errors=True)
     model_cache = {}
@@ -340,7 +399,7 @@ def main():
         write_json(DATA_DIR / "items" / f"{osrs_id}.json", item_file(cache, osrs_defs.item(all_items[osrs_id]), model_cache))
     for osrs_id in sorted(set(matches.values()) | set(events.values())):
         write_json(DATA_DIR / "items" / f"{osrs_id}.json", item_file(cache, worn_parts(osrs_id, by_id[osrs_id]), model_cache))
-    custom = custom_skillcapes(cache)
+    custom = custom_skillcapes(cache) | recoloured_items(cache, equipment, specs, by_slug, by_id, model_cache)
     index = {e.media: matches[e.id] for e in equipment if e.id in matches} | {e.media: custom[e.id] for e in equipment if e.id in custom} | events
     write_json(DATA_DIR / "index.json", dict(sorted(index.items())))
     write_report(equipment, matches, by_id, custom)
