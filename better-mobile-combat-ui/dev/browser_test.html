@@ -948,6 +948,16 @@ window.game.prayer.isUnlocked = true;
 window.game.altMagic.isUnlocked = true;
 render();
 check('and they come back once unlocked', cornerButtons().length === 4);
+const slayerCount = () => cornerButton('Slayer').querySelector('.mobile-combat-corner-count');
+check('with no Slayer task, the Slayer button shows just its icon', slayerCount()?.textContent === '' && !cornerButton('Slayer').classList.contains('mobile-combat-corner-counted'), slayerCount()?.textContent);
+combat.slayerTask = { active: true, killsLeft: 37 };
+render();
+check('on a Slayer task, the Slayer button shows the kills left along its bottom edge, like prayer points on Prayer', slayerCount().textContent === '37' && cornerButton('Slayer').classList.contains('mobile-combat-corner-counted') && shown(slayerCount()) && Math.abs(box(slayerCount()).bottom - box(cornerButton('Slayer')).bottom) < 3, slayerCount().textContent);
+combat.slayerTask.active = false;
+render();
+check('and the count goes away when the task is done', slayerCount().textContent === '' && !cornerButton('Slayer').classList.contains('mobile-combat-corner-counted'));
+delete combat.slayerTask;
+render();
 
 const playerContainer = document.getElementById('combat-player-container');
 playerContainer.classList.add('d-mobile-none');

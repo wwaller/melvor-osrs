@@ -15,7 +15,7 @@ const CORNER_MENUS = [
   { tab: 0, label: 'Equipment', element: 'combat-menu-0', media: 'assets/media/bank/armour_helmet_bronze.png' },
   { tab: 1, label: 'Spellbook', element: 'combat-menu-1', media: 'assets/media/skills/combat/spellbook.png', skill: 'altMagic', active: (player) => (player.attackType === 'magic' ? player.spellSelection.attack : undefined) },
   { tab: 2, label: 'Prayer', element: 'combat-menu-2', media: 'assets/media/skills/prayer/prayer.png', skill: 'prayer', active: (player) => player.activePrayers.values().next().value, count: (player) => player.prayerPoints },
-  { tab: 5, label: 'Slayer', element: 'combat-slayer-task-menu', media: 'assets/media/skills/slayer/slayer.png' },
+  { tab: 5, label: 'Slayer', element: 'combat-slayer-task-menu', media: 'assets/media/skills/slayer/slayer.png', count: () => (game.combat.slayerTask?.active ? game.combat.slayerTask.killsLeft : undefined) },
 ];
 const OPEN_CARD_CLASS = 'mobile-combat-area-open';
 const UNMET_CARD_CLASS = 'mobile-combat-area-unmet';
@@ -209,7 +209,7 @@ export function setup(ctx) {
     { type: 'switch', name: 'jump-to-last', label: 'Jump To Last section', hint: 'On the combat page, a section above your Player panel with a button to fight the last enemy again once a fight ends.', default: true, onChange: switches['jump-to-last'] },
     { type: 'switch', name: 'compact-area-select', label: 'Compact Area Select', hint: 'Made for mobile. Shows the area types as a 2x2 grid in place of the Select Combat Area dropdown (the open one in red, pressed again to hide its areas), and each area as just its art and name, two to a row and dimmed if you cannot enter it yet. An opened area shows its full card and enemies across the whole width.', default: true, onChange: switches['compact-area-select'] },
     { type: 'switch', name: 'attack-styles-under-enemy', label: 'Attack Styles above the enemy stats', hint: 'Made for mobile. Moves the Attack Style section to just above the Offensive Stats of the enemy, so you can switch without scrolling back up. It is the same section, moved, so buttons other mods add to it come along.', default: false, onChange: switches['attack-styles-under-enemy'] },
-    { type: 'switch', name: 'combat-menu-buttons', label: 'Combat buttons in the corner', hint: 'On the combat page, adds Equipment, Spellbook, Prayer and Slayer buttons in the bottom right, above the Skill Switcher buttons if you have that mod. Each switches to that menu, unfolds your side of the page if it is folded away, and scrolls to it. Prayer and Spellbook show the prayer you have on and the spell you are casting, with your prayer points under Prayer. While you fight on a narrow screen, a button with the enemy on top scrolls down to the fight.', default: true, onChange: switches['combat-menu-buttons'] },
+    { type: 'switch', name: 'combat-menu-buttons', label: 'Combat buttons in the corner', hint: 'On the combat page, adds Equipment, Spellbook, Prayer and Slayer buttons in the bottom right, above the Skill Switcher buttons if you have that mod. Each switches to that menu, unfolds your side of the page if it is folded away, and scrolls to it. Prayer and Spellbook show the prayer you have on and the spell you are casting, with your prayer points under Prayer and the kills left on your Slayer task under Slayer. While you fight on a narrow screen, a button with the enemy on top scrolls down to the fight.', default: true, onChange: switches['combat-menu-buttons'] },
     { type: 'switch', name: 'scroll-on-area-fight', label: 'Scroll to Combat after picking an enemy', hint: 'When you start a fight from an area card (a monster, dungeon or stronghold), scrolls down to the fight.', default: true, onChange: switches['scroll-on-area-fight'] },
     { type: 'switch', name: 'hide-hp-bars', label: 'Hide the HP bars and attack intervals on the combat page', hint: 'Hides your HP bar, the enemy HP and barrier bars, and both attack interval timers (your familiar one too) on the combat page, since the combat minibar already shows them. The HP numbers stay.', default: false, onChange: switches['hide-hp-bars'] },
     { type: 'switch', name: 'hide-food', label: 'Hide the Food section on the combat page', hint: 'Hides the Food section on the combat page, since the combat minibar already has your food.', default: false, onChange: switches['hide-food'] },
@@ -398,7 +398,11 @@ export function setup(ctx) {
           icon.src = media;
         }
       }
-      if (count) setText(count, formatNumber(menu.count(player)));
+      if (count) {
+        const value = menu.count(player);
+        setText(count, value === undefined ? '' : formatNumber(value));
+        button.classList.toggle('mobile-combat-corner-counted', value !== undefined);
+      }
     }
     const enemyMedia = game.combat?.isActive && !game.golbinRaid?.isActive ? game.combat.selectedMonster?.media : undefined;
     cornerFight.classList.toggle('d-none', !enemyMedia);
