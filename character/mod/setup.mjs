@@ -222,13 +222,15 @@ export async function setup(ctx) {
   const shownIn = (place) => ctx.settings.section(SECTION).get(place) !== false;
   const stageOn = () => shownIn('combat') && game.combat?.isActive === true;
 
-  const spritesLoaded = (() => {
+  // Checked once every mod has loaded, since the Art mod may come after this one in the load order.
+  let spritesLoaded = false;
+  ctx.onModsLoaded(() => {
     try {
-      return Boolean(mod.getContext(SPRITES_NAMESPACE));
+      spritesLoaded = Boolean(mod.getContext(SPRITES_NAMESPACE));
     } catch {
-      return false;
+      spritesLoaded = false;
     }
-  })();
+  });
   const showsOsrsArt = (item) => {
     if (!spritesLoaded) return true;
     try {
