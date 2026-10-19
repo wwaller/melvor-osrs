@@ -144,7 +144,6 @@ def slug(spec):
 
 
 def synth_names(wiki):
-    """Jagex's sound effect names to cache ids, from the OSRS Wiki's list of sound IDs."""
     text = wiki.api({"action": "parse", "page": "List of sound IDs", "prop": "wikitext"})["parse"]["wikitext"]
     names = {}
     for sound_id, name in re.findall(r"\|\s*(\d+)\s*\|\|\s*([^|\n]+)", text):
@@ -161,7 +160,6 @@ def synth_death(names, candidates):
 
 
 def sprite_picks(kind):
-    """The sprite mod's OSRS pick per Melvor id, so a spell or monster sounds like what it shows."""
     picks = {}
     for name in ("guesses.json", "overrides.json"):
         path = SPRITES_BUILD / name
@@ -263,7 +261,7 @@ def track_lengths():
 
 
 def music_plan():
-    """Context id -> wiki files to play; tracks under a minute are jingles (level-ups, chart stings), not music, and are left out."""
+    # Tracks under a minute are jingles, not music.
     approved = BUILD_DIR / "music.json"
     source = approved if approved.exists() else BUILD_DIR / "music_proposals.json"
     plan = {}
@@ -277,8 +275,6 @@ def music_plan():
 
 
 class Sources:
-    """Local audio for a sound spec: an OSRS Wiki file, or a Jagex-named synth sound rendered from the game cache."""
-
     def __init__(self, wiki, info):
         self.wiki = wiki
         self.info = info
@@ -316,7 +312,7 @@ def encode(source, out_path, bitrate, mono):
 
 
 def square(image):
-    """Melvor draws mod icons in a square box: centre the art on a transparent square so it is not stretched."""
+    # Melvor draws mod icons in a square box and stretches anything else.
     side = max(image.size)
     canvas = Image.new("RGBA", (side, side))
     canvas.paste(image, ((side - image.width) // 2, (side - image.height) // 2))

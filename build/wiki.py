@@ -57,7 +57,6 @@ class Wiki:
                 return rows
 
     def image_info(self, file_titles, thumb_size=None):
-        """Map 'File:X.png' titles to {url, width, height}; missing files are omitted."""
         info = {}
         titles = sorted(set(file_titles))
         for start in range(0, len(titles), TITLES_PER_QUERY):

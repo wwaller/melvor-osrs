@@ -21,6 +21,18 @@ const DEBUG_PART_MS = 8000;
 const SONG_RETRY_FIRST_MS = 3000;
 const SONG_RETRY_MAX_MS = 10 * 60 * 1000;
 const SONG_RATE_LIMITED_MIN_MS = 60 * 1000;
+const SONG_DATABASE = 'osrs-sounds-songs';
+const SONG_TABLE = 'songs';
+const SIZE_TABLE = 'sizes';
+const BULK_GAP_MS = 1000;
+const BULK_MAX_FAILURES = 5;
+const TYPICAL_SONG_BYTES = 3.2 * 1024 * 1024;
+const BYTES_PER_MB = 1024 * 1024;
+const SONG_PROBLEMS_KEPT = 8;
+const HISTORY_DATABASE = 'osrs-sounds-history';
+const HISTORY_SHOWN = 5000;
+const MODS_KEY = 'osrsSoundsLastMods';
+const SCREEN_SETTLE_MS = 1000;
 const RESTART_AFTER_SECONDS = 3;
 const HISTORY_SIZE = 50;
 const REPEAT_KEY = 'repeat-one';
@@ -60,21 +72,32 @@ const WEAPON_PATTERNS = [
 export async function setup(ctx) {
   ctx.loadStylesheet('style.css');
   const audio = await ctx.loadData('audio.json');
-  (await ctx.loadModule('overhaul.mjs')).offerOverhaul(ctx);
+  const shared = await ctx.loadModule('overhaul.mjs');
+  shared.offerOverhaul(ctx);
   const music = ctx.settings.section('Music');
   const effects = ctx.settings.section('Sound effects');
   const debugLog = [];
+  const deviceLog = typeof indexedDB === 'undefined' ? null : shared.createHistory(indexedDB, HISTORY_DATABASE);
   const note = (event) => {
     debugLog.push(`${new Date().toLocaleTimeString()} ${event}`);
     if (debugLog.length > DEBUG_LOG_SIZE) debugLog.shift();
+    deviceLog?.add(event);
   };
-  const later = (name, fn) => (value) => {
-    note(`setting ${name} changed to ${value}`);
-    setTimeout(fn);
-  };
+  const later = (fn) => () => setTimeout(fn);
+  const logged = (section) => (config) => ({
+    ...config,
+    ...(config.onChange ? { onChange: (value, previous) => {
+      note(`setting "${section}: ${config.label}" changed from ${previous} to ${value}`);
+      return config.onChange(value, previous);
+    } } : config.type !== 'button' ? { onChange: (value, previous) => note(`setting "${section}: ${config.label}" changed from ${previous} to ${value}`) } : {}),
+    ...(config.onClick ? { onClick: (...args) => {
+      note(`pressed "${section}: ${config.display}"`);
+      return config.onClick(...args);
+    } } : {}),
+  });
 
   const musicSettings = [
-    { type: 'switch', name: 'enabled', label: 'Play OSRS music', hint: 'Each skill, combat area, dungeon and menu has its own tracks, streamed from the OSRS Wiki.', default: true, onChange: later('enabled', () => {
+    { type: 'switch', name: 'enabled', label: 'Play OSRS music', hint: 'Each skill, combat area, dungeon and menu has its own tracks, streamed from the OSRS Wiki.', default: true, onChange: later(() => {
       applyVolume();
       syncMusic();
     }) },
@@ -85,17 +108,20 @@ export async function setup(ctx) {
       hint: 'No shuffle plays the tracks for what you are doing in order. Per-skill shuffle picks at random from them. Full shuffle picks from every track in the mod, whatever you are doing.',
       default: 'skill',
       options: [{ value: 'off', display: 'No shuffle' }, { value: 'skill', display: 'Per-skill shuffle' }, { value: 'all', display: 'Full shuffle' }],
-      onChange: later('shuffle-mode', reshuffle),
+      onChange: later(reshuffle),
     },
-    { type: 'number', name: 'volume', label: 'Music volume', hint: '0 to 100', default: 30, min: 0, max: 100, onChange: later('volume', applyVolume) },
-    { type: 'switch', name: 'animated-icon', label: 'Animated music button', hint: 'The music button in the top bar shows moving bars while a song plays. Off always shows the harp.', default: true, onChange: later('animated-icon', renderPlayer) },
-    { type: 'switch', name: 'background', label: 'Keep playing in the background (desktop)', hint: 'Off pauses sound while the game window is minimized or another window is in front. On phones, sound always stops when you leave the app.', default: true, onChange: later('background', onVisibility) },
+    { type: 'number', name: 'volume', label: 'Music volume', hint: '0 to 100', default: 30, min: 0, max: 100, onChange: later(applyVolume) },
+    { type: 'switch', name: 'save-songs', label: 'Play downloaded songs from this device', hint: 'Songs downloaded to this device play from it instead of the OSRS Wiki, and each new song is kept the first time it plays, so it never downloads again. Every song together takes about 1 GB.', default: false, onChange: later(refreshStorage) },
+    { type: 'button', name: 'download-all', display: 'Download every song now', color: 'primary', onClick: () => offerDownloadAll() },
+    { type: 'button', name: 'clear-songs', display: 'Clear downloaded songs', color: 'danger', onClick: () => offerClearSongs() },
+    { type: 'switch', name: 'animated-icon', label: 'Animated music button', hint: 'The music button in the top bar shows moving bars while a song plays. Off always shows the harp.', default: true, onChange: later(renderPlayer) },
+    { type: 'switch', name: 'background', label: 'Keep playing in the background (desktop)', hint: 'Off pauses sound while the game window is minimized or another window is in front. On phones, sound always stops when you leave the app.', default: true, onChange: later(onVisibility) },
     { type: 'button', name: 'guide', display: '? How this mod works', color: 'info', onClick: () => showGuide() },
     { type: 'button', name: 'debug', display: 'Copy sound debug info', color: 'secondary', onClick: () => showDebugInfo() },
   ];
   const effectsSettings = [
     { type: 'switch', name: 'effects-enabled', label: 'Play OSRS sound effects', hint: 'Nothing plays during offline progress.', default: true },
-    { type: 'number', name: 'effects-volume', label: 'Sound effect volume', hint: '0 to 100', default: 40, min: 0, max: 100, onChange: later('effects-volume', applyVolume) },
+    { type: 'number', name: 'effects-volume', label: 'Sound effect volume', hint: '0 to 100', default: 40, min: 0, max: 100, onChange: later(applyVolume) },
     { type: 'switch', name: 'levelups', label: 'Level-up jingles', hint: 'Music dips while the jingle plays.', default: true },
     { type: 'switch', name: 'combat', label: 'Weapon sounds', hint: 'One sound per attack, matched to your weapon type.', default: true },
     { type: 'switch', name: 'spells', label: 'Spell sounds', hint: 'Combat spells and Alt. Magic.', default: true },
@@ -107,15 +133,35 @@ export async function setup(ctx) {
     { type: 'switch', name: 'pets', label: 'Pet drop chime', hint: 'The OSRS unique drop sound when you find a pet.', default: true },
     { type: 'switch', name: 'catch-up', label: 'Replay what happened during offline progress', hint: 'When you come back, plays one jingle (your death, otherwise your latest level-up), then the pet chime if you found one.', default: true },
   ];
-  music.add(musicSettings);
-  effects.add(effectsSettings);
+  music.add(musicSettings.map(logged('Music')));
+  effects.add(effectsSettings.map(logged('Sound effects')));
   ctx.settings.section('DANGER').add([
     { type: 'button', name: 'danger-unlock-all', display: 'Unlock All Songs', color: 'danger', onClick: () => confirmUnlockAll() },
-  ]);
+  ].map(logged('DANGER')));
+  const screenText = () => safe(() => `${window.innerWidth}x${window.innerHeight} at ${window.devicePixelRatio}x, ${screen.orientation?.type ?? 'orientation not reported'}`);
+  note(`opened: OSRS Sounds ${safe(() => ctx.version || undefined, '?')} on Melvor ${safe(() => gameVersion, '?')}, ${safe(() => navigator.userAgent)}, screen ${screenText()}`);
+  shared.noteModChanges(note, MODS_KEY);
+  let screenTimer = 0;
+  window.addEventListener('resize', () => {
+    clearTimeout(screenTimer);
+    screenTimer = setTimeout(() => note(`screen changed: ${screenText()}`), SCREEN_SETTLE_MS);
+  });
+  safe(() => navigator.mediaDevices.addEventListener('devicechange', () => {
+    navigator.mediaDevices.enumerateDevices().then((devices) => {
+      const outputs = devices.filter((device) => device.kind === 'audiooutput');
+      note(`audio outputs changed: ${outputs.length}${outputs.some((device) => device.label) ? ` (${outputs.map((device) => device.label || '?').join(', ')})` : ''}`);
+    }, (error) => note(`audio outputs changed, could not list them: ${describeError(error)}`));
+  }));
+  if (typeof Settings !== 'undefined') {
+    ctx.patch(Settings, 'toggleSetting').after(function (_result, setting) {
+      note(`Melvor setting ${setting} turned ${safe(() => (this.boolData[setting].currentValue ? 'on' : 'off'))}`);
+    });
+    ctx.patch(Settings, 'changeChoiceSetting').after((_result, setting, value) => note(`Melvor setting ${setting} changed to ${value}`));
+  }
 
   const percent = (value) => Math.max(0, Math.min(100, Number(value) || 0)) / 100;
 
-  /** Melvor keeps mod settings in each save, so the main menu only has the defaults: it uses the ones last set on any character instead. */
+  // Settings live in each save, so the main menu only sees defaults; use the last values stored from any character.
   function soundSettings() {
     const current = [music.get('volume'), effects.get('effects-volume'), music.get('enabled')];
     const remembered = characterLoaded ? null : ctx.accountStorage?.getItem(VOLUME_KEY);
@@ -206,7 +252,7 @@ export async function setup(ctx) {
     }, FADE_OUT_MS + 20);
   }
 
-  /** iOS can freeze the page the moment it is hidden, so a fade might never finish: mute at once, and leave stopping the audio to a timer as before. */
+  // iOS can freeze the page the moment it is hidden, so a fade might never finish.
   function muteThenSuspend() {
     const now = engine.currentTime;
     masterGain.gain.cancelScheduledValues(now);
@@ -243,7 +289,7 @@ export async function setup(ctx) {
     return 'idle';
   }
 
-  /** Base-game skills trained in another realm (the Abyss) play that realm's tracks; expansion skills keep their own. */
+  // Base-game skills trained in another realm (the Abyss) play that realm's tracks.
   function actionKey(action) {
     const realm = action.currentRealm;
     if (realm && realm !== game.defaultRealm && action.namespace === 'melvorD' && audio.music[realm.id]) return realm.id;
@@ -268,8 +314,172 @@ export async function setup(ctx) {
   let skipServiceWorker = false;
   let songFailures = 0;
   let songRetryAt = 0;
+  const songStore = typeof indexedDB === 'undefined' ? null : createSongStore(indexedDB);
+  const playingDownloaded = () => songStore !== null && music.get('save-songs') === true;
+  const songLog = { reads: 0, writes: 0, failures: {}, staleRemoved: 0, problems: [], lastBulk: 'none this session', marked: false };
+  const storeFailed = (kind) => (error) => {
+    songLog.failures[kind] = (songLog.failures[kind] ?? 0) + 1;
+    songLog.problems.push(`${new Date().toLocaleTimeString()} ${kind}: ${describeError(error)}`);
+    if (songLog.problems.length > SONG_PROBLEMS_KEPT) songLog.problems.shift();
+    note(`downloaded songs: ${kind} failed: ${describeError(error)}`);
+  };
+  const setMarker = (on) => {
+    try {
+      if (on) globalThis.localStorage.setItem(shared.SONG_MARKER, 'true');
+      else globalThis.localStorage.removeItem(shared.SONG_MARKER);
+    } catch (error) {
+      storeFailed('marker')(error);
+    }
+  };
+  const kept = () => {
+    songLog.writes++;
+    if (!songLog.marked) setMarker(true);
+    songLog.marked = true;
+  };
 
   async function downloadTrack(url) {
+    const fromDevice = playingDownloaded() && url.startsWith('http');
+    if (fromDevice) {
+      const saved = await songStore.get(url).catch(storeFailed('read'));
+      if (saved) {
+        songLog.reads++;
+        return saved;
+      }
+    }
+    const bytes = await downloadFromWiki(url);
+    if (fromDevice) songStore.put(url, bytes.slice(0)).then(() => {
+      kept();
+      refreshStorage();
+    }, storeFailed('write'));
+    return bytes;
+  }
+
+  const wikiSongs = () => [...new Set(Object.values(audio.music).flat())].filter((url) => url.startsWith('http'));
+  const megabytes = (bytes) => `${Math.round(bytes / BYTES_PER_MB).toLocaleString()} MB`;
+  const minutes = (ms) => `${Math.round(ms / 60000)} min`;
+  let bulk = null;
+
+  async function storageSummary() {
+    const usage = await songStore.usage();
+    const total = wikiSongs().length;
+    return { ...usage, total, text: `${usage.count} of ${total} songs downloaded to this device, using ${megabytes(usage.bytes)}` };
+  }
+
+  function refreshStorage() {
+    if (!songStore || !player.storage) return;
+    storageSummary().then((summary) => {
+      player.storage.textContent = bulk ? `Downloading every song: ${bulk.done} of ${bulk.missing}. ${summary.text}.` : summary.count ? `${summary.text}${playingDownloaded() ? '' : ' (they play from the OSRS Wiki while "Play downloaded songs" is off)'}.` : '';
+    }, storeFailed('count'));
+  }
+
+  function notice(message) {
+    if (typeof fireTopToast !== 'function') return;
+    fireTopToast(`<div class="block block-rounded-double bg-dark p-2"><div class="media d-flex align-items-center push"><div class="mr-2"><img class="skill-icon-md" src="${ctx.getResourceUrl('icon.png')}"></div><div class="media-body text-left font-size-sm">${escapeHtml(message)}</div></div></div>`, 5000);
+  }
+
+  function ask(options) {
+    return SwalLocale.fire({ showCancelButton: true, reverseButtons: true, customClass: { container: 'swal-infront', confirmButton: 'btn btn-primary m-1', cancelButton: 'btn btn-secondary m-1' }, buttonsStyling: false, ...options }).then((result) => result.isConfirmed);
+  }
+
+  async function offerDownloadAll() {
+    if (!songStore || typeof SwalLocale === 'undefined') return;
+    if (bulk) {
+      if (await ask({ title: 'Downloading Every Song', text: `${bulk.done} of ${bulk.missing} songs downloaded so far. Stop downloading the rest?`, confirmButtonText: 'Stop', cancelButtonText: 'Keep going' })) bulk.stopped = true;
+      return;
+    }
+    const summary = await storageSummary().catch(storeFailed('count'));
+    if (!summary) return;
+    const have = new Set(await songStore.keys());
+    const missing = wikiSongs().filter((url) => !have.has(url));
+    if (!missing.length) {
+      ask({ title: 'Every Song Is Downloaded', text: `All ${summary.total} songs are on this device, using ${megabytes(summary.bytes)}.`, showCancelButton: false, confirmButtonText: 'OK' });
+      return;
+    }
+    const perSong = summary.count ? summary.bytes / summary.count : TYPICAL_SONG_BYTES;
+    const text = `${summary.text}. The other ${missing.length} will download one at a time from the OSRS Wiki, about ${megabytes(perSong * missing.length)} more. You can keep playing while they download.${playingDownloaded() ? '' : ' They play from this device once "Play downloaded songs from this device" is on.'}`;
+    if (await ask({ title: 'Download Every Song?', text, confirmButtonText: `Download ${missing.length} songs`, cancelButtonText: 'Cancel' })) downloadAllSongs(missing);
+  }
+
+  async function downloadAllSongs(missing) {
+    bulk = { missing: missing.length, done: 0, stopped: false, startedAt: Date.now(), failures: 0, current: null, problem: null };
+    note(`downloading every song: ${missing.length} to go`);
+    notice(`Downloading ${missing.length} songs from the OSRS Wiki. Press Download every song now again to see how far along it is.`);
+    let index = 0;
+    let deviceFull = false;
+    while (index < missing.length && !bulk.stopped) {
+      const url = missing[index];
+      bulk.current = trackTitle(url);
+      let bytes;
+      try {
+        bytes = await downloadFromWiki(url);
+      } catch (error) {
+        bulk.failures++;
+        bulk.problem = `${bulk.current}: ${describeError(error)}`;
+        note(`downloading every song: ${bulk.problem} (${bulk.failures} in a row)`);
+        if (bulk.failures >= BULK_MAX_FAILURES) break;
+        await wait(songRetryDelay(bulk.failures, error));
+        continue;
+      }
+      try {
+        await songStore.put(url, bytes);
+      } catch (error) {
+        storeFailed('write')(error);
+        bulk.problem = `could not keep ${bulk.current} on this device: ${describeError(error)}`;
+        deviceFull = true;
+        break;
+      }
+      kept();
+      bulk.done++;
+      bulk.failures = 0;
+      index++;
+      refreshStorage();
+      await wait(BULK_GAP_MS);
+    }
+    const { done, stopped, problem, startedAt } = bulk;
+    bulk = null;
+    const outcome = stopped ? 'stopped' : done === missing.length ? 'finished' : deviceFull ? 'ran out of room' : 'the OSRS Wiki stopped answering';
+    songLog.lastBulk = `${outcome} at ${new Date().toLocaleTimeString()}, ${done} of ${missing.length} downloaded in ${minutes(Date.now() - startedAt)}${problem ? `, last problem: ${problem}` : ''}`;
+    note(`downloading every song: ${songLog.lastBulk}`);
+    refreshStorage();
+    if (stopped) notice(`Stopped downloading songs. ${done} downloaded.`);
+    else if (done === missing.length) notice(`All ${missing.length} songs are downloaded to this device.`);
+    else if (deviceFull) notice(`Downloaded ${done} of ${missing.length} songs, then this device would not keep any more (${problem}).`);
+    else notice(`Downloaded ${done} of ${missing.length} songs, then the OSRS Wiki stopped answering (${problem}). Try again later to get the rest.`);
+  }
+
+  async function offerClearSongs() {
+    if (!songStore || typeof SwalLocale === 'undefined') return;
+    const summary = await storageSummary().catch(storeFailed('count'));
+    if (!summary) return;
+    if (!summary.count && !bulk) {
+      ask({ title: 'No Downloaded Songs', text: 'There are no songs downloaded to this device.', showCancelButton: false, confirmButtonText: 'OK' });
+      return;
+    }
+    if (!(await ask({ title: 'Clear Downloaded Songs?', text: `${summary.text}. Clearing them frees that space; songs come from the OSRS Wiki again when they play.`, confirmButtonText: 'Clear', cancelButtonText: 'Keep them', customClass: { container: 'swal-infront', confirmButton: 'btn btn-danger m-1', cancelButton: 'btn btn-secondary m-1' } }))) return;
+    if (bulk) bulk.stopped = true;
+    songStore.clear().then(() => {
+      setMarker(false);
+      songLog.marked = false;
+      note(`cleared ${summary.count} downloaded songs (${megabytes(summary.bytes)})`);
+      notice(`Cleared ${summary.count} downloaded songs, freeing ${megabytes(summary.bytes)}.`);
+      refreshStorage();
+    }, storeFailed('clear'));
+  }
+
+  function pruneSavedSongs() {
+    if (!songStore) return;
+    const current = new Set(Object.values(audio.music).flat());
+    songStore.keys().then((urls) => {
+      const stale = urls.filter((url) => !current.has(url));
+      if (!stale.length) return;
+      return songStore.remove(stale).then(() => {
+        songLog.staleRemoved += stale.length;
+        note(`removed ${stale.length} downloaded songs the mod no longer uses`);
+      });
+    }).catch(storeFailed('cleanup'));
+  }
+
+  async function downloadFromWiki(url) {
     if (!skipServiceWorker) {
       const response = await fetch(url);
       if (response.status !== 408 || !navigator.serviceWorker?.controller) return checkedBytes(response);
@@ -402,7 +612,6 @@ export async function setup(ctx) {
     renderPlayer();
   }
 
-  /** Like any music player: early in a song, back goes to the previous one; later on, it starts this one again. */
   function skipBack() {
     const position = nowPlaying ? positionOf(nowPlaying) : paused?.position ?? 0;
     paused = null;
@@ -429,7 +638,7 @@ export async function setup(ctx) {
   const appleTouch = (typeof nativeManager !== 'undefined' && nativeManager.isIOS) || /iPad|iPhone|iPod/.test(agent) || (/Macintosh/.test(agent) && navigator.maxTouchPoints > 1);
   const pausesWhenIdle = !appleTouch;
 
-  /** A running audio engine keeps a phone's audio hardware awake even when silent, so it is paused once nothing has played for a few seconds. iOS can refuse to restart one without a tap, so it is left running there. */
+  // iOS can refuse to restart a suspended engine without a tap, so it is never idle-suspended there.
   function pauseWhenIdle() {
     if (!pausesWhenIdle || engine.state !== 'running' || inBackground()) return;
     if (nowPlaying || playing.size) {
@@ -492,7 +701,6 @@ export async function setup(ctx) {
     if (list.length && !paused && !(nowPlaying && repeatOne)) crossfadeTo(list[trackIndex]);
   }
 
-  /** Only unlocked songs play; a place with none of its own (or none unlocked yet) falls back to the idle music. */
   function playableSongs(key, shuffle) {
     const pool = shuffle === 'all' && key !== 'charselect' ? everyTrack() : audio.music[key] || audio.music.idle || [];
     const list = pool.filter(isUnlocked);
@@ -519,7 +727,6 @@ export async function setup(ctx) {
     if (characterLoaded && list && !FREE_CONTEXTS.has(key) && !isUnlocked(list[0])) unlockSong(list[0]);
   }
 
-  /** Like OSRS: a place's first song unlocks the moment you are there; after that every action or attack has a small chance at the next one, about 4 hours of play for the second and a day for the third. */
   function rollForSong(key, intervalMs) {
     const list = audio.music[key];
     if (!list || FREE_CONTEXTS.has(key)) return;
@@ -558,7 +765,6 @@ export async function setup(ctx) {
     renderPlayer();
   }
 
-  /** Unlocking everything skips the whole progression, so it warns hard and defaults to cancel. */
   function confirmUnlockAll() {
     if (!characterLoaded || typeof SwalLocale === 'undefined') return;
     const element = (tag, className = '', text = '') => Object.assign(document.createElement(tag), { className, textContent: text });
@@ -594,16 +800,11 @@ export async function setup(ctx) {
   const songList = () => (allSongs ??= [...new Set(Object.values(audio.music).flat())].sort((a, b) => trackTitle(a).localeCompare(trackTitle(b))));
   const songPlaces = new Map();
   for (const [key, list] of Object.entries(audio.music)) for (const path of list) songPlaces.set(path, [...(songPlaces.get(path) ?? []), key]);
-  /** In Adventure mode a song only shows in the list once one of the skills it plays for is unlocked, or if it also plays outside a skill. */
   const songShown = (path) => songPlaces.get(path).some((key) => {
     const skill = typeof game !== 'undefined' ? game.skills?.getObjectByID?.(key) : undefined;
     return !skill || skill.isUnlocked !== false;
   });
 
-  /**
-   * The music button in the top bar, next to the potions: moving bars while a song plays, otherwise the harp, and a player with the
-   * song's name, pause, back, next, repeat, and the OSRS song list (green for unlocked, red for locked).
-   */
   function buildPlayer() {
     const potions = typeof document.getElementById === 'function' ? document.getElementById('page-header-potions-dropdown') : null;
     const bar = potions?.closest('.d-flex');
@@ -624,6 +825,7 @@ export async function setup(ctx) {
     button.append(bars, image('icon.png', 'osrs-music-harp'));
     const panel = element('div', 'dropdown-menu dropdown-menu-right font-size-sm osrs-music-panel');
     panel.addEventListener('click', (event) => event.stopPropagation());
+    shared.closeOnOutsidePress(document, () => ({ toggle: button, menu: panel }));
     const help = element('button', 'btn btn-sm btn-link osrs-music-help');
     help.type = 'button';
     help.title = 'How this mod works';
@@ -690,19 +892,18 @@ export async function setup(ctx) {
       const current = songItems.get(nowPlaying?.path ?? paused?.path);
       if (current && typeof current.offsetTop === 'number') songsList.scrollTop = current.offsetTop - songsList.clientHeight / 2;
     });
-    songs.append(songsToggle, songsList, songsCount);
+    const storage = element('div', 'osrs-music-storage');
+    songs.append(songsToggle, songsList, songsCount, storage);
     panel.append(label, title, controls, songs);
     root.append(button, panel);
     bar.prepend(root);
     repeatOne = ctx.accountStorage?.getItem(REPEAT_KEY) === true;
-    Object.assign(player, { root, button, label, title, back, toggle, next, repeat, songsToggle, songsLabel, songsList, songsCount, songItems });
+    Object.assign(player, { root, button, label, title, back, toggle, next, repeat, songsToggle, songsLabel, songsList, songsCount, songItems, storage });
+    button.addEventListener('click', refreshStorage);
     renderPlayer();
   }
 
-  /** Like the OSRS music tab: unlocked songs in green at the top, locked ones in red below, each group alphabetical. */
   let guide = null;
-  /** The mod's guide, laid out like Melvor's own Game Guide. */
-  /** Melvor's own Mod Settings entry in the sidebar opens this mod's settings, Music first. */
   function openSettings() {
     const entry = attempt(() => sidebar.category('Modding').item('Mod Settings').subitems().find((each) => each.id === ctx.name));
     if (entry) entry.click();
@@ -851,10 +1052,7 @@ export async function setup(ctx) {
     resumeEngine('rebuild');
   }
 
-  /**
-   * After a quick lock and unlock, iOS can hand back an audio context that says "running" while its clock never moves,
-   * so nothing plays and no fade completes. Rebuild until the clock moves; if it never does, the next tap rebuilds it.
-   */
+  // After a quick lock and unlock, iOS can hand back a "running" context whose clock never moves.
   let clockStuck = false;
   function watchClock(retriesLeft) {
     const watched = engine;
@@ -874,6 +1072,7 @@ export async function setup(ctx) {
   let wasHidden = false;
   function onVisibility() {
     note(`page ${document.hidden ? 'hidden' : 'visible'}, audio ${engine.state}`);
+    if (document.hidden) deviceLog?.flush();
     if (isMobile && document.hidden) {
       wasHidden = true;
       muteThenSuspend();
@@ -910,6 +1109,7 @@ export async function setup(ctx) {
   document.addEventListener('visibilitychange', onVisibility);
   window.addEventListener('pagehide', () => {
     note('page hide');
+    deviceLog?.flush();
     wasHidden = true;
     if (isMobile) muteThenSuspend();
     else fadeOutAndSuspend();
@@ -942,7 +1142,6 @@ export async function setup(ctx) {
   let clockSample = null;
   let clockStalled = false;
   let silentTicks = 0;
-  /** Once a second: is the device still taking sound from the game, and is a playing song making any sound? */
   function watchHealth() {
     const now = Date.now();
     const previous = clockSample;
@@ -1095,6 +1294,35 @@ export async function setup(ctx) {
       add(`character loaded ${characterLoaded}, game ready ${ready}, offline progress running ${isOffline()}`);
     });
 
+    await part('Downloaded songs', async () => {
+      if (!songStore) {
+        add('not possible here: this browser has no IndexedDB, so songs always come from the OSRS Wiki');
+        return;
+      }
+      add(`play downloaded songs from this device: ${playingDownloaded() ? 'on' : 'off'}`);
+      const summary = await settle(attempt(() => storageSummary()));
+      add(summary ? `${summary.text}${summary.count ? `, about ${megabytes(summary.bytes / summary.count)} each` : ''}` : 'could not read the downloaded songs');
+      const keys = await settle(attempt(() => songStore.keys()));
+      if (keys) {
+        const have = new Set(keys);
+        const all = wikiSongs();
+        const missing = all.filter((url) => !have.has(url));
+        add(`not downloaded yet: ${missing.length}${missing.length ? ` (${missing.slice(0, 8).map(trackTitle).join(', ')}${missing.length > 8 ? ', ...' : ''})` : ''}`);
+        const unused = keys.filter((url) => !all.includes(url)).length;
+        if (unused) add(`downloaded songs this version no longer uses: ${unused}`);
+      }
+      add(bulk
+        ? `downloading every song: ${bulk.done} of ${bulk.missing} done, started ${ago(bulk.startedAt)}, now on ${bulk.current ?? '-'}, failures in a row ${bulk.failures}${bulk.problem ? `, last problem: ${bulk.problem}` : ''}`
+        : `downloading every song: not running, last run: ${songLog.lastBulk}`);
+      add(`this session: ${songLog.reads} played from this device, ${songLog.writes} downloaded and kept, ${songLog.staleRemoved} old songs removed at start, failures ${JSON.stringify(songLog.failures)}`);
+      add(`recent problems: ${songLog.problems.join(' | ') || 'none'}`);
+      const estimate = await settle(attempt(() => navigator.storage?.estimate()));
+      add(estimate ? `browser storage for the game: ${megabytes(estimate.usage)} used of ${megabytes(estimate.quota)} allowed` : 'browser storage: not reported');
+      const persisted = await settle(attempt(() => navigator.storage?.persisted?.()));
+      add(`storage protected from being cleared when the device runs low: ${typeof persisted === 'boolean' ? (persisted ? 'yes' : 'no') : 'not reported'}`);
+      add(`cleanup marker for when Sounds is uninstalled: ${safe(() => globalThis.localStorage.getItem(shared.SONG_MARKER) ?? 'not set')}`);
+    });
+
     await part('Sound effects', async () => {
       const failedFiles = [...bufferStatus].filter(([, status]) => status !== 'ready' && status !== 'loading');
       const count = (status) => [...bufferStatus.values()].filter((each) => each === status).length;
@@ -1133,6 +1361,21 @@ export async function setup(ctx) {
 
     await part('Mods loaded', async () => {
       add(safe(() => (typeof mod !== 'undefined' ? mod.manager.getLoadedModList().map((each) => (typeof each === 'string' ? each : each?.name ?? show(each))).join(', ') : undefined)));
+    });
+
+    await part(`History on this device (last ${deviceLog?.days ?? 7} days)`, async () => {
+      if (!deviceLog) {
+        add('not kept here: this browser has no IndexedDB');
+        return;
+      }
+      const events = await settle(deviceLog.read(), 3000);
+      if (!events) {
+        add('could not read the history');
+        return;
+      }
+      const stamp = (time) => new Date(time).toISOString().replace('T', ' ').slice(0, 19);
+      if (events.length > HISTORY_SHOWN) add(`(${events.length - HISTORY_SHOWN} older events left out)`);
+      events.slice(-HISTORY_SHOWN).forEach((event) => add(`${stamp(event.t)} ${event.text}`));
     });
 
     await part(`Recent events (last ${debugLog.length})`, async () => {
@@ -1253,7 +1496,7 @@ export async function setup(ctx) {
   const decodeQueue = [];
   let decoding = 0;
 
-  /** GeckoView on some phones fails every decode past the first 25 running at once. */
+  // GeckoView on some phones fails every decode past the first 25 running at once.
   function whenDecoderFree(job) {
     return new Promise((resolve, reject) => {
       decodeQueue.push(() => job().then(resolve, reject));
@@ -1478,6 +1721,7 @@ export async function setup(ctx) {
     game.combat.on('monsterKilled', (event) => playEffect(audio.sfx.monsters[event.monster.id], 'deaths'));
   });
   ctx.onInterfaceReady(() => {
+    pruneSavedSongs();
     ready = true;
     buildPlayer();
     setTimeout(() => {
@@ -1509,7 +1753,7 @@ const DIRECT_FETCH = `onmessage = async (event) => {
   }
 };`;
 
-/** Melvor's Android app puts a service worker in front of every request, and it answers 408 whenever its own request fails; a worker started from a data: URL has no service worker. */
+// Melvor's Android service worker answers 408 when its own request fails; a data: URL worker bypasses it.
 function fetchAroundServiceWorker(url) {
   return new Promise((resolve, reject) => {
     const worker = new Worker(`data:text/javascript,${encodeURIComponent(DIRECT_FETCH)}`);
@@ -1536,7 +1780,48 @@ function httpError(status, statusText, retryAfter) {
   return Object.assign(new Error(`HTTP ${status}${statusText ? ` ${statusText}` : ''}`), { status, retryAfterMs: parseRetryAfter(retryAfter) });
 }
 
-/** Retry-After is either seconds or an HTTP date. Cross-origin servers only let the page read it when they expose the header. */
+// Retry-After is either seconds or an HTTP date.
+export function createSongStore(idb) {
+  let opened = null;
+  const open = () => (opened ??= new Promise((resolve, reject) => {
+    const request = idb.open(SONG_DATABASE, 1);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore(SONG_TABLE);
+      request.result.createObjectStore(SIZE_TABLE);
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+    request.onblocked = () => reject(new Error('the saved songs are open in another copy of the game'));
+  }).catch((error) => {
+    opened = null;
+    throw error;
+  }));
+  const run = (mode, act) => open().then((db) => new Promise((resolve, reject) => {
+    const transaction = db.transaction([SONG_TABLE, SIZE_TABLE], mode);
+    const request = act(transaction.objectStore(SONG_TABLE), transaction.objectStore(SIZE_TABLE));
+    transaction.oncomplete = () => resolve(request?.result);
+    transaction.onerror = () => reject(transaction.error);
+    transaction.onabort = () => reject(transaction.error ?? new Error('saving was cancelled'));
+  }));
+  return {
+    get: (url) => run('readonly', (songs) => songs.get(url)),
+    put: (url, bytes) => run('readwrite', (songs, sizes) => {
+      sizes.put(bytes.byteLength, url);
+      return songs.put(bytes, url);
+    }),
+    keys: () => run('readonly', (songs, sizes) => sizes.getAllKeys()),
+    remove: (urls) => run('readwrite', (songs, sizes) => urls.forEach((url) => {
+      songs.delete(url);
+      sizes.delete(url);
+    })),
+    clear: () => run('readwrite', (songs, sizes) => {
+      sizes.clear();
+      return songs.clear();
+    }),
+    usage: () => run('readonly', (songs, sizes) => sizes.getAll()).then((all) => ({ count: all.length, bytes: all.reduce((sum, size) => sum + size, 0) })),
+  };
+}
+
 export function parseRetryAfter(value, now = Date.now()) {
   if (value === null || value === undefined || value === '') return null;
   const seconds = Number(value);
@@ -1545,7 +1830,6 @@ export function parseRetryAfter(value, now = Date.now()) {
   return Number.isNaN(date) ? null : Math.max(0, date - now);
 }
 
-/** Doubles from 3s up to 10 minutes per failure in a row; a 429 or 503 waits at least its Retry-After, or a minute when the server hides it. */
 export function songRetryDelay(failures, error) {
   const backoff = Math.min(SONG_RETRY_MAX_MS, SONG_RETRY_FIRST_MS * 2 ** Math.max(0, failures - 1));
   if (error?.status !== 429 && error?.status !== 503) return backoff;
@@ -1579,7 +1863,6 @@ function settle(promise, ms = 1000) {
 const decibels = (value) => (value > 0 ? `${(20 * Math.log10(value)).toFixed(1)} dB` : 'silent');
 const ago = (time) => (time ? `${Math.round((Date.now() - time) / 1000)}s ago` : 'never');
 
-/** Melvor's phone apps are GoNative wrappers; the Android one ships with either Chrome's WebView or Firefox's GeckoView. */
 function appEngine(agent) {
   if (agent.includes('gonative_android')) return agent.includes('geckoview') ? `Android app on GeckoView, Firefox's engine${agent.includes('paid') ? ' (paid version)' : ''}` : "Android app on Android System WebView, Chrome's engine";
   if (agent.includes('gonative_ios')) return "iOS app on WKWebView, Safari's engine";
@@ -1590,7 +1873,6 @@ function escapeHtml(text) {
   return String(text).replace(/[&<>"']/g, (character) => `&#${character.charCodeAt(0)};`);
 }
 
-/** A song's name from its OSRS Wiki file, like "Scape_Main.ogg". */
 export function trackTitle(path) {
   return decodeURIComponent(path.split('?')[0].split('/').pop()).replace(/\.ogg$/i, '').replace(/_/g, ' ');
 }

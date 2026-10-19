@@ -155,7 +155,6 @@ def load_entities(cache_dir, refresh=False):
 
 
 def melvor_bytes(media, cache_dir):
-    """Melvor art from the local Steam install, falling back to Melvor's CDN (cached)."""
     local = STEAM_APP / media
     if local.exists():
         return local.read_bytes()

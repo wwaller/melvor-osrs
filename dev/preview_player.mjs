@@ -1,4 +1,4 @@
-// Drives headless Chrome in real time over the DevTools protocol (decoding audio needs a real clock) and screenshots the top-bar music player.
+// Headless Chrome over the DevTools protocol (audio decoding needs a real clock); screenshots the top-bar player.
 import { spawn } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';

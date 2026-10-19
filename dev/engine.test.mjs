@@ -2,6 +2,9 @@ import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { parseRetryAfter, songRetryDelay, trackTitle } from '../mod/setup.mjs';
+import { createHistory as createHistoryFor, modChanges } from '../mod/overhaul.mjs';
+
+const createHistory = (idb, options) => createHistoryFor(idb, 'osrs-sounds-history', options);
 
 const audio = JSON.parse(readFileSync(new URL('../mod/audio.json', import.meta.url)));
 
@@ -174,6 +177,174 @@ test('after a 429 no other song downloads until its Retry-After is up, even when
   } finally {
     globalThis.setTimeout = realSetTimeout;
   }
+});
+
+function fakeIndexedDB() {
+  const databases = new Map();
+  const answer = (result) => ({ result });
+  const table = () => Object.assign(new Map(), { next: 0 });
+  return {
+    get tables() { return databases.get('osrs-sounds-songs') ?? new Map(); },
+    get history() { return databases.get('osrs-sounds-history')?.get('events') ?? new Map(); },
+    open(name) {
+      const request = {};
+      setTimeout(() => {
+        const fresh = !databases.has(name);
+        if (fresh) databases.set(name, new Map());
+        const tables = databases.get(name);
+        request.result = {
+          createObjectStore: (store) => tables.set(store, table()),
+          transaction: () => {
+            const transaction = {
+              objectStore: (store) => ((rows) => ({
+                get: (key) => answer(rows.get(key)),
+                put: (value, key) => (rows.set(key, value), answer(key)),
+                add: (value) => {
+                  rows.next++;
+                  rows.set(rows.next, value);
+                  return answer(rows.next);
+                },
+                getAllKeys: () => answer([...rows.keys()]),
+                delete: (key) => (rows.delete(key), answer(undefined)),
+                clear: () => (rows.clear(), answer(undefined)),
+                count: () => answer(rows.size),
+                getAll: () => answer([...rows.values()]),
+              }))(tables.get(store)),
+            };
+            setTimeout(() => transaction.oncomplete?.());
+            return transaction;
+          },
+        };
+        if (fresh) request.onupgradeneeded?.();
+        request.onsuccess?.();
+      });
+      return request;
+    },
+  };
+}
+
+const settle = () => new Promise((resolve) => setTimeout(resolve, 10));
+
+test('songs are only kept on the device when that setting is on, which it is not by default', async () => {
+  globalThis.indexedDB = fakeIndexedDB();
+  const { configs, fetched, tick } = await boot();
+  await tick();
+  await settle();
+  assert.strictEqual(configs['save-songs'].default, false);
+  assert.match(fetched[0], /Scape_Main/);
+  assert.strictEqual(globalThis.indexedDB.tables.get('songs'), undefined, 'nothing saved');
+  delete globalThis.indexedDB;
+});
+
+test('with it on, a song downloads from the wiki once and plays from the device after that, even after a reload', async () => {
+  globalThis.indexedDB = fakeIndexedDB();
+  const first = await boot();
+  first.settings['Music:save-songs'] = true;
+  await first.tick();
+  await settle();
+  const song = first.fetched[0];
+  assert.match(song, /Scape_Main/);
+  assert.ok(globalThis.indexedDB.tables.get('songs').has(song), 'saved under its wiki address');
+  assert.ok(globalThis.indexedDB.tables.get('songs').get(song).byteLength > 0);
+
+  const second = await boot();
+  second.settings['Music:save-songs'] = true;
+  await second.tick();
+  await settle();
+  assert.strictEqual(second.fetched.length, 0, 'not downloaded again');
+  assert.strictEqual(second.log.started.length, 1, 'but still plays');
+  delete globalThis.indexedDB;
+});
+
+test('songs the mod no longer uses are dropped when the game starts, and turning the setting off keeps the saved songs', async () => {
+  globalThis.indexedDB = fakeIndexedDB();
+  const { settings, configs, hooks, tick } = await boot({ header: true });
+  settings['Music:save-songs'] = true;
+  await tick();
+  await settle();
+  const songs = globalThis.indexedDB.tables.get('songs');
+  const sizes = globalThis.indexedDB.tables.get('sizes');
+  const stale = 'https://oldschool.runescape.wiki/images/Old_Song.ogg?00000';
+  songs.set(stale, new ArrayBuffer(4));
+  sizes.set(stale, 4);
+  hooks.ready();
+  await settle();
+  assert.ok(!songs.has(stale) && !sizes.has(stale), 'stale song removed');
+  assert.ok(songs.size > 0 && songs.size === sizes.size, 'songs still in use are kept, each with its size');
+
+  settings['Music:save-songs'] = false;
+  configs['save-songs'].onChange(false);
+  await settle();
+  assert.ok(songs.size > 0, 'still saved, just not played from the device');
+  delete globalThis.indexedDB;
+});
+
+test('Download every song now downloads every song from the wiki one at a time, even with the setting off, and Clear downloaded songs frees them', async () => {
+  globalThis.indexedDB = fakeIndexedDB();
+  const asked = [];
+  globalThis.SwalLocale = { fire: async (options) => (asked.push(options), { isConfirmed: true }) };
+  const { configs, fetched, tick, toasts } = await boot();
+  await tick();
+  await settle();
+  const before = fetched.length;
+  await configs['download-all'].onClick();
+  const wiki = [...new Set(Object.values(audio.music).flat())].filter((url) => url.startsWith('http'));
+  assert.match(asked[0].text, new RegExp(`^0 of ${wiki.length} songs downloaded to this device, using 0 MB\\. The other ${wiki.length} will download one at a time`), asked[0].text);
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  assert.ok(fetched.length > before, 'downloads started');
+  assert.ok(fetched.slice(before).every((url) => wiki.includes(url)), 'only wiki songs');
+  await configs['download-all'].onClick();
+  assert.match(asked.at(-1).text, /songs downloaded so far\. Stop downloading the rest\?$/, 'pressing it again shows how far along it is');
+  await new Promise((resolve) => setTimeout(resolve, 1100));
+  const saved = globalThis.indexedDB.tables.get('songs').size;
+  assert.ok(saved > 0 && saved < wiki.length, 'stopped partway');
+  assert.match(toasts.at(-1), /Stopped downloading songs/);
+
+  await configs['clear-songs'].onClick();
+  assert.match(asked.at(-1).text, new RegExp(`^${saved} of ${wiki.length} songs downloaded to this device, using \\d+ MB\\. Clearing them frees that space`), asked.at(-1).text);
+  await settle();
+  assert.strictEqual(globalThis.indexedDB.tables.get('songs').size, 0);
+  assert.match(toasts.at(-1), new RegExp(`Cleared ${saved} downloaded songs`));
+  delete globalThis.SwalLocale;
+  delete globalThis.indexedDB;
+});
+
+test('the mod list is compared with the last time the game opened', () => {
+  assert.strictEqual(modChanges(null, ['OSRS Theme', 'SEMI']), 'mods loaded (2): OSRS Theme, SEMI');
+  assert.strictEqual(modChanges(['OSRS Theme', 'SEMI'], ['OSRS Theme', 'SEMI']), null);
+  assert.strictEqual(modChanges(['OSRS Theme', 'SEMI'], ['OSRS Theme', 'Idle Guard']), 'mods added: Idle Guard; mods removed or turned off: SEMI');
+});
+
+test('the history on the device keeps a week of events and no more than its cap', async () => {
+  const idb = fakeIndexedDB();
+  const now = Date.now();
+  await createHistory(idb, { flushMs: 5 }).read();
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  const events = idb.history;
+  [now - 9 * 86400000, now - 8 * 86400000, now - 3 * 86400000, now - 1000].forEach((t, index) => {
+    events.next++;
+    events.set(events.next, { t, text: `event ${index}` });
+  });
+  const log = createHistory(idb, { flushMs: 5, max: 3 });
+  log.add('just now');
+  await new Promise((resolve) => setTimeout(resolve, 40));
+  assert.deepStrictEqual((await log.read()).map((event) => event.text), ['event 2', 'event 3', 'just now']);
+  const capped = createHistory(idb, { flushMs: 5, max: 2 });
+  await new Promise((resolve) => setTimeout(resolve, 40));
+  assert.deepStrictEqual((await capped.read()).map((event) => event.text), ['event 3', 'just now']);
+});
+
+test('settings changes and button presses go into the history on the device', async () => {
+  globalThis.indexedDB = fakeIndexedDB();
+  const { configs } = await boot();
+  configs.volume.onChange(55, 30);
+  configs['effects-enabled'].onChange(false, true);
+  await new Promise((resolve) => setTimeout(resolve, 5200));
+  const texts = [...globalThis.indexedDB.history.values()].map((event) => event.text);
+  assert.ok(texts.some((text) => text.startsWith('opened: OSRS Sounds')), texts.join(' | '));
+  assert.ok(texts.includes('setting "Music: Music volume" changed from 30 to 55'), texts.join(' | '));
+  assert.ok(texts.includes('setting "Sound effects: Play OSRS sound effects" changed from true to false'), texts.join(' | '));
+  delete globalThis.indexedDB;
 });
 
 test('character select plays Scape Main, a skill crossfades to its own track, music off stops it', async () => {
@@ -614,10 +785,7 @@ test('after the first, each action has a small chance at the next song, sized to
   const songs = audio.music['melvorD:Woodcutting'];
   const rolls = [];
   const random = Math.random;
-  Math.random = () => {
-    const value = rolls.shift() ?? 0.5;
-    return value;
-  };
+  Math.random = () => rolls.shift() ?? 0.5;
   try {
     rolls.push(3000 / (4 * 3600000) + 1e-9);
     actions.action();
@@ -705,7 +873,7 @@ test('no two settings share a name, since Melvor gives each one the page id "mod
   assert.deepStrictEqual(names.filter((name, i) => names.indexOf(name) !== i), []);
 });
 
-/** A seeded random number generator (mulberry32), so the odds checks below give the same answer every run. */
+// mulberry32
 function seeded(seed) {
   let state = seed >>> 0;
   return () => {

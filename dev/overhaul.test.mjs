@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 import { test } from 'node:test';
-import { countOpen, offerOptions, offerOverhaul, overhaulState } from '../mod/overhaul.mjs';
+import { SONG_MARKER, closeOnOutsidePress, countOpen, dropOrphanedSongs, offerOptions, offerOverhaul, overhaulState } from '../mod/overhaul.mjs';
 
 const storage = (values = {}) => ({ values, getItem: (key) => values[key], setItem: (key, value) => (values[key] = value) });
 const device = (values = {}) => ({ values, getItem: (key) => (key in values ? values[key] : null), setItem: (key, value) => (values[key] = String(value)) });
@@ -120,3 +120,47 @@ test('the offer: the question, the mod, two identical stacked buttons with Take 
   assert.match(options.footer, /class="text-danger[^"]*"[^>]*>You will never see this again</);
   assert.match(options.imageUrl, /^data:image\/png;base64,/);
 });
+
+test('once Sounds is uninstalled, any OSRS mod still installed deletes the songs Sounds downloaded', () => {
+  const deleted = [];
+  const databases = { deleteDatabase: (name) => deleted.push(name) };
+  const local = (order, marker = 'true') => {
+    const values = { modLoadOrder: JSON.stringify(order), ...(marker ? { [SONG_MARKER]: marker } : {}) };
+    return { values, getItem: (key) => (key in values ? values[key] : null), removeItem: (key) => delete values[key] };
+  };
+  assert.strictEqual(dropOrphanedSongs(local([6442829, 6442568]), databases), false, 'Sounds still installed, even if switched off');
+  assert.strictEqual(dropOrphanedSongs(local([6442829], null), databases), false, 'nothing was ever downloaded');
+  assert.deepStrictEqual(deleted, []);
+  const gone = local([6442829, 6443344]);
+  assert.strictEqual(dropOrphanedSongs(gone, databases), true);
+  assert.deepStrictEqual(deleted, ['osrs-sounds-songs']);
+  assert.ok(!(SONG_MARKER in gone.values), 'and it only happens once');
+  assert.strictEqual(dropOrphanedSongs({ getItem: () => 'true', removeItem() {} }, databases), false, 'no load order to go by means leave them alone');
+});
+
+test('an open top bar menu closes when you press anywhere outside it, but not inside it or in a popup on top of it', () => {
+  const node = (name, parent = null) => ({ name, parent, contains(other) { for (let at = other; at; at = at.parent) if (at === this) return true; return false; }, closest(selector) { for (let at = this; at; at = at.parent) if (at.popup && selector.includes('data-tippy-root')) return at; return null; } });
+  const page = node('page');
+  const toggle = node('toggle', page);
+  const menu = Object.assign(node('menu', page), { classList: { contains: (name) => name === 'show' && menu.open } });
+  const inside = node('equip slot', menu);
+  const popup = Object.assign(node('popup', page), { popup: true });
+  const inPopup = node('quick equip', popup);
+  const elsewhere = node('bank', page);
+  let listener = null;
+  let captured = false;
+  closeOnOutsidePress({ addEventListener: (type, fn, capture) => { if (type === 'pointerdown') [listener, captured] = [fn, capture]; } }, () => ({ toggle, menu }));
+  const hidden = [];
+  globalThis.$ = (element) => ({ dropdown: (action) => hidden.push([element.name, action]) });
+  menu.open = true;
+  for (const target of [inside, toggle, inPopup]) listener({ target });
+  assert.deepStrictEqual(hidden, [], 'presses inside, on its button or in a popup over it leave it open');
+  listener({ target: elsewhere });
+  assert.deepStrictEqual(hidden, [['toggle', 'hide']]);
+  menu.open = false;
+  listener({ target: elsewhere });
+  assert.strictEqual(hidden.length, 1, 'nothing to close when it is shut');
+  assert.strictEqual(captured, true, 'listens before the game can stop the press');
+  delete globalThis.$;
+});
+

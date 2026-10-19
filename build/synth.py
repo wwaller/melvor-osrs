@@ -1,7 +1,4 @@
-"""Render RuneScape synth sound effects to PCM, ported from the OSRS client (SoundEffect, Instrument, SoundEnvelope, AudioFilter).
-
-Integer math follows Java's 32-bit wraparound and truncating division, so the output matches the game.
-"""
+"""Render RuneScape synth sound effects to PCM, ported from the OSRS client with Java 32-bit integer math."""
 import math
 import struct
 import wave
@@ -317,7 +314,6 @@ def _envelope(reader):
 
 
 def render(data):
-    """Signed 8-bit samples at 22050 Hz, mixed the way SoundEffect.mix does."""
     reader = Reader(data)
     instruments = []
     for _ in range(MAX_INSTRUMENTS):
