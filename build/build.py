@@ -47,7 +47,7 @@ def scaled(image, scale):
 
 
 def square(image):
-    """Melvor draws mod icons in a square box: centre the art on a transparent square so it is not stretched."""
+    """Melvor draws mod icons in a square box, so pad to a square instead of letting it stretch."""
     side = max(image.size)
     canvas = Image.new("RGBA", (side, side))
     canvas.paste(image, ((side - image.width) // 2, (side - image.height) // 2))
@@ -55,7 +55,6 @@ def square(image):
 
 
 def draw_logo():
-    """A skill page: the card in use moved to the front, ahead of the rest of the cards."""
     logo = Image.new("RGBA", (1280, 720), BACKGROUND)
     pen = ImageDraw.Draw(logo)
     font = ImageFont.load_default_imagefont()

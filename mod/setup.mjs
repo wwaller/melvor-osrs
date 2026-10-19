@@ -1,7 +1,6 @@
 const HIGHLIGHT_CLASS = 'active-first-highlight';
 const ACTIVE_CLASS = 'active-first-active';
 
-/** Where each skill keeps its cards and which ones are in use. The card registries are the game's own globals. */
 const SKILLS = [
   { id: 'melvorD:Woodcutting', cards: () => woodcuttingMenu.treeMenus, active: (skill) => [...skill.activeTrees] },
   { id: 'melvorD:Fishing', cards: () => fishingAreaMenus, active: (skill) => [skill.activeFishingArea] },
@@ -20,7 +19,7 @@ function registry(spec) {
   }
 }
 
-/** The card's first block that is not hidden inside it: Melvor's tree cards keep a hidden Locked block ahead of the real one. */
+// Tree cards keep a hidden Locked block ahead of the real one.
 function shownBlock(card) {
   const hidden = (block) => {
     for (let node = block; node && node !== card.parentElement; node = node.parentElement) if (node.classList.contains('d-none')) return true;
@@ -29,7 +28,6 @@ function shownBlock(card) {
   return [...card.querySelectorAll('.block')].find((block) => !hidden(block)) ?? card;
 }
 
-/** One skill's cards in use, moved to the head of its card list and put back where they were once out of use. Showing them says whether a card newly came into use. */
 function pinner(spec) {
   const homes = new Map();
   const outlined = new Map();
