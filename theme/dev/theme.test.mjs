@@ -75,6 +75,7 @@ async function boot(values = {}, { brokenFont, strictFontNames } = {}) {
     loadData: async (path) => (path === 'img/backgrounds.json' ? [{ key: 'varlamore', label: 'Varlamore' }, { key: 'nex', label: 'Nex' }] : null),
     characterStorage: { getItem: (key) => stored.get(key), setItem: (key, value) => stored.set(key, value), removeItem: (key) => stored.delete(key) },
     loadModule: (path) => import(`../mod/${path}`),
+    api: (endpoints) => endpoints,
     patch: (target, method) => ({ before: (fn) => (patches[`${target.name}.${method}`] = fn), after: (fn) => (patches[`${target.name}.${method}`] = fn), replace: (fn) => (patches[`${target.name}.${method}`] = fn) }),
     settings: { section: (sectionName) => (sectionOrder.includes(sectionName) || sectionOrder.push(sectionName), { add: (list) => list.forEach((c) => { configs[c.name] = c; sectionOf[c.name] = sectionName; }), get: (key) => settings[key] ?? configs[key]?.default, set: (key, value) => (settings[key] = value) }) },
     onCharacterLoaded: (fn) => (hooks.character = fn),

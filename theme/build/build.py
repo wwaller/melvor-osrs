@@ -4,6 +4,8 @@ import io
 import json
 import re
 import shutil
+import sys
+import zipfile
 import urllib.parse
 import urllib.request
 import zipfile
@@ -12,6 +14,8 @@ from pathlib import Path
 from PIL import Image, ImageColor, ImageDraw, ImageFilter, ImageFont
 
 from osrs_cache import Cache
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
+import core  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 MOD_DIR = ROOT / "mod"
@@ -336,6 +340,7 @@ def main():
         stone.save(images / f"{name}.png", optimize=True)
     DIST_DIR.mkdir(exist_ok=True)
     draw_logo(icon, Image.open(images / "titlebox.png").convert("RGBA")).convert("RGB").save(DIST_DIR / "logo.png", optimize=True)
+    core.bundle(ROOT)
     archive = DIST_DIR / "melvor-osrs-theme.zip"
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as bundle:
         for path in sorted(MOD_DIR.rglob("*")):

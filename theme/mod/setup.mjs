@@ -32,6 +32,7 @@ const PROGRESS_ATTRIBUTE = 'data-osrs-progress';
 const LEVEL_ATTRIBUTE = 'data-osrs-level';
 const CAP_ATTRIBUTE = 'data-osrs-cap';
 const STONES_CLASS = 'osrs-skill-stones';
+const API_VERSION = 1;
 const PROGRESS_PROPERTY = '--osrs-progress';
 const FONT_SAMPLES = [
   ['sidebar links', '.nav-main-link-name'],
@@ -151,7 +152,7 @@ export async function setup(ctx) {
   const failures = [];
   const events = [];
   const fontStatus = {};
-  const shared = await ctx.loadModule('overhaul.mjs');
+  const [shared, api] = await Promise.all([ctx.loadModule('core/overhaul.mjs'), ctx.loadModule('core/api.mjs')]);
   const deviceLog = typeof indexedDB === 'undefined' ? null : shared.createHistory(indexedDB, HISTORY_DATABASE);
   const note = (text) => {
     events.push(`${new Date().toLocaleTimeString()} ${text}`);
@@ -167,6 +168,11 @@ export async function setup(ctx) {
   for (const [family, { path, sizeAdjust }] of Object.entries(FONTS)) {
     loadFont(family, path, sizeAdjust ? { sizeAdjust } : {});
   }
+  api.publish(ctx, API_VERSION, {
+    textures: () => Object.fromEntries(Object.entries(ASSETS).map(([property, path]) => [property, ctx.getResourceUrl(path)])),
+    fonts: Object.keys(FONTS),
+    features: () => [...document.body.classList].filter((name) => name.startsWith('osrs-')),
+  });
 
   async function loadFont(family, path, descriptors) {
     const started = performance.now();
