@@ -1,6 +1,5 @@
 const GRID = 'quick-equip-all';
 
-/** Every bank item that fits the slot, in the order the bank shows them. */
 export function slotChoices(itemsByTab, slotID) {
   return itemsByTab.flat().filter((bankItem) => typeof bankItem.item.fitsInSlot === 'function' && bankItem.item.fitsInSlot(slotID));
 }
@@ -53,7 +52,7 @@ function choiceButton(grid, player, slot, { item, quantity, worn }, refresh) {
     const amount = worn ? (slot.allowQuantity ? game.bank.getQty(item) : 0) : slot.allowQuantity ? quantity : 1;
     if (!amount) return;
     player.equipItem(item, player.selectedEquipmentSet, slot, amount);
-    // Redraw after the click finishes: the top bar's equipment menu only stays open for clicks whose button is still on the page.
+    // The top bar menu only stays open if the clicked button is still on the page, so redraw after the click.
     setTimeout(refresh);
   };
   grid.tips.push(tippy(button, { content: item.name, placement: 'top', animation: false }));

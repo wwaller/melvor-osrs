@@ -46,7 +46,6 @@ def scaled(image, scale):
 
 
 def draw_logo():
-    """The new menu as the art: a grid of every helmet you own, one of them worn."""
     logo = Image.new("RGBA", (1280, 720), BACKGROUND)
     pen = ImageDraw.Draw(logo)
     cell, gap, left, top = 120, 16, 70, 160
