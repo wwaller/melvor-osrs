@@ -11,7 +11,7 @@ function element(tag, attributes = {}) {
       add: (...all) => all.forEach((name) => names.add(name)),
       remove: (name) => names.delete(name),
       contains: (name) => names.has(name),
-      toggle: (name, on) => (on ? names.add(name) : names.delete(name)),
+      toggle: (name, on = !names.has(name)) => (on ? names.add(name) : names.delete(name), on),
     },
     set className(value) { names.clear(); String(value).split(/\s+/).filter(Boolean).forEach((name) => names.add(name)); },
     get className() { return [...names].join(' '); },
@@ -94,7 +94,7 @@ async function boot({ saved, shown = true, unlocked = { township: true, atlas: t
   const all = element('li');
   all.append(element('a', { onclick: 'shopMenu.showAllTabsButRaid();' }));
   list.append(all, ...categories.map(() => element('li')));
-  globalThis.document = { getElementById: (id) => ({ 'new-shop': shop, 'shop-tab-container': list })[id] ?? null, createElement: (tag) => element(tag) };
+  globalThis.document = { body: element('body'), getElementById: (id) => ({ 'new-shop': shop, 'shop-tab-container': list })[id] ?? null, createElement: (tag) => element(tag) };
   let observe;
   globalThis.IntersectionObserver = class { constructor(fn) { observe = fn; } observe() {} };
   const realm = { isUnlocked: unlocked.abyss };
@@ -116,22 +116,34 @@ async function boot({ saved, shown = true, unlocked = { township: true, atlas: t
   globalThis.shopMenu = new ShopMenu();
   const stored = new Map(saved ? [['category', saved]] : []);
   const hooks = {};
+  const configs = {};
   const ctx = {
     loadStylesheet() {},
     accountStorage: { getItem: (key) => stored.get(key), setItem: (key, value) => stored.set(key, value) },
     patch: (target, method) => ({ after(fn) { const original = target.prototype[method]; target.prototype[method] = function (...args) { const result = original.apply(this, args); fn.call(this, result, ...args); return result; }; } }),
     onInterfaceReady: (fn) => (hooks.ready = fn),
-    settings: { section: () => ({ add() {}, get: () => false }) },
+    settings: { section: () => ({ add: (list) => list.forEach((config) => (configs[config.name] = config)), get: () => false }) },
   };
   const { setup } = await import(`../mod/setup.mjs?${Math.random()}`);
   setup(ctx);
   hooks.ready();
   if (shown) observe([{ isIntersecting: true }]);
   const card = (i) => generalTab.itemsContainer.children[i];
-  return { generalTab, card, purchases, shown: shown_, stored, list, navWrap, nav, shop, observe, general, skills };
+  return { generalTab, card, purchases, shown: shown_, stored, list, navWrap, nav, shop, observe, general, skills, configs };
 }
 
 const has = (node, name) => node.classList.contains(name);
+
+const melvorAccepts = (result) => typeof result !== 'string' && (result === undefined || Boolean(result));
+
+test('the solid buttons switch turns off as well as on', async () => {
+  const { configs } = await boot();
+  const { onChange } = configs['solid-buttons'];
+  assert.ok(melvorAccepts(onChange(true, false)));
+  assert.ok(has(document.body, 'mobile-shop-solid'));
+  assert.ok(melvorAccepts(onChange(false, true)), 'Melvor flips the switch back on a false or string return');
+  assert.ok(!has(document.body, 'mobile-shop-solid'));
+});
 
 test('every card is greyed when it cannot be bought: at its buy limit, a requirement unmet, too expensive, or none left to buy', async () => {
   const { card } = await boot();

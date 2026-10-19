@@ -44,7 +44,9 @@ export function addSlayerCoins(doc, coins) {
 export function setup(ctx) {
   ctx.loadStylesheet('style.css');
   const settings = ctx.settings.section('Accessibility');
-  const solid = (on) => document.body.classList.toggle(SOLID_CLASS, Boolean(on));
+  const solid = (on) => {
+    document.body.classList.toggle(SOLID_CLASS, Boolean(on));
+  };
   settings.add([{ type: 'switch', name: 'solid-buttons', label: 'Solid shop buttons', hint: 'The category buttons and shop cards get a solid background instead of a see-through one.', default: false, onChange: solid }]);
   ctx.onInterfaceReady(() => solid(settings.get('solid-buttons')));
   let open = null;
