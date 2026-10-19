@@ -1,0 +1,189 @@
+.osrs-quest-tab {
+  padding: 10px 12px 12px;
+  background: #3e3529;
+  border: 3px solid #1d1914;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 2px #5a4d3c;
+  text-align: left;
+}
+
+.osrs-quest-points {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  color: #ff981f;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.osrs-quest-points img {
+  width: 22px;
+  image-rendering: pixelated;
+}
+
+.osrs-quest-list {
+  max-height: min(60vh, 520px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.osrs-quest-series {
+  margin: 8px 0 2px;
+  color: #ff981f;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.osrs-quest-entry {
+  display: block;
+  width: 100%;
+  padding: 2px 4px;
+  background: none;
+  border: 0;
+  text-align: left;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.osrs-quest-entry:hover,
+.osrs-quest-entry:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.osrs-quest-not-started { color: #ff0000; }
+.osrs-quest-in-progress { color: #ffff00; }
+.osrs-quest-completed { color: #0dc10d; }
+
+.osrs-quest-empty {
+  color: #9a9a9a;
+  text-align: center;
+}
+
+.osrs-quest-scroll {
+  position: relative;
+  padding: 26px 26px 22px;
+  background: radial-gradient(ellipse at center, #e2d1ab 0%, #d3bf95 70%, #b9a072 100%);
+  border-top: 10px solid #8a6d43;
+  border-bottom: 10px solid #8a6d43;
+  border-radius: 2px;
+  box-shadow: inset 0 6px 6px -4px rgba(0, 0, 0, 0.45), inset 0 -6px 6px -4px rgba(0, 0, 0, 0.45), 0 2px 0 #3a2c18;
+  color: #000080;
+  text-align: center;
+}
+
+.osrs-quest-title,
+.osrs-quest-congrats {
+  font-family: OsrsQuill, OsrsBold, serif;
+  font-size: 28px;
+  color: #800000;
+  margin-bottom: 6px;
+}
+
+.osrs-quest-facts {
+  margin-bottom: 10px;
+  color: #5c4a2c;
+}
+
+.osrs-quest-line {
+  margin: 4px 0;
+}
+
+.osrs-quest-done {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.osrs-quest-hl {
+  color: #800000;
+}
+
+.osrs-quest-finished {
+  margin-top: 10px;
+  color: #ff0000;
+}
+
+.osrs-quest-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.osrs-quest-talk,
+.osrs-quest-back {
+  padding: 6px 14px;
+  background: #3e3529;
+  border: 2px solid #1d1914;
+  box-shadow: inset 0 0 0 1px #5a4d3c;
+  color: #ff981f;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.osrs-quest-talk:hover:not(:disabled),
+.osrs-quest-back:hover,
+.osrs-quest-talk:focus-visible,
+.osrs-quest-back:focus-visible {
+  color: #fff;
+}
+
+.osrs-quest-talk:disabled {
+  color: #7a6a52;
+  cursor: not-allowed;
+}
+
+.osrs-quest-completed-line {
+  margin-bottom: 14px;
+  color: #000080;
+}
+
+.osrs-quest-reward-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  text-align: left;
+}
+
+.osrs-quest-reward-frame {
+  flex: 0 0 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 96px;
+  background: rgba(0, 0, 0, 0.06);
+  border: 2px solid #8a6d43;
+  border-radius: 4px;
+}
+
+.osrs-quest-reward-image {
+  width: 72px;
+  image-rendering: pixelated;
+}
+
+.osrs-quest-awarded {
+  color: #800000;
+  margin-bottom: 4px;
+}
+
+.osrs-quest-reward {
+  color: #000080;
+}
+
+.osrs-quest-total {
+  margin-top: 16px;
+  color: #800000;
+}
+
+.osrs-quests-complete-popup .osrs-quest-scroll {
+  animation: osrs-quest-unroll 0.5s ease-out;
+}
+
+@keyframes osrs-quest-unroll {
+  from { clip-path: inset(48% 0 48% 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .osrs-quests-complete-popup .osrs-quest-scroll {
+    animation: none;
+  }
+}
