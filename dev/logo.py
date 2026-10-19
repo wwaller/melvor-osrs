@@ -8,7 +8,7 @@ import tempfile
 import time
 from pathlib import Path
 
-from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
 PROJECTS = ROOT.parent
@@ -58,7 +58,7 @@ def paste_centered(canvas, image, center_x, top):
 
 
 def max_cape_file():
-    """The Max cape isn't Melvor gear, so the character mod doesn't export it; build its item file with that mod's own build code."""
+    """The character mod doesn't export the Max cape (not Melvor gear), so build it with that mod's code."""
     spec = importlib.util.spec_from_file_location("character_build", CHARACTER / "build" / "build.py")
     character_build = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(character_build)
@@ -78,7 +78,6 @@ def with_max_cape(test_data):
 
 
 def character():
-    """The outfit mid-slash, facing right, rendered with a transparent background."""
     OUT.mkdir(parents=True, exist_ok=True)
     page = OUT / "character.html"
     preview.test_data = with_max_cape(preview.test_data)
@@ -115,14 +114,12 @@ FIRE_HIDDEN_ROWS = 8
 
 
 def fire_frame():
-    """One frame of the theme's login-screen brazier fire, run with the theme's own simulation."""
     result = subprocess.run(["node", str(ROOT / "dev" / "fire_frame.mjs")], capture_output=True, text=True, check=True)
     frame = json.loads(result.stdout)
     return Image.frombytes("RGBA", (frame["width"], frame["height"]), base64.b64decode(frame["rgba"]))
 
 
 def add_brazier_fires(canvas):
-    """Lights both braziers of the login art, placed the way the theme's login scene places its fire canvases."""
     scale = max(SIZE[0] / LOGIN_ART["width"], SIZE[1] / LOGIN_ART["height"])
     left = (SIZE[0] - LOGIN_ART["width"] * scale) / 2
     top = (SIZE[1] - LOGIN_ART["height"] * scale) / 2
@@ -137,7 +134,6 @@ def add_brazier_fires(canvas):
 
 
 def shadow(canvas, image, x, y, blur_scale=0.6):
-    from PIL import ImageFilter
     layer = Image.new("RGBA", canvas.size)
     silhouette = Image.new("RGBA", image.size, (0, 0, 0, 150))
     layer.paste(silhouette, (x, y + 6), image)

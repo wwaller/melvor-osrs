@@ -35,7 +35,7 @@ def wiki_image(title):
 
 
 def square(image):
-    """Melvor draws mod icons in a square box: centre the art on a transparent square so it is not stretched."""
+    """Melvor draws mod icons in a square box, so pad rather than stretch."""
     side = max(image.size)
     canvas = Image.new("RGBA", (side, side))
     canvas.paste(image, ((side - image.width) // 2, (side - image.height) // 2))
