@@ -220,6 +220,10 @@ def spec_slug(spec):
         parts.append("cape_" + re.sub(r"[^A-Za-z0-9]+", "_", spec["emblem"].rsplit("/", 1)[-1].rsplit(".", 1)[0]).strip("_"))
     if spec.get("recolor"):
         parts.append(spec["recolor"]["color"].lstrip("#"))
+        if spec["recolor"].get("colours"):
+            parts.append("liquid")
+    if isinstance(spec.get("outline"), str):
+        parts.append("outline" + spec["outline"].lstrip("#"))
     if spec.get("trim"):
         parts.append(f"trim_{spec['trim']}")
     if spec.get("shrink"):
@@ -277,7 +281,7 @@ def process(entity, spec, info, wiki):
     if max(base["width"] or 0, base["height"] or 0) <= images.MIN_ICON_SIZE:
         canvas = images.ITEM_CANVAS if entity.kind in SPRITE_CANVAS_KINDS else 0
         decal = decal_bytes(spec["decal"], fetch) if spec.get("decal") else None
-        return "sprite", images.pixel_sprite(fetch(spec["base"]), canvas, spec.get("label"), spec.get("star", False), decal, spec.get("recolor"), spec.get("trim"))
+        return "sprite", images.pixel_sprite(fetch(spec["base"]), canvas, spec.get("label"), spec.get("star", False), decal, spec.get("recolor"), spec.get("trim"), spec.get("outline"))
     badge = fetch(spec["badge"]) if spec.get("badge") else None
     return "render", images.render(fetch(spec["base"]), spec.get("label"), badge, grounded, spec.get("recolor"), spec.get("shrink"), spec.get("top"), spec.get("star", False), spec.get("rotate"), spec.get("erase_hue"), spec.get("inflate"), spec.get("outline"))
 

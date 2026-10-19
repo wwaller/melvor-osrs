@@ -41,6 +41,303 @@
   "melvorF:Water_God_Dungeon": "File:Water elemental.png"
  },
  "item": {
+  "melvorAoD:Ancient_Carrot_Seeds": {
+   "base": "File:Potato seed.png",
+   "recolor": {
+    "color": "#be6239"
+   }
+  },
+  "melvorAoD:Ancient_Corn_Seeds": {
+   "base": "File:Potato seed.png",
+   "recolor": {
+    "color": "#aec667"
+   }
+  },
+  "melvorAoD:Ancient_Wildberry_Seeds": {
+   "base": "File:Potato seed.png",
+   "recolor": {
+    "color": "#c6791d"
+   }
+  },
+  "melvorAoD:Aranite_2H_Blade": {
+   "base": "File:Steel 2h sword.png",
+   "recolor": {
+    "color": "#de8671",
+    "greys": 0.12
+   }
+  },
+  "melvorAoD:Aranite_Arrows": {
+   "base": "File:Mithril arrow 5.png",
+   "recolor": {
+    "color": "#d6685a"
+   }
+  },
+  "melvorAoD:Aranite_Arrowtips": {
+   "base": "File:Steel arrowtips.png",
+   "recolor": {
+    "color": "#de8671",
+    "greys": 0.12
+   }
+  },
+  "melvorAoD:Aranite_Bar": {
+   "base": "File:Steel bar.png",
+   "recolor": {
+    "color": "#de8671",
+    "greys": 0.12
+   }
+  },
+  "melvorAoD:Aranite_Ore": {
+   "base": "File:Iron ore.png",
+   "recolor": {
+    "color": "#de8671"
+   }
+  },
+  "melvorAoD:Aranite_Platebody": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#de8671",
+    "greys": 0.12
+   }
+  },
+  "melvorAoD:Aranite_Shield": {
+   "base": "File:Steel kiteshield.png",
+   "recolor": {
+    "color": "#de8671",
+    "greys": 0.12
+   }
+  },
+  "melvorAoD:Barrier_Igniter_Potion_I": "File:Extended antifire(1).png",
+  "melvorAoD:Barrier_Igniter_Potion_II": "File:Extended antifire(2).png",
+  "melvorAoD:Barrier_Igniter_Potion_III": "File:Extended antifire(3).png",
+  "melvorAoD:Barrier_Igniter_Potion_IV": "File:Extended antifire(4).png",
+  "melvorAoD:Barrier_Touch_Potion_I": "File:Absorption (1).png",
+  "melvorAoD:Barrier_Touch_Potion_II": "File:Absorption (2).png",
+  "melvorAoD:Barrier_Touch_Potion_III": "File:Absorption (3).png",
+  "melvorAoD:Barrier_Touch_Potion_IV": "File:Absorption (4).png",
+  "melvorAoD:Crystal_Arrowtips": {
+   "base": "File:Mithril arrowtips.png",
+   "recolor": {
+    "color": "#8b194c"
+   }
+  },
+  "melvorAoD:Crystal_Sanction_Potion_I": {
+   "base": "File:Egniol potion (1).png",
+   "recolor": {
+    "color": "#f66a48",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorAoD:Crystal_Sanction_Potion_II": {
+   "base": "File:Egniol potion (2).png",
+   "recolor": {
+    "color": "#f66a48",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorAoD:Crystal_Sanction_Potion_III": {
+   "base": "File:Egniol potion (3).png",
+   "recolor": {
+    "color": "#f66a48",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorAoD:Crystal_Sanction_Potion_IV": {
+   "base": "File:Egniol potion (4).png",
+   "recolor": {
+    "color": "#f66a48",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorAoD:Crystallization_Potion_I": "File:Egniol potion (1).png",
+  "melvorAoD:Crystallization_Potion_II": "File:Egniol potion (2).png",
+  "melvorAoD:Crystallization_Potion_III": "File:Egniol potion (3).png",
+  "melvorAoD:Crystallization_Potion_IV": "File:Egniol potion (4).png",
+  "melvorAoD:Cursed_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#a62200"
+   }
+  },
+  "melvorAoD:Cursed_Potion_I": "File:Forgotten brew(1).png",
+  "melvorAoD:Cursed_Potion_II": "File:Forgotten brew(2).png",
+  "melvorAoD:Cursed_Potion_III": "File:Forgotten brew(3).png",
+  "melvorAoD:Cursed_Potion_IV": "File:Forgotten brew(4).png",
+  "melvorAoD:Darksteel_2H_SWord": {
+   "base": "File:Steel 2h sword.png",
+   "recolor": {
+    "color": "#4f4d4d",
+    "greys": 0.12
+   }
+  },
+  "melvorAoD:Darksteel_Arrows": {
+   "base": "File:Steel arrow 5.png",
+   "recolor": {
+    "color": "#3a3d45",
+    "greys": 0.12
+   }
+  },
+  "melvorAoD:Darksteel_Arrowtips": {
+   "base": "File:Steel arrowtips.png",
+   "recolor": {
+    "color": "#4f4d4d",
+    "greys": 0.12
+   }
+  },
+  "melvorAoD:Darksteel_Bar": {
+   "base": "File:Steel bar.png",
+   "recolor": {
+    "color": "#4f4d4d",
+    "greys": 0.12
+   }
+  },
+  "melvorAoD:Darksteel_Ore": {
+   "base": "File:Iron ore.png",
+   "recolor": {
+    "color": "#4f4d4d"
+   }
+  },
+  "melvorAoD:Darksteel_Shield": {
+   "base": "File:Steel kiteshield.png",
+   "recolor": {
+    "color": "#4f4d4d",
+    "greys": 0.12
+   }
+  },
+  "melvorAoD:Harming_Potion": "File:Explosive potion.png",
+  "melvorAoD:Imbued_Adamantite_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#1aa238"
+   },
+   "outline": "#00c6ff"
+  },
+  "melvorAoD:Imbued_Bronze_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#7a612a"
+   },
+   "outline": "#00c6ff"
+  },
+  "melvorAoD:Imbued_Dragonite_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#b72b30"
+   },
+   "outline": "#00c6ff"
+  },
+  "melvorAoD:Imbued_Iron_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#58483c"
+   },
+   "outline": "#00c6ff"
+  },
+  "melvorAoD:Imbued_Mithril_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#1b3cac"
+   },
+   "outline": "#00c6ff"
+  },
+  "melvorAoD:Imbued_Runite_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#1b89ac"
+   },
+   "outline": "#00c6ff"
+  },
+  "melvorAoD:Imbued_Steel_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#34a9cb"
+   },
+   "outline": "#00c6ff"
+  },
+  "melvorAoD:Pure_Crystal_Arrowtips": {
+   "base": "File:Mithril arrowtips.png",
+   "recolor": {
+    "color": "#198b6e"
+   }
+  },
+  "melvorAoD:Pure_Crystal_Helmet": "File:Crystal helm.png",
+  "melvorAoD:Pure_Crystal_Helmet_T_G": {
+   "base": "File:Crystal helm.png",
+   "label": "G"
+  },
+  "melvorAoD:Pure_Crystal_Helmet_T_S": {
+   "base": "File:Crystal helm.png",
+   "label": "S"
+  },
+  "melvorAoD:Pure_Crystal_Platebody": "File:Crystal body.png",
+  "melvorAoD:Pure_Crystal_Platebody_T_G": {
+   "base": "File:Crystal body.png",
+   "label": "G"
+  },
+  "melvorAoD:Pure_Crystal_Platebody_T_S": {
+   "base": "File:Crystal body.png",
+   "label": "S"
+  },
+  "melvorAoD:Pure_Crystal_Platelegs": "File:Crystal legs.png",
+  "melvorAoD:Pure_Crystal_Platelegs_T_G": {
+   "base": "File:Crystal legs.png",
+   "label": "G"
+  },
+  "melvorAoD:Pure_Crystal_Platelegs_T_S": {
+   "base": "File:Crystal legs.png",
+   "label": "S"
+  },
+  "melvorAoD:Pure_Crystal_Shield": "File:Crystal shield.png",
+  "melvorAoD:Pure_Crystal_Shield_T_G": {
+   "base": "File:Crystal shield.png",
+   "label": "G"
+  },
+  "melvorAoD:Pure_Crystal_Shield_T_S": {
+   "base": "File:Crystal shield.png",
+   "label": "S"
+  },
+  "melvorAoD:Underwater_Helmet": "File:Fishbowl helmet.png",
+  "melvorAoD:Unholy_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#b67a51"
+   }
+  },
+  "melvorAoD:Unholy_Potion_I": "File:Zamorak brew(1).png",
+  "melvorAoD:Unholy_Potion_II": "File:Zamorak brew(2).png",
+  "melvorAoD:Unholy_Potion_III": "File:Zamorak brew(3).png",
+  "melvorAoD:Unholy_Potion_IV": "File:Zamorak brew(4).png",
   "melvorD:Adamant_Crossbow_Head": "File:Adamantite limbs.png",
   "melvorD:Adamant_Javelin_Heads": "File:Adamant javelin tips 5.png",
   "melvorD:Almighty_Ring": "File:Ring of the gods.png",
@@ -103,9 +400,21 @@
   "melvorD:Carp_Perfect": "File:Giant carp.png",
   "melvorD:Carrot_Cake": "File:Cake.png",
   "melvorD:Carrot_Cake_Perfect": "File:Cake.png",
+  "melvorD:Carrot_Seeds": {
+   "base": "File:Potato seed.png",
+   "recolor": {
+    "color": "#d27324"
+   }
+  },
   "melvorD:Cave_Fish": "File:Cavefish.png",
   "melvorD:Cave_Fish_Perfect": "File:Cavefish.png",
   "melvorD:Charge_Stone_of_Rhaelyx": "File:Elemental guardian stone.png",
+  "melvorD:Cherry_Seeds": {
+   "base": "File:Potato seed.png",
+   "recolor": {
+    "color": "#f96868"
+   }
+  },
   "melvorD:Chest_of_Witwix": "File:Reward casket (hard).png",
   "melvorD:Christmas_Coal": "File:Coal fragment.png",
   "melvorD:Christmas_Present_Blue": "File:Secret santa present (blue).png",
@@ -867,7 +1176,2710 @@
   "melvorF:Woodcutters_Hat": "File:Lumberjack hat.png",
   "melvorF:Woodcutters_Leggings": "File:Lumberjack legs.png",
   "melvorF:Woodcutting_Scroll_Of_XP": "File:Tattered scroll.png",
-  "melvorF:Worm_Spike": "File:Long kebbit spike.png"
+  "melvorF:Worm_Spike": "File:Long kebbit spike.png",
+  "melvorItA:Abyssal_Combination_Potion_I": "File:Combat potion(1).png",
+  "melvorItA:Abyssal_Combination_Potion_II": "File:Combat potion(2).png",
+  "melvorItA:Abyssal_Combination_Potion_III": "File:Combat potion(3).png",
+  "melvorItA:Abyssal_Combination_Potion_IV": "File:Combat potion(4).png",
+  "melvorItA:Abyssal_Consumable_Potion_I": {
+   "base": "File:Attack potion(1).png",
+   "recolor": {
+    "color": "#ec3a78",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Abyssal_Consumable_Potion_II": {
+   "base": "File:Attack potion(2).png",
+   "recolor": {
+    "color": "#ec3a78",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Abyssal_Consumable_Potion_III": {
+   "base": "File:Attack potion(3).png",
+   "recolor": {
+    "color": "#ec3a78",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Abyssal_Consumable_Potion_IV": {
+   "base": "File:Attack potion(4).png",
+   "recolor": {
+    "color": "#ec3a78",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Abyssal_Feathers": {
+   "base": "File:Feather.png",
+   "recolor": {
+    "color": "#bf2b2a"
+   }
+  },
+  "melvorItA:Abyssal_Miner_Potion_I": {
+   "base": "File:Attack potion(1).png",
+   "recolor": {
+    "color": "#c8143f",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Abyssal_Miner_Potion_II": {
+   "base": "File:Attack potion(2).png",
+   "recolor": {
+    "color": "#c8143f",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Abyssal_Miner_Potion_III": {
+   "base": "File:Attack potion(3).png",
+   "recolor": {
+    "color": "#c8143f",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Abyssal_Miner_Potion_IV": {
+   "base": "File:Attack potion(4).png",
+   "recolor": {
+    "color": "#c8143f",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Abyssia_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#f0355a"
+   }
+  },
+  "melvorItA:Abyssium_2H_Sword": {
+   "base": "File:Steel 2h sword.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Abyssium_Arrows": {
+   "base": "File:Steel arrow 5.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Abyssium_Arrowtips": {
+   "base": "File:Mithril arrowtips.png",
+   "recolor": {
+    "color": "#d23637"
+   }
+  },
+  "melvorItA:Abyssium_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#df3349"
+   }
+  },
+  "melvorItA:Abyssium_Boots": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Abyssium_Boots_U": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12
+   },
+   "label": "U"
+  },
+  "melvorItA:Abyssium_Crossbow": {
+   "base": "File:Steel crossbow.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Abyssium_Crossbow_Head": {
+   "base": "File:Steel limbs.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Abyssium_Dagger": {
+   "base": "File:Steel dagger.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Abyssium_Decorative_Shield": {
+   "base": "File:Steel sq shield.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Abyssium_Helmet": {
+   "base": "File:Steel full helm.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Abyssium_Helmet_U": {
+   "base": "File:Steel full helm.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12
+   },
+   "label": "U"
+  },
+  "melvorItA:Abyssium_Javelin": {
+   "base": "File:Steel javelin.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Abyssium_Javelin_Heads": {
+   "base": "File:Steel javelin heads.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Abyssium_Ore": {
+   "base": "File:Iron ore.png",
+   "recolor": {
+    "color": "#df3349"
+   }
+  },
+  "melvorItA:Abyssium_Platebody": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Abyssium_Platebody_U": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12
+   },
+   "label": "U"
+  },
+  "melvorItA:Abyssium_Platelegs": {
+   "base": "File:Steel platelegs.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Abyssium_Platelegs_U": {
+   "base": "File:Steel platelegs.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12
+   },
+   "label": "U"
+  },
+  "melvorItA:Abyssium_Sword": {
+   "base": "File:Steel sword.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Abyssium_Throwing_Knife": {
+   "base": "File:Steel knife.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": 0.12,
+    "keep": [
+     [
+      0,
+      16,
+      20,
+      29
+     ],
+     [
+      8,
+      15,
+      11,
+      16
+     ],
+     [
+      9,
+      14,
+      11,
+      15
+     ]
+    ]
+   }
+  },
+  "melvorItA:Azurian_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#1aadd3"
+   }
+  },
+  "melvorItA:Blighted_Touch_Potion_I": "File:Blighted super restore(1).png",
+  "melvorItA:Blighted_Touch_Potion_II": "File:Blighted super restore(2).png",
+  "melvorItA:Blighted_Touch_Potion_III": "File:Blighted super restore(3).png",
+  "melvorItA:Blighted_Touch_Potion_IV": "File:Blighted super restore(4).png",
+  "melvorItA:Brumia_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#bbc3c0"
+   }
+  },
+  "melvorItA:Brumite_2H_Sword": {
+   "base": "File:Steel 2h sword.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Brumite_Arrows": {
+   "base": "File:Steel arrow 5.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Brumite_Arrowtips": {
+   "base": "File:Mithril arrowtips.png",
+   "recolor": {
+    "color": "#168d62"
+   }
+  },
+  "melvorItA:Brumite_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#199a6b"
+   }
+  },
+  "melvorItA:Brumite_Boots": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Brumite_Boots_U": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   },
+   "label": "U"
+  },
+  "melvorItA:Brumite_Crossbow": {
+   "base": "File:Steel crossbow.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Brumite_Crossbow_Head": {
+   "base": "File:Steel limbs.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Brumite_Dagger": {
+   "base": "File:Steel dagger.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Brumite_Decorative_Shield": {
+   "base": "File:Steel sq shield.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Brumite_Helmet": {
+   "base": "File:Steel full helm.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Brumite_Helmet_U": {
+   "base": "File:Steel full helm.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   },
+   "label": "U"
+  },
+  "melvorItA:Brumite_Javelin": {
+   "base": "File:Steel javelin.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Brumite_Javelin_Heads": {
+   "base": "File:Steel javelin heads.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Brumite_Ore": {
+   "base": "File:Iron ore.png",
+   "recolor": {
+    "color": "#199a6b"
+   }
+  },
+  "melvorItA:Brumite_Platebody": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Brumite_Platebody_U": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   },
+   "label": "U"
+  },
+  "melvorItA:Brumite_Platelegs": {
+   "base": "File:Steel platelegs.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Brumite_Platelegs_U": {
+   "base": "File:Steel platelegs.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   },
+   "label": "U"
+  },
+  "melvorItA:Brumite_Sword": {
+   "base": "File:Steel sword.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Brumite_Throwing_Knife": {
+   "base": "File:Steel knife.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12,
+    "keep": [
+     [
+      0,
+      16,
+      20,
+      29
+     ],
+     [
+      8,
+      15,
+      11,
+      16
+     ],
+     [
+      9,
+      14,
+      11,
+      15
+     ]
+    ]
+   }
+  },
+  "melvorItA:Corrupted_Fighter_Potion_I": "File:Elder potion (1).png",
+  "melvorItA:Corrupted_Fighter_Potion_II": "File:Elder potion (2).png",
+  "melvorItA:Corrupted_Fighter_Potion_III": "File:Elder potion (3).png",
+  "melvorItA:Corrupted_Fighter_Potion_IV": "File:Elder potion (4).png",
+  "melvorItA:Crumbletain_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#be8698"
+   }
+  },
+  "melvorItA:Dark_Ritual_Potion_I": "File:Sacred oil(1).png",
+  "melvorItA:Dark_Ritual_Potion_II": "File:Sacred oil(2).png",
+  "melvorItA:Dark_Ritual_Potion_III": "File:Sacred oil(3).png",
+  "melvorItA:Dark_Ritual_Potion_IV": "File:Sacred oil(4).png",
+  "melvorItA:Echoing_Lure_Potion_I": "File:Super fishing potion(1).png",
+  "melvorItA:Echoing_Lure_Potion_II": "File:Super fishing potion(2).png",
+  "melvorItA:Echoing_Lure_Potion_III": "File:Super fishing potion(3).png",
+  "melvorItA:Echoing_Lure_Potion_IV": "File:Super fishing potion(4).png",
+  "melvorItA:Eldria_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#e3cf96"
+   }
+  },
+  "melvorItA:Eldritch_Curse_Potion_I": {
+   "base": "File:Attack potion(1).png",
+   "recolor": {
+    "color": "#8bc866",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Eldritch_Curse_Potion_II": {
+   "base": "File:Attack potion(2).png",
+   "recolor": {
+    "color": "#8bc866",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Eldritch_Curse_Potion_III": {
+   "base": "File:Attack potion(3).png",
+   "recolor": {
+    "color": "#8bc866",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Eldritch_Curse_Potion_IV": {
+   "base": "File:Attack potion(4).png",
+   "recolor": {
+    "color": "#8bc866",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Fear_Potion_I": {
+   "base": "File:Attack potion(1).png",
+   "recolor": {
+    "color": "#6a1616",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Fear_Potion_II": {
+   "base": "File:Attack potion(2).png",
+   "recolor": {
+    "color": "#6a1616",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Fear_Potion_III": {
+   "base": "File:Attack potion(3).png",
+   "recolor": {
+    "color": "#6a1616",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Fear_Potion_IV": {
+   "base": "File:Attack potion(4).png",
+   "recolor": {
+    "color": "#6a1616",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Gloomgrowth_Potion_I": {
+   "base": "File:Compost potion(1).png",
+   "recolor": {
+    "color": "#44c4d8",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Gloomgrowth_Potion_II": {
+   "base": "File:Compost potion(2).png",
+   "recolor": {
+    "color": "#44c4d8",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Gloomgrowth_Potion_III": {
+   "base": "File:Compost potion(3).png",
+   "recolor": {
+    "color": "#44c4d8",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Gloomgrowth_Potion_IV": {
+   "base": "File:Compost potion(4).png",
+   "recolor": {
+    "color": "#44c4d8",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Gloomia_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#3a88cc"
+   }
+  },
+  "melvorItA:Gloomite_2H_Sword": {
+   "base": "File:Steel 2h sword.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Gloomite_Arrows": {
+   "base": "File:Steel arrow 5.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Gloomite_Arrowtips": {
+   "base": "File:Mithril arrowtips.png",
+   "recolor": {
+    "color": "#318dbb"
+   }
+  },
+  "melvorItA:Gloomite_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#338cc0"
+   }
+  },
+  "melvorItA:Gloomite_Boots": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Gloomite_Boots_U": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   },
+   "label": "U"
+  },
+  "melvorItA:Gloomite_Crossbow": {
+   "base": "File:Steel crossbow.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Gloomite_Crossbow_Head": {
+   "base": "File:Steel limbs.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Gloomite_Dagger": {
+   "base": "File:Steel dagger.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Gloomite_Decorative_Shield": {
+   "base": "File:Steel sq shield.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Gloomite_Helmet": {
+   "base": "File:Steel full helm.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Gloomite_Helmet_U": {
+   "base": "File:Steel full helm.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   },
+   "label": "U"
+  },
+  "melvorItA:Gloomite_Javelin": {
+   "base": "File:Steel javelin.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Gloomite_Javelin_Heads": {
+   "base": "File:Steel javelin heads.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Gloomite_Ore": {
+   "base": "File:Iron ore.png",
+   "recolor": {
+    "color": "#338cc0"
+   }
+  },
+  "melvorItA:Gloomite_Platebody": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Gloomite_Platebody_U": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   },
+   "label": "U"
+  },
+  "melvorItA:Gloomite_Platelegs": {
+   "base": "File:Steel platelegs.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Gloomite_Platelegs_U": {
+   "base": "File:Steel platelegs.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   },
+   "label": "U"
+  },
+  "melvorItA:Gloomite_Sword": {
+   "base": "File:Steel sword.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Gloomite_Throwing_Knife": {
+   "base": "File:Steel knife.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12,
+    "keep": [
+     [
+      0,
+      16,
+      20,
+      29
+     ],
+     [
+      8,
+      15,
+      11,
+      16
+     ],
+     [
+      9,
+      14,
+      11,
+      15
+     ]
+    ]
+   }
+  },
+  "melvorItA:Harvesters_Potion_I": "File:Super hunter potion(1).png",
+  "melvorItA:Harvesters_Potion_II": "File:Super hunter potion(2).png",
+  "melvorItA:Harvesters_Potion_III": "File:Super hunter potion(3).png",
+  "melvorItA:Harvesters_Potion_IV": "File:Super hunter potion(4).png",
+  "melvorItA:Laceration_Potion_I": {
+   "base": "File:Attack potion(1).png",
+   "recolor": {
+    "color": "#a50d22",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Laceration_Potion_II": {
+   "base": "File:Attack potion(2).png",
+   "recolor": {
+    "color": "#a50d22",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Laceration_Potion_III": {
+   "base": "File:Attack potion(3).png",
+   "recolor": {
+    "color": "#a50d22",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Laceration_Potion_IV": {
+   "base": "File:Attack potion(4).png",
+   "recolor": {
+    "color": "#a50d22",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Netherite_2H_Sword": {
+   "base": "File:Steel 2h sword.png",
+   "recolor": {
+    "color": "#99423f",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Netherite_Arrows": {
+   "base": "File:Steel arrow 5.png",
+   "recolor": {
+    "color": "#99423f",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Netherite_Arrowtips": {
+   "base": "File:Mithril arrowtips.png",
+   "recolor": {
+    "color": "#994c41"
+   }
+  },
+  "melvorItA:Netherite_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#99423f"
+   }
+  },
+  "melvorItA:Netherite_Boots": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#99423f",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Netherite_Boots_U": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#99423f",
+    "greys": 0.12
+   },
+   "label": "U"
+  },
+  "melvorItA:Netherite_Crossbow": {
+   "base": "File:Steel crossbow.png",
+   "recolor": {
+    "color": "#99423f",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Netherite_Crossbow_Head": {
+   "base": "File:Steel limbs.png",
+   "recolor": {
+    "color": "#99423f",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Netherite_Dagger": {
+   "base": "File:Steel dagger.png",
+   "recolor": {
+    "color": "#99423f",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Netherite_Gloves": {
+   "base": "File:Steel gloves.png",
+   "recolor": {
+    "color": "#99423f",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Netherite_Helmet": "File:Obsidian helmet.png",
+  "melvorItA:Netherite_Helmet_U": {
+   "base": "File:Obsidian helmet.png",
+   "label": "U"
+  },
+  "melvorItA:Netherite_Javelin": {
+   "base": "File:Steel javelin.png",
+   "recolor": {
+    "color": "#99423f",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Netherite_Javelin_Heads": {
+   "base": "File:Steel javelin heads.png",
+   "recolor": {
+    "color": "#99423f",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Netherite_Ore": {
+   "base": "File:Iron ore.png",
+   "recolor": {
+    "color": "#99423f"
+   }
+  },
+  "melvorItA:Netherite_Platebody": "File:Obsidian platebody.png",
+  "melvorItA:Netherite_Platebody_U": {
+   "base": "File:Obsidian platebody.png",
+   "label": "U"
+  },
+  "melvorItA:Netherite_Platelegs": "File:Obsidian platelegs.png",
+  "melvorItA:Netherite_Platelegs_U": {
+   "base": "File:Obsidian platelegs.png",
+   "label": "U"
+  },
+  "melvorItA:Netherite_Sword": {
+   "base": "File:Steel sword.png",
+   "recolor": {
+    "color": "#99423f",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Netherite_Throwing_Knife": {
+   "base": "File:Steel knife.png",
+   "recolor": {
+    "color": "#99423f",
+    "greys": 0.12,
+    "keep": [
+     [
+      0,
+      16,
+      20,
+      29
+     ],
+     [
+      8,
+      15,
+      11,
+      16
+     ],
+     [
+      9,
+      14,
+      11,
+      15
+     ]
+    ]
+   }
+  },
+  "melvorItA:Nethia_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#71132c"
+   }
+  },
+  "melvorItA:Obsidian_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#424098"
+   }
+  },
+  "melvorItA:Obzurian_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#207f9b"
+   }
+  },
+  "melvorItA:Piece_Finder_Potion_I": {
+   "base": "File:Attack potion(1).png",
+   "recolor": {
+    "color": "#f68a10",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Piece_Finder_Potion_II": {
+   "base": "File:Attack potion(2).png",
+   "recolor": {
+    "color": "#f68a10",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Piece_Finder_Potion_III": {
+   "base": "File:Attack potion(3).png",
+   "recolor": {
+    "color": "#f68a10",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Piece_Finder_Potion_IV": {
+   "base": "File:Attack potion(4).png",
+   "recolor": {
+    "color": "#f68a10",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Plagueroot_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#f88b67"
+   }
+  },
+  "melvorItA:Shadebark_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#45717b"
+   }
+  },
+  "melvorItA:Shadeveil_Potion_I": "File:Serum 208 (1).png",
+  "melvorItA:Shadeveil_Potion_II": "File:Serum 208 (2).png",
+  "melvorItA:Shadeveil_Potion_III": "File:Serum 208 (3).png",
+  "melvorItA:Shadeveil_Potion_IV": "File:Serum 208 (4).png",
+  "melvorItA:Silence_Potion_I": {
+   "base": "File:Attack potion(1).png",
+   "recolor": {
+    "color": "#3fbfc6",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Silence_Potion_II": {
+   "base": "File:Attack potion(2).png",
+   "recolor": {
+    "color": "#3fbfc6",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Silence_Potion_III": {
+   "base": "File:Attack potion(3).png",
+   "recolor": {
+    "color": "#3fbfc6",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Silence_Potion_IV": {
+   "base": "File:Attack potion(4).png",
+   "recolor": {
+    "color": "#3fbfc6",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Silent_Thief_Potion_I": "File:Goblin potion(1).png",
+  "melvorItA:Silent_Thief_Potion_II": "File:Goblin potion(2).png",
+  "melvorItA:Silent_Thief_Potion_III": "File:Goblin potion(3).png",
+  "melvorItA:Silent_Thief_Potion_IV": "File:Goblin potion(4).png",
+  "melvorItA:Soulsnap_Potion_I": {
+   "base": "File:Attack potion(1).png",
+   "recolor": {
+    "color": "#0151b0",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Soulsnap_Potion_II": {
+   "base": "File:Attack potion(2).png",
+   "recolor": {
+    "color": "#0151b0",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Soulsnap_Potion_III": {
+   "base": "File:Attack potion(3).png",
+   "recolor": {
+    "color": "#0151b0",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Soulsnap_Potion_IV": {
+   "base": "File:Attack potion(4).png",
+   "recolor": {
+    "color": "#0151b0",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Toxic_Protection_Mask": "File:Gas mask.png",
+  "melvorItA:Twisted_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#937057"
+   }
+  },
+  "melvorItA:Void_Stabilisation_Potion_I": "File:Guthix balance(1).png",
+  "melvorItA:Void_Stabilisation_Potion_II": "File:Guthix balance(2).png",
+  "melvorItA:Void_Stabilisation_Potion_III": "File:Guthix balance(3).png",
+  "melvorItA:Void_Stabilisation_Potion_IV": "File:Guthix balance(4).png",
+  "melvorItA:Voidburst_Potion_I": "File:Ancient brew(1).png",
+  "melvorItA:Voidburst_Potion_II": "File:Ancient brew(2).png",
+  "melvorItA:Voidburst_Potion_III": "File:Ancient brew(3).png",
+  "melvorItA:Voidburst_Potion_IV": "File:Ancient brew(4).png",
+  "melvorItA:Voidia_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#0089a9"
+   }
+  },
+  "melvorItA:Whisperwillow_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#c7deea"
+   }
+  },
+  "melvorItA:Withering_Potion_I": {
+   "base": "File:Attack potion(1).png",
+   "recolor": {
+    "color": "#d3ceb3",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Withering_Potion_II": {
+   "base": "File:Attack potion(2).png",
+   "recolor": {
+    "color": "#d3ceb3",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Withering_Potion_III": {
+   "base": "File:Attack potion(3).png",
+   "recolor": {
+    "color": "#d3ceb3",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Withering_Potion_IV": {
+   "base": "File:Attack potion(4).png",
+   "recolor": {
+    "color": "#d3ceb3",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorItA:Witherite_2H_Sword": {
+   "base": "File:Steel 2h sword.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Witherite_Arrows": {
+   "base": "File:Steel arrow 5.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Witherite_Arrowtips": {
+   "base": "File:Mithril arrowtips.png",
+   "recolor": {
+    "color": "#d3ceb3"
+   }
+  },
+  "melvorItA:Witherite_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#9b9889"
+   }
+  },
+  "melvorItA:Witherite_Boots": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Witherite_Boots_U": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   },
+   "label": "U"
+  },
+  "melvorItA:Witherite_Crossbow": {
+   "base": "File:Steel crossbow.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Witherite_Crossbow_Head": {
+   "base": "File:Steel limbs.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Witherite_Dagger": {
+   "base": "File:Steel dagger.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Witherite_Helmet": {
+   "base": "File:Steel full helm.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Witherite_Helmet_U": {
+   "base": "File:Steel full helm.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   },
+   "label": "U"
+  },
+  "melvorItA:Witherite_Javelin": {
+   "base": "File:Steel javelin.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Witherite_Javelin_Heads": {
+   "base": "File:Steel javelin heads.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Witherite_Ore": {
+   "base": "File:Iron ore.png",
+   "recolor": {
+    "color": "#9b9889"
+   }
+  },
+  "melvorItA:Witherite_Platebody": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Witherite_Platebody_U": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   },
+   "label": "U"
+  },
+  "melvorItA:Witherite_Platelegs": {
+   "base": "File:Steel platelegs.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Witherite_Platelegs_U": {
+   "base": "File:Steel platelegs.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   },
+   "label": "U"
+  },
+  "melvorItA:Witherite_Sword": {
+   "base": "File:Steel sword.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Witherite_Throwing_Knife": {
+   "base": "File:Steel knife.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12,
+    "keep": [
+     [
+      0,
+      16,
+      20,
+      29
+     ],
+     [
+      8,
+      15,
+      11,
+      16
+     ],
+     [
+      9,
+      14,
+      11,
+      15
+     ]
+    ]
+   }
+  },
+  "melvorItA:Withia_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#efebd9"
+   }
+  },
+  "melvorTotH:Adaptive_Accuracy_Potion_I": "File:Divine super attack potion(1).png",
+  "melvorTotH:Adaptive_Accuracy_Potion_II": "File:Divine super attack potion(2).png",
+  "melvorTotH:Adaptive_Accuracy_Potion_III": "File:Divine super attack potion(3).png",
+  "melvorTotH:Adaptive_Accuracy_Potion_IV": "File:Divine super attack potion(4).png",
+  "melvorTotH:Adaptive_Defence_Potion_I": "File:Divine super defence potion(1).png",
+  "melvorTotH:Adaptive_Defence_Potion_II": "File:Divine super defence potion(2).png",
+  "melvorTotH:Adaptive_Defence_Potion_III": "File:Divine super defence potion(3).png",
+  "melvorTotH:Adaptive_Defence_Potion_IV": "File:Divine super defence potion(4).png",
+  "melvorTotH:Alchemic_Practice_Potion_I": "File:Mixture - step 1(1).png",
+  "melvorTotH:Alchemic_Practice_Potion_II": "File:Mixture - step 1(2).png",
+  "melvorTotH:Alchemic_Practice_Potion_III": "File:Mixture - step 1(3).png",
+  "melvorTotH:Alchemic_Practice_Potion_IV": "File:Mixture - step 1(4).png",
+  "melvorTotH:Alt_Magic_Potion_I": "File:Super magic potion (1).png",
+  "melvorTotH:Alt_Magic_Potion_II": "File:Super magic potion (2).png",
+  "melvorTotH:Alt_Magic_Potion_III": "File:Super magic potion (3).png",
+  "melvorTotH:Alt_Magic_Potion_IV": "File:Super magic potion (4).png",
+  "melvorTotH:Area_Control_Potion_I": "File:Relicym's balm(1).png",
+  "melvorTotH:Area_Control_Potion_II": "File:Relicym's balm(2).png",
+  "melvorTotH:Area_Control_Potion_III": "File:Relicym's balm(3).png",
+  "melvorTotH:Area_Control_Potion_IV": "File:Relicym's balm(4).png",
+  "melvorTotH:Augite_2H_Sword": {
+   "base": "File:Steel 2h sword.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Augite_Arrows": {
+   "base": "File:Steel arrow 5.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Augite_Arrowtips": {
+   "base": "File:Mithril arrowtips.png",
+   "recolor": {
+    "color": "#274611"
+   }
+  },
+  "melvorTotH:Augite_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#2c4e13"
+   }
+  },
+  "melvorTotH:Augite_Battleaxe": {
+   "base": "File:Steel battleaxe.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Augite_Boots": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Augite_Boots_T_I": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   },
+   "label": "I"
+  },
+  "melvorTotH:Augite_Boots_T_P": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   },
+   "label": "P"
+  },
+  "melvorTotH:Augite_Crossbow": {
+   "base": "File:Steel crossbow.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Augite_Crossbow_Head": {
+   "base": "File:Steel limbs.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Augite_Dagger": {
+   "base": "File:Steel dagger.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Augite_Gloves": {
+   "base": "File:Steel gloves.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Augite_Helmet": {
+   "base": "File:Steel full helm.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Augite_Helmet_T_I": {
+   "base": "File:Steel full helm.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   },
+   "label": "I"
+  },
+  "melvorTotH:Augite_Helmet_T_P": {
+   "base": "File:Steel full helm.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   },
+   "label": "P"
+  },
+  "melvorTotH:Augite_Javelin": {
+   "base": "File:Steel javelin.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Augite_Javelin_Heads": {
+   "base": "File:Steel javelin heads.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Augite_Ore": {
+   "base": "File:Mithril ore.png",
+   "recolor": {
+    "color": "#2e4c16"
+   }
+  },
+  "melvorTotH:Augite_Platebody": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Augite_Platebody_T_I": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   },
+   "label": "I"
+  },
+  "melvorTotH:Augite_Platebody_T_P": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   },
+   "label": "P"
+  },
+  "melvorTotH:Augite_Platelegs": {
+   "base": "File:Steel platelegs.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Augite_Platelegs_T_I": {
+   "base": "File:Steel platelegs.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   },
+   "label": "I"
+  },
+  "melvorTotH:Augite_Platelegs_T_P": {
+   "base": "File:Steel platelegs.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   },
+   "label": "P"
+  },
+  "melvorTotH:Augite_Scimitar": {
+   "base": "File:Steel scimitar.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Augite_Shield": {
+   "base": "File:Steel kiteshield.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Augite_Shield_T_I": {
+   "base": "File:Steel kiteshield.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   },
+   "label": "I"
+  },
+  "melvorTotH:Augite_Shield_T_P": {
+   "base": "File:Steel kiteshield.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   },
+   "label": "P"
+  },
+  "melvorTotH:Augite_Sword": {
+   "base": "File:Steel sword.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Augite_Throwing_Knife": {
+   "base": "File:Steel knife.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12,
+    "keep": [
+     [
+      0,
+      16,
+      20,
+      29
+     ],
+     [
+      8,
+      15,
+      11,
+      16
+     ],
+     [
+      9,
+      14,
+      11,
+      15
+     ]
+    ]
+   }
+  },
+  "melvorTotH:Bitterlyme_Herb": {
+   "base": "File:Ranarr weed.png",
+   "recolor": {
+    "color": "#51c0b2"
+   }
+  },
+  "melvorTotH:Bitterlyme_Seeds": {
+   "base": "File:Ranarr seed.png",
+   "recolor": {
+    "color": "#6ec6b1"
+   }
+  },
+  "melvorTotH:Blacksmith_Potion_I": {
+   "base": "File:Attack potion(1).png",
+   "recolor": {
+    "color": "#5e5e5e",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorTotH:Blacksmith_Potion_II": {
+   "base": "File:Attack potion(2).png",
+   "recolor": {
+    "color": "#5e5e5e",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorTotH:Blacksmith_Potion_III": {
+   "base": "File:Attack potion(3).png",
+   "recolor": {
+    "color": "#5e5e5e",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorTotH:Blacksmith_Potion_IV": {
+   "base": "File:Attack potion(4).png",
+   "recolor": {
+    "color": "#5e5e5e",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorTotH:Carrion_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#6a5a52"
+   }
+  },
+  "melvorTotH:Carrion_Tree_Seeds": {
+   "base": "File:Maple seed.png",
+   "recolor": {
+    "color": "#62534a"
+   }
+  },
+  "melvorTotH:Chilli_Seeds": {
+   "base": "File:Potato seed.png",
+   "recolor": {
+    "color": "#ec5438"
+   }
+  },
+  "melvorTotH:Corundum_2H_Sword": {
+   "base": "File:Steel 2h sword.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Corundum_Arrows": {
+   "base": "File:Steel arrow 5.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Corundum_Arrowtips": {
+   "base": "File:Mithril arrowtips.png",
+   "recolor": {
+    "color": "#9031a3"
+   }
+  },
+  "melvorTotH:Corundum_Battleaxe": {
+   "base": "File:Steel battleaxe.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Corundum_Boots": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Corundum_Boots_T_I": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   },
+   "label": "I"
+  },
+  "melvorTotH:Corundum_Boots_T_P": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   },
+   "label": "P"
+  },
+  "melvorTotH:Corundum_Crossbow": {
+   "base": "File:Steel crossbow.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Corundum_Crossbow_Head": {
+   "base": "File:Steel limbs.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Corundum_Dagger": {
+   "base": "File:Steel dagger.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Corundum_Gloves": {
+   "base": "File:Steel gloves.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Corundum_Helmet": {
+   "base": "File:Steel full helm.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Corundum_Helmet_T_I": {
+   "base": "File:Steel full helm.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   },
+   "label": "I"
+  },
+  "melvorTotH:Corundum_Helmet_T_P": {
+   "base": "File:Steel full helm.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   },
+   "label": "P"
+  },
+  "melvorTotH:Corundum_Javelin": {
+   "base": "File:Steel javelin.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Corundum_Javelin_Heads": {
+   "base": "File:Steel javelin heads.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Corundum_Platebody": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Corundum_Platebody_T_I": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   },
+   "label": "I"
+  },
+  "melvorTotH:Corundum_Platebody_T_P": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   },
+   "label": "P"
+  },
+  "melvorTotH:Corundum_Platelegs": {
+   "base": "File:Steel platelegs.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Corundum_Platelegs_T_I": {
+   "base": "File:Steel platelegs.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   },
+   "label": "I"
+  },
+  "melvorTotH:Corundum_Platelegs_T_P": {
+   "base": "File:Steel platelegs.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   },
+   "label": "P"
+  },
+  "melvorTotH:Corundum_Scimitar": {
+   "base": "File:Steel scimitar.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Corundum_Shield": {
+   "base": "File:Steel kiteshield.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Corundum_Shield_T_I": {
+   "base": "File:Steel kiteshield.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   },
+   "label": "I"
+  },
+  "melvorTotH:Corundum_Shield_T_P": {
+   "base": "File:Steel kiteshield.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   },
+   "label": "P"
+  },
+  "melvorTotH:Corundum_Sword": {
+   "base": "File:Steel sword.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Corundum_Throwing_Knife": {
+   "base": "File:Steel knife.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12,
+    "keep": [
+     [
+      0,
+      16,
+      20,
+      29
+     ],
+     [
+      8,
+      15,
+      11,
+      16
+     ],
+     [
+      9,
+      14,
+      11,
+      15
+     ]
+    ]
+   }
+  },
+  "melvorTotH:Corundumite_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#9637aa"
+   }
+  },
+  "melvorTotH:Corundumite_Ore": {
+   "base": "File:Mithril ore.png",
+   "recolor": {
+    "color": "#933ba5"
+   }
+  },
+  "melvorTotH:Critical_Strike_Potion_I": "File:Overload (1).png",
+  "melvorTotH:Critical_Strike_Potion_II": "File:Overload (2).png",
+  "melvorTotH:Critical_Strike_Potion_III": "File:Overload (3).png",
+  "melvorTotH:Critical_Strike_Potion_IV": "File:Overload (4).png",
+  "melvorTotH:Deadly_Toxins_Potion": "File:Weapon poison(++).png",
+  "melvorTotH:Divine_2H_Sword": {
+   "base": "File:Steel 2h sword.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Divine_Arrows": {
+   "base": "File:Steel arrow 5.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Divine_Arrowtips": {
+   "base": "File:Mithril arrowtips.png",
+   "recolor": {
+    "color": "#8d7c2d"
+   }
+  },
+  "melvorTotH:Divine_Battleaxe": {
+   "base": "File:Steel battleaxe.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Divine_Boots": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Divine_Boots_T_I": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   },
+   "label": "I"
+  },
+  "melvorTotH:Divine_Boots_T_P": {
+   "base": "File:Steel boots.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   },
+   "label": "P"
+  },
+  "melvorTotH:Divine_Crossbow": {
+   "base": "File:Steel crossbow.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Divine_Crossbow_Head": {
+   "base": "File:Steel limbs.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Divine_Dagger": {
+   "base": "File:Steel dagger.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Divine_Gloves": {
+   "base": "File:Steel gloves.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Divine_Helmet": {
+   "base": "File:Steel full helm.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Divine_Helmet_T_I": {
+   "base": "File:Steel full helm.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   },
+   "label": "I"
+  },
+  "melvorTotH:Divine_Helmet_T_P": {
+   "base": "File:Steel full helm.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   },
+   "label": "P"
+  },
+  "melvorTotH:Divine_Javelin": {
+   "base": "File:Steel javelin.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Divine_Javelin_Heads": {
+   "base": "File:Steel javelin heads.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Divine_Platebody": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Divine_Platebody_T_I": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   },
+   "label": "I"
+  },
+  "melvorTotH:Divine_Platebody_T_P": {
+   "base": "File:Steel platebody.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   },
+   "label": "P"
+  },
+  "melvorTotH:Divine_Platelegs": {
+   "base": "File:Steel platelegs.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Divine_Platelegs_T_I": {
+   "base": "File:Steel platelegs.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   },
+   "label": "I"
+  },
+  "melvorTotH:Divine_Platelegs_T_P": {
+   "base": "File:Steel platelegs.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   },
+   "label": "P"
+  },
+  "melvorTotH:Divine_Scimitar": {
+   "base": "File:Steel scimitar.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Divine_Shield": {
+   "base": "File:Steel kiteshield.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Divine_Shield_T_I": {
+   "base": "File:Steel kiteshield.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   },
+   "label": "I"
+  },
+  "melvorTotH:Divine_Shield_T_P": {
+   "base": "File:Steel kiteshield.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   },
+   "label": "P"
+  },
+  "melvorTotH:Divine_Sword": {
+   "base": "File:Steel sword.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Divine_Throwing_Knife": {
+   "base": "File:Steel knife.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12,
+    "keep": [
+     [
+      0,
+      16,
+      20,
+      29
+     ],
+     [
+      8,
+      15,
+      11,
+      16
+     ],
+     [
+      9,
+      14,
+      11,
+      15
+     ]
+    ]
+   }
+  },
+  "melvorTotH:Divinite_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#948330"
+   }
+  },
+  "melvorTotH:Divinite_Ore": {
+   "base": "File:Mithril ore.png",
+   "recolor": {
+    "color": "#8f7e34"
+   }
+  },
+  "melvorTotH:Elderwood_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#806b80"
+   }
+  },
+  "melvorTotH:Elderwood_Tree_Seeds": {
+   "base": "File:Maple seed.png",
+   "recolor": {
+    "color": "#786378"
+   }
+  },
+  "melvorTotH:Enkindled_Yields_Potion_I": "File:Super antifire potion(1).png",
+  "melvorTotH:Enkindled_Yields_Potion_II": "File:Super antifire potion(2).png",
+  "melvorTotH:Enkindled_Yields_Potion_III": "File:Super antifire potion(3).png",
+  "melvorTotH:Enkindled_Yields_Potion_IV": "File:Super antifire potion(4).png",
+  "melvorTotH:Gem_Detector_Potion_I": {
+   "base": "File:Attack potion(1).png",
+   "recolor": {
+    "color": "#0a86c4",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorTotH:Gem_Detector_Potion_II": {
+   "base": "File:Attack potion(2).png",
+   "recolor": {
+    "color": "#0a86c4",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorTotH:Gem_Detector_Potion_III": {
+   "base": "File:Attack potion(3).png",
+   "recolor": {
+    "color": "#0a86c4",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorTotH:Gem_Detector_Potion_IV": {
+   "base": "File:Attack potion(4).png",
+   "recolor": {
+    "color": "#0a86c4",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorTotH:Grove_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#c59a85"
+   }
+  },
+  "melvorTotH:Grove_Tree_Seeds": {
+   "base": "File:Maple seed.png",
+   "recolor": {
+    "color": "#b98d78"
+   }
+  },
+  "melvorTotH:Holy_Bulwark_Potion_I": "File:Prayer regeneration potion(1).png",
+  "melvorTotH:Holy_Bulwark_Potion_II": "File:Prayer regeneration potion(2).png",
+  "melvorTotH:Holy_Bulwark_Potion_III": "File:Prayer regeneration potion(3).png",
+  "melvorTotH:Holy_Bulwark_Potion_IV": "File:Prayer regeneration potion(4).png",
+  "melvorTotH:Hornbeam_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#643927"
+   }
+  },
+  "melvorTotH:Iridium_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#959595"
+   }
+  },
+  "melvorTotH:Iridium_Ore": {
+   "base": "File:Mithril ore.png",
+   "recolor": {
+    "color": "#7a7a7a"
+   }
+  },
+  "melvorTotH:Linden_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#905a45"
+   }
+  },
+  "melvorTotH:Meteorite_2H_Sword": {
+   "base": "File:Steel 2h sword.png",
+   "recolor": {
+    "color": "#8a3405",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Meteorite_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#8a3405"
+   }
+  },
+  "melvorTotH:Meteorite_Bolts": {
+   "base": "File:Steel bolts 5.png",
+   "recolor": {
+    "color": "#8a3405",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Meteorite_Crossbow": {
+   "base": "File:Steel crossbow.png",
+   "recolor": {
+    "color": "#8a3405",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Meteorite_Crossbow_Head": {
+   "base": "File:Steel limbs.png",
+   "recolor": {
+    "color": "#8a3405",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Meteorite_Helmet": "File:Sunfire fanatic helm.png",
+  "melvorTotH:Meteorite_Javelin": {
+   "base": "File:Steel javelin.png",
+   "recolor": {
+    "color": "#8a3405",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Meteorite_Javelin_Heads": {
+   "base": "File:Steel javelin heads.png",
+   "recolor": {
+    "color": "#8a3405",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Meteorite_Ore": {
+   "base": "File:Mithril ore.png",
+   "recolor": {
+    "color": "#572b12"
+   }
+  },
+  "melvorTotH:Meteorite_Platebody": "File:Sunfire fanatic cuirass.png",
+  "melvorTotH:Meteorite_Platelegs": "File:Sunfire fanatic chausses.png",
+  "melvorTotH:Moonwort_Herb": {
+   "base": "File:Ranarr weed.png",
+   "recolor": {
+    "color": "#848f83"
+   }
+  },
+  "melvorTotH:Moonwort_Seeds": {
+   "base": "File:Ranarr seed.png",
+   "recolor": {
+    "color": "#f5bf8e"
+   }
+  },
+  "melvorTotH:Multicooker_Potion_I": {
+   "base": "File:Attack potion(1).png",
+   "recolor": {
+    "color": "#c64813",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorTotH:Multicooker_Potion_II": {
+   "base": "File:Attack potion(2).png",
+   "recolor": {
+    "color": "#c64813",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorTotH:Multicooker_Potion_III": {
+   "base": "File:Attack potion(3).png",
+   "recolor": {
+    "color": "#c64813",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorTotH:Multicooker_Potion_IV": {
+   "base": "File:Attack potion(4).png",
+   "recolor": {
+    "color": "#c64813",
+    "colours": true,
+    "keep": [
+     [
+      0,
+      0,
+      99,
+      6
+     ]
+    ]
+   }
+  },
+  "melvorTotH:Mystic_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#d4a091"
+   }
+  },
+  "melvorTotH:Palladium_Bar": {
+   "base": "File:Mithril bar.png",
+   "recolor": {
+    "color": "#7ca17c"
+   }
+  },
+  "melvorTotH:Palladium_Ore": {
+   "base": "File:Mithril ore.png",
+   "recolor": {
+    "color": "#82ba81"
+   }
+  },
+  "melvorTotH:Penetration_Potion_I": "File:Divine super strength potion(1).png",
+  "melvorTotH:Penetration_Potion_II": "File:Divine super strength potion(2).png",
+  "melvorTotH:Penetration_Potion_III": "File:Divine super strength potion(3).png",
+  "melvorTotH:Penetration_Potion_IV": "File:Divine super strength potion(4).png",
+  "melvorTotH:Pumpkin_Seeds": {
+   "base": "File:Potato seed.png",
+   "recolor": {
+    "color": "#eb8738"
+   }
+  },
+  "melvorTotH:Reaper_Potion_I": "File:Revitalisation potion (1).png",
+  "melvorTotH:Reaper_Potion_II": "File:Revitalisation potion (2).png",
+  "melvorTotH:Reaper_Potion_III": "File:Revitalisation potion (3).png",
+  "melvorTotH:Reaper_Potion_IV": "File:Revitalisation potion (4).png",
+  "melvorTotH:Red_Oak_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#bc706b"
+   }
+  },
+  "melvorTotH:Revenant_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#e2bfb5"
+   }
+  },
+  "melvorTotH:Slayer_Bounty_Potion_I": "File:Super combat potion(1).png",
+  "melvorTotH:Slayer_Bounty_Potion_II": "File:Super combat potion(2).png",
+  "melvorTotH:Slayer_Bounty_Potion_III": "File:Super combat potion(3).png",
+  "melvorTotH:Slayer_Bounty_Potion_IV": "File:Super combat potion(4).png",
+  "melvorTotH:Snowcress_Herb": {
+   "base": "File:Ranarr weed.png",
+   "recolor": {
+    "color": "#5ec051"
+   }
+  },
+  "melvorTotH:Snowcress_Seeds": {
+   "base": "File:Ranarr seed.png",
+   "recolor": {
+    "color": "#7bc65d"
+   }
+  },
+  "melvorTotH:Spruce_Logs": {
+   "base": "File:Logs.png",
+   "recolor": {
+    "color": "#89532e"
+   }
+  },
+  "melvorTotH:Star_Seeker_Potion_I": "File:Armadyl brew(1).png",
+  "melvorTotH:Star_Seeker_Potion_II": "File:Armadyl brew(2).png",
+  "melvorTotH:Star_Seeker_Potion_III": "File:Armadyl brew(3).png",
+  "melvorTotH:Star_Seeker_Potion_IV": "File:Armadyl brew(4).png",
+  "melvorTotH:Starfruit_Seeds": {
+   "base": "File:Potato seed.png",
+   "recolor": {
+    "color": "#e1ab28"
+   }
+  },
+  "melvorTotH:Traps_Potion_I": "File:Extended stamina potion(1).png",
+  "melvorTotH:Traps_Potion_II": "File:Extended stamina potion(2).png",
+  "melvorTotH:Traps_Potion_III": "File:Extended stamina potion(3).png",
+  "melvorTotH:Traps_Potion_IV": "File:Extended stamina potion(4).png",
+  "melvorTotH:Wurmtayle_Herb": {
+   "base": "File:Ranarr weed.png",
+   "recolor": {
+    "color": "#c06e51"
+   }
+  },
+  "melvorTotH:Wurmtayle_Seeds": {
+   "base": "File:Ranarr seed.png",
+   "recolor": {
+    "color": "#d07f5d"
+   }
+  }
  },
  "monster": {
   "melvorD:AdamantKnight": "File:Animated Adamant Armour.png",
@@ -1085,6 +4097,8 @@
   "melvorF:Stone_Skin": "File:Rock Skin.png"
  },
  "shop": {
+  "melvorAoD:ShipUpgrade5": "File:Ship's wheel.png",
+  "melvorAoD:ShipUpgrade8": "File:Pirate cannon.png",
   "melvorD:Adamant_Fishing_Rod": "File:Pearl fishing rod.png",
   "melvorD:Basic_Furnace": "File:Furnace.png",
   "melvorD:Basic_Pot": "File:Cooking pot (unobtainable item).png",
@@ -1101,7 +4115,242 @@
   "melvorD:Strong_Furnace": "File:Furnace (Keldagrim).png",
   "melvorD:Strong_Pot": "File:Cooking pot (scenery).png",
   "melvorF:Expanded_Knowledge": "File:Book of Knowledge.png",
-  "melvorF:Map_To_The_Unhallowed_Wasteland": "File:Crandor map.png"
+  "melvorF:Map_To_The_Unhallowed_Wasteland": "File:Crandor map.png",
+  "melvorItA:Abyssium_Axe_Coating": "File:Dragon felling axe.png",
+  "melvorItA:Abyssium_Fishing_Rod_Coating": "File:Dragon harpoon.png",
+  "melvorItA:Abyssium_Harvester": {
+   "base": "File:Silver sickle.png",
+   "recolor": {
+    "color": "#df3349",
+    "greys": true,
+    "keep": [
+     [
+      0,
+      17,
+      29,
+      28
+     ]
+    ]
+   }
+  },
+  "melvorItA:Abyssium_Pickaxe_Coating": "File:Dragon pickaxe (or).png",
+  "melvorItA:Brumite_Axe_Coating": {
+   "base": "File:Steel axe.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Brumite_Fishing_Rod_Coating": {
+   "base": "File:Fishing rod.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": true
+   }
+  },
+  "melvorItA:Brumite_Harvester": {
+   "base": "File:Silver sickle.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": true,
+    "keep": [
+     [
+      0,
+      17,
+      29,
+      28
+     ]
+    ]
+   }
+  },
+  "melvorItA:Brumite_Pickaxe_Coating": {
+   "base": "File:Steel pickaxe.png",
+   "recolor": {
+    "color": "#199a6b",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Gloomite_Axe_Coating": {
+   "base": "File:Steel axe.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Gloomite_Fishing_Rod_Coating": {
+   "base": "File:Fishing rod.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": true
+   }
+  },
+  "melvorItA:Gloomite_Harvester": {
+   "base": "File:Silver sickle.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": true,
+    "keep": [
+     [
+      0,
+      17,
+      29,
+      28
+     ]
+    ]
+   }
+  },
+  "melvorItA:Gloomite_Pickaxe_Coating": {
+   "base": "File:Steel pickaxe.png",
+   "recolor": {
+    "color": "#338cc0",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Netherite_Axe_Coating": {
+   "base": "File:Steel axe.png",
+   "recolor": {
+    "color": "#99423f",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Netherite_Fishing_Rod_Coating": {
+   "base": "File:Fishing rod.png",
+   "recolor": {
+    "color": "#99423f",
+    "greys": true
+   }
+  },
+  "melvorItA:Netherite_Harvester": {
+   "base": "File:Silver sickle.png",
+   "recolor": {
+    "color": "#99423f",
+    "greys": true,
+    "keep": [
+     [
+      0,
+      17,
+      29,
+      28
+     ]
+    ]
+   }
+  },
+  "melvorItA:Netherite_Pickaxe_Coating": {
+   "base": "File:Steel pickaxe.png",
+   "recolor": {
+    "color": "#99423f",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Witherite_Axe_Coating": {
+   "base": "File:Steel axe.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   }
+  },
+  "melvorItA:Witherite_Fishing_Rod_Coating": {
+   "base": "File:Fishing rod.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": true
+   }
+  },
+  "melvorItA:Witherite_Harvester": {
+   "base": "File:Silver sickle.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": true,
+    "keep": [
+     [
+      0,
+      17,
+      29,
+      28
+     ]
+    ]
+   }
+  },
+  "melvorItA:Witherite_Pickaxe_Coating": {
+   "base": "File:Steel pickaxe.png",
+   "recolor": {
+    "color": "#9b9889",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:AugiteFurnace": "File:Lovakite furnace.png",
+  "melvorTotH:Augite_Axe": {
+   "base": "File:Steel axe.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Augite_Fishing_Rod": {
+   "base": "File:Fishing rod.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": true
+   }
+  },
+  "melvorTotH:Augite_Pickaxe": {
+   "base": "File:Steel pickaxe.png",
+   "recolor": {
+    "color": "#2c4e13",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:CarrionCookingFire": "File:Bonfire.png",
+  "melvorTotH:CorundumFurnace": "File:Ancient Furnace.png",
+  "melvorTotH:Corundum_Axe": {
+   "base": "File:Steel axe.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Corundum_Fishing_Rod": {
+   "base": "File:Fishing rod.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": true
+   }
+  },
+  "melvorTotH:Corundum_Pickaxe": {
+   "base": "File:Steel pickaxe.png",
+   "recolor": {
+    "color": "#9637aa",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:DivineFurnace": "File:Sacred Forge.png",
+  "melvorTotH:Divine_Axe": {
+   "base": "File:Steel axe.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:Divine_Fishing_Rod": {
+   "base": "File:Fishing rod.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": true
+   }
+  },
+  "melvorTotH:Divine_Pickaxe": {
+   "base": "File:Steel pickaxe.png",
+   "recolor": {
+    "color": "#948330",
+    "greys": 0.12
+   }
+  },
+  "melvorTotH:ElderWoodCookingFire": "File:Forester's Campfire.png",
+  "melvorTotH:Meteorite_Axe": "File:Infernal axe.png",
+  "melvorTotH:Meteorite_Fishing_Rod": "File:Infernal harpoon.png",
+  "melvorTotH:Meteorite_Pickaxe": "File:Infernal pickaxe.png",
+  "melvorTotH:SignOfTheStars": "File:Star chart (1).png",
+  "melvorTotH:SpruceCookingFire": "File:Campfire.png"
  },
  "spell": {
   "melvorF:AnguishI": "File:Vulnerability.png",

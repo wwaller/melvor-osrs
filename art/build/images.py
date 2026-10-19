@@ -100,16 +100,18 @@ def _rgba(h, l, s, a):
     return tuple(round(v * 255) for v in colorsys.hls_to_rgb(h, min(1, max(0, l)), s)) + (a,)
 
 
-def tint(image, color, greys_only=False):
-    """Recolour a sprite to one colour, keeping its shading; greys_only leaves coloured parts (wooden handles) alone."""
+def tint(image, color, greys_only=False, keep=(), colours_only=False):
+    """Recolour a sprite to one colour, keeping its shading; greys_only leaves coloured parts (wooden handles) alone, and a number sets its saturation cutoff.
+    keep lists [left, top, right, bottom] boxes left alone, for grey handles; colours_only leaves the greys (potion glass) alone instead."""
     target_h, target_l, target_s = _hls(color)
+    grey_limit = GREY_SATURATION if greys_only is True else greys_only
     pixels = image.load()
     picked = []
     for y in range(image.height):
         for x in range(image.width):
             r, g, b, a = pixels[x, y]
             h, l, s = colorsys.rgb_to_hls(r / 255, g / 255, b / 255)
-            if a and l > OUTLINE_LIGHTNESS and not (greys_only and s > GREY_SATURATION):
+            if a and l > OUTLINE_LIGHTNESS and not (greys_only and s > grey_limit) and not (colours_only and s <= GREY_SATURATION) and not any(left <= x < right and top <= y < bottom for left, top, right, bottom in keep):
                 picked.append((x, y, l, a))
     if not picked:
         return image
@@ -182,10 +184,12 @@ def skillcape(template_data, emblem_data, color, trim=None):
     return _png(_crisp(cape, ITEM_CANVAS)[0])
 
 
-def pixel_sprite(data, canvas=0, label=None, star=False, decal=None, recolor=None, trim=None):
+def pixel_sprite(data, canvas=0, label=None, star=False, decal=None, recolor=None, trim=None, outline=None):
     image = _trim(_open(data)) if canvas else _open(data)
     if recolor:
-        tint(image, recolor["color"], recolor.get("greys", False))
+        tint(image, recolor["color"], recolor.get("greys", False), recolor.get("keep", ()), recolor.get("colours", False))
+    if outline:
+        image = _outline(image, 1, outline)
     if trim:
         gold_trim(image)
     side = max(canvas, image.width, image.height)
@@ -203,7 +207,7 @@ def pixel_sprite(data, canvas=0, label=None, star=False, decal=None, recolor=Non
 def _finish_render(image, label=None, badge=None, grounded=False, recolor=None, shrink=None, star=False, outline=None):
     image.thumbnail((RENDER_SIZE, RENDER_SIZE), Image.LANCZOS)
     if recolor:
-        tint(image, recolor["color"], recolor.get("greys", False))
+        tint(image, recolor["color"], recolor.get("greys", False), recolor.get("keep", ()), recolor.get("colours", False))
     if outline:
         image = _outline(image, outline)
     side = max(image.width, image.height)
@@ -284,7 +288,7 @@ def cluster(parts, grounded=False):
         fit = side * share / max(image.size)
         image = image.resize((max(1, round(image.width * fit)), max(1, round(image.height * fit))), Image.LANCZOS)
         if recolor:
-            tint(image, recolor["color"], recolor.get("greys", False))
+            tint(image, recolor["color"], recolor.get("greys", False), recolor.get("keep", ()), recolor.get("colours", False))
         canvas.alpha_composite(image, (round((side - image.width) * fx), round((side - image.height) * fy)))
     return _finish_render(_trim(canvas), grounded=grounded)
 
