@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 import { test } from 'node:test';
-import { SONG_MARKER, closeOnOutsidePress, countOpen, dropOrphanedSongs, offerOptions, offerOverhaul, overhaulState } from '../mod/overhaul.mjs';
+import { SONG_MARKER, closeOnOutsidePress, countOpen, dropOrphanedSongs, offerOptions, offerOverhaul, overhaulState } from '../overhaul.mjs';
 
 const storage = (values = {}) => ({ values, getItem: (key) => values[key], setItem: (key, value) => (values[key] = value) });
 const device = (values = {}) => ({ values, getItem: (key) => (key in values ? values[key] : null), setItem: (key, value) => (values[key] = String(value)) });
