@@ -1,0 +1,5 @@
+{
+  "namespace": "osrsRandomEvents",
+  "icon": "icon.png",
+  "setup": "setup.mjs"
+}

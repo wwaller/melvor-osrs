@@ -1,0 +1,7 @@
+__pycache__/
+build/.cache/
+dist/
+.DS_Store
+mod/icon.png
+mod/img/
+mod/fonts/
