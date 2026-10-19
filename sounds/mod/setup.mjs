@@ -2,6 +2,7 @@ const CHECK_MS = 1000;
 const IDLE_SUSPEND_MS = 5000;
 const FADE_MS = 1500;
 const MAX_SFX = 8;
+const LOG_RANGE_DB = 40;
 const API_VERSION = 1;
 const EXTERNAL_URL = /^(blob:|data:|https?:)/;
 const SOUND_KINDS = { monsterDeath: 'monsters', enemyAttack: 'enemyAttacks', spell: 'spells', skill: 'skills', recipeCategory: 'categories', prayer: 'prayers' };
@@ -79,6 +80,7 @@ export async function setup(ctx) {
   shared.offerOverhaul(ctx);
   const music = ctx.settings.section('Music');
   const effects = ctx.settings.section('Sound effects');
+  const advanced = ctx.settings.section('Advanced');
   const debugLog = [];
   const deviceLog = typeof indexedDB === 'undefined' ? null : shared.createHistory(indexedDB, HISTORY_DATABASE);
   const note = (event) => {
@@ -138,6 +140,17 @@ export async function setup(ctx) {
   ];
   music.add(musicSettings.map(logged('Music')));
   effects.add(effectsSettings.map(logged('Sound effects')));
+  advanced.add([
+    {
+      type: 'dropdown',
+      name: 'volume-scaling',
+      label: 'Volume scaling',
+      hint: 'Linear sets the sound level straight from the volume number. Logarithmic follows how loud it sounds, so each step up or down feels the same size.',
+      default: 'linear',
+      options: [{ value: 'linear', display: 'Linear' }, { value: 'logarithmic', display: 'Logarithmic' }],
+      onChange: later(applyVolume),
+    },
+  ].map(logged('Advanced')));
   ctx.settings.section('DANGER').add([
     { type: 'button', name: 'danger-unlock-all', display: 'Unlock All Songs', color: 'danger', onClick: () => confirmUnlockAll() },
   ].map(logged('DANGER')));
@@ -163,6 +176,10 @@ export async function setup(ctx) {
   }
 
   const percent = (value) => Math.max(0, Math.min(100, Number(value) || 0)) / 100;
+  const loudness = (value) => {
+    const level = percent(value);
+    return advanced.get('volume-scaling') === 'logarithmic' && level > 0 ? 10 ** ((LOG_RANGE_DB * (level - 1)) / 20) : level;
+  };
 
   // Settings live in each save, so the main menu only sees defaults; use the last values stored from any character.
   function soundSettings() {
@@ -275,8 +292,8 @@ export async function setup(ctx) {
   function applyVolume() {
     const settings = soundSettings();
     const [musicVolume, effectsVolume, on] = settings;
-    rampTo(musicGain.gain, on !== false ? percent(musicVolume) * duck : 0, 0.25);
-    rampTo(effectsGain.gain, percent(effectsVolume), 0.05);
+    rampTo(musicGain.gain, on !== false ? loudness(musicVolume) * duck : 0, 0.25);
+    rampTo(effectsGain.gain, loudness(effectsVolume), 0.05);
     if (characterLoaded && ctx.accountStorage?.getItem(VOLUME_KEY)?.join() !== settings.join()) ctx.accountStorage?.setItem(VOLUME_KEY, settings);
   }
 
