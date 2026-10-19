@@ -1,17 +1,19 @@
 const NAMESPACE = 'osrsRandomEvents';
+const COMBAT_SKILLS = ['Attack', 'Strength', 'Defence', 'Hitpoints', 'Ranged', 'Magic'];
+const scoped = (skill, value) => [{ skillID: `melvorD:${skill}`, value }];
 
 export const OUTFITS = {
   frog: [
-    { id: 'Frog_Mask', name: 'Frog mask', slot: 'Helmet', media: 'img/costume/frog-mask.png' },
-    { id: 'Royal_Frog_Tunic', name: 'Royal frog tunic', slot: 'Platebody', media: 'img/costume/royal-frog-tunic.png' },
-    { id: 'Royal_Frog_Leggings', name: 'Royal frog leggings', slot: 'Platelegs', media: 'img/costume/royal-frog-leggings.png' },
-    { id: 'Royal_Frog_Blouse', name: 'Royal frog blouse', slot: 'Platebody', media: 'img/costume/royal-frog-blouse.png' },
-    { id: 'Royal_Frog_Skirt', name: 'Royal frog skirt', slot: 'Platelegs', media: 'img/costume/royal-frog-skirt.png' },
+    { id: 'Frog_Mask', name: 'Frog mask', slot: 'Helmet', media: 'img/costume/frog-mask.png', modifiers: { masteryXP: scoped('Fishing', 2) } },
+    { id: 'Royal_Frog_Tunic', name: 'Royal frog tunic', slot: 'Platebody', media: 'img/costume/royal-frog-tunic.png', modifiers: { skillXP: scoped('Fishing', 2) } },
+    { id: 'Royal_Frog_Leggings', name: 'Royal frog leggings', slot: 'Platelegs', media: 'img/costume/royal-frog-leggings.png', modifiers: { doubleItemsSkill: scoped('Fishing', 2) } },
+    { id: 'Royal_Frog_Blouse', name: 'Royal frog blouse', slot: 'Platebody', media: 'img/costume/royal-frog-blouse.png', modifiers: { skillXP: scoped('Fishing', 2) } },
+    { id: 'Royal_Frog_Skirt', name: 'Royal frog skirt', slot: 'Platelegs', media: 'img/costume/royal-frog-skirt.png', modifiers: { doubleItemsSkill: scoped('Fishing', 2) } },
   ],
   camo: [
-    { id: 'Camo_Top', name: 'Camo top', slot: 'Platebody', media: 'img/costume/camo-top.png' },
-    { id: 'Camo_Helmet', name: 'Camo helmet', slot: 'Helmet', media: 'img/costume/camo-helmet.png' },
-    { id: 'Camo_Bottoms', name: 'Camo bottoms', slot: 'Platelegs', media: 'img/costume/camo-bottoms.png' },
+    { id: 'Camo_Top', name: 'Camo top', slot: 'Platebody', media: 'img/costume/camo-top.png', modifiers: { skillXP: COMBAT_SKILLS.flatMap((skill) => scoped(skill, 2)) } },
+    { id: 'Camo_Helmet', name: 'Camo helmet', slot: 'Helmet', media: 'img/costume/camo-helmet.png', modifiers: { skillXP: scoped('Thieving', 2) } },
+    { id: 'Camo_Bottoms', name: 'Camo bottoms', slot: 'Platelegs', media: 'img/costume/camo-bottoms.png', modifiers: { skillXP: scoped('Agility', 2) } },
   ],
 };
 
@@ -34,6 +36,7 @@ export async function register(ctx) {
         occupiesSlots: [],
         equipRequirements: [],
         equipmentStats: [],
+        modifiers: piece.modifiers,
       });
     }
   }).add();
