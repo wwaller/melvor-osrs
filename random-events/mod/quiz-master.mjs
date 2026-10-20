@@ -31,7 +31,7 @@ export function mysteryBox({ game, dialog, lamp, loot, outfits }, random = Math.
     () => loot.gift(game, random),
     () => loot.gems(game, random),
   ];
-  const food = loot.foods(game.items.allObjects);
+  const food = loot.foods(game);
   if (food.length) prizes.push(() => ({ item: dialog.pick(food, random), quantity: loot.foodQuantity(random) }));
   const wishes = lamp.wishes(game);
   if (wishes.length) prizes.push(() => ({ item: dialog.pick(wishes, random).token, quantity: lamp.TOKENS }));

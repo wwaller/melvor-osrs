@@ -31,16 +31,20 @@ function makeGame({ foods = 10, skills, owned = [], equipped = [] } = {}) {
       .map((id) => [id, thing(id.split(':')[1], 'Gem')]),
     ...COSTUME.map((id) => [`osrsRandomEvents:${id}`, thing(id, 'Armour')]),
   ]);
+  const emptyFood = new FoodItem('Empty_Food', { name: '', media: 'food_empty.png', type: '' });
   return {
     added,
     earned,
     characterName: 'Garu Garu',
+    emptyFoodItem: emptyFood,
     defaultRealm: realm,
     items: {
       allObjects: [
         ...Array.from({ length: foods }, (_, i) => new FoodItem(`Food ${i}`)),
         new FoodItem('Raid food', { golbinRaidExclusive: true }),
         new FoodItem('Same icon as Food 0', { media: 'Food 0.png' }),
+        emptyFood,
+        new FoodItem('Lemonade (Full)', { media: 'missing_artwork.png', ignoreCompletion: true }),
         ...['Normal', 'Oak', 'Willow', 'Teak'].map((name) => thing(`${name} Logs`, 'Logs')),
         ...['Copper', 'Tin', 'Iron'].map((name) => thing(`${name} Ore`, 'Ore')),
         thing('Mystery Junk', 'Junk'),
@@ -249,6 +253,11 @@ test('the tray holds 7 different-looking foods, never raid food or non-food', as
   assert.strictEqual(new Set(foods).size, 7);
   assert.ok(foods.every((name) => /^Food \d$/.test(name)), foods.join());
   assert.strictEqual(game.added.length, 0);
+});
+
+test('the tray never holds the empty food slot or event food', async () => {
+  const { root } = await showEvent('sandwich-lady.mjs', { game: makeGame({ foods: 2 }) });
+  assert.deepStrictEqual(all(root, 'osrs-re-food').map((button) => button.attributes['aria-label']).sort(), ['Food 0', 'Food 1']);
 });
 
 test('taking the food she offers gives 5 to 25 of it, even with a full bank', async () => {

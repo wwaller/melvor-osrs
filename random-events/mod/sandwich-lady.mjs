@@ -5,12 +5,12 @@ const CHATHEAD = 'img/sandwich-lady.png';
 const TRAY_SIZE = 7;
 
 export function available({ game, loot }) {
-  return loot.foods(game.items.allObjects).length > 1;
+  return loot.foods(game).length > 1;
 }
 
 export function show({ game, dialog, loot, media, preview, random = Math.random }) {
   const { el, img } = dialog;
-  const foods = dialog.shuffle(loot.foods(game.items.allObjects), random).slice(0, TRAY_SIZE);
+  const foods = dialog.shuffle(loot.foods(game), random).slice(0, TRAY_SIZE);
   const wanted = dialog.pick(foods, random);
   const chathead = media(CHATHEAD);
   const chat = dialog.chat(NAME, chathead, `You look hungry to me. I tell you what - have a ${wanted.name} on me.`);

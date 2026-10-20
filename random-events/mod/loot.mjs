@@ -36,10 +36,10 @@ const PINBALL = [
   [1, { gem: 'melvorD:Diamond', quantity: 2 }],
 ];
 
-export function foods(items) {
+export function foods(game) {
   const seen = new Set();
-  return items.filter((item) => {
-    if (!(item instanceof FoodItem) || item.golbinRaidExclusive || seen.has(item.media)) return false;
+  return game.items.allObjects.filter((item) => {
+    if (!(item instanceof FoodItem) || item === game.emptyFoodItem || item.ignoreCompletion || item.golbinRaidExclusive || seen.has(item.media)) return false;
     seen.add(item.media);
     return true;
   });
@@ -74,7 +74,7 @@ function roll(table, random) {
 function resolve(game, entry, random) {
   if (entry.gp) return { gp: entry.gp };
   if (entry.food) {
-    const list = foods(game.items.allObjects);
+    const list = foods(game);
     return list.length ? { item: list[Math.floor(random() * list.length)], quantity: foodQuantity(random) } : { gp: 800 };
   }
   return { item: game.items.getObjectByID(entry.gem), quantity: entry.quantity };
