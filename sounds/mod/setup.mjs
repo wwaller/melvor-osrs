@@ -1717,7 +1717,7 @@ export async function setup(ctx) {
   });
 
   ctx.patch(Character, 'attack').after(function (_result, _target, attack) {
-    const sound = audio.sfx.enemyAttacks?.[attack.id];
+    const sound = audio.sfx.enemyAttacks?.[attack.id] ?? audio.sfx.monsterAttacks?.[this.monster?.id];
     if (sound && this === game.combat.enemy && this.attackCount === 1) playEffect(sound, 'combat', 'enemyAttack');
   });
   ctx.patch(BaseManager, 'onPlayerDeath').after(() => {

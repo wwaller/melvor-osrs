@@ -142,6 +142,51 @@ ENEMY_ATTACK_EFFECTS = [(re.compile(pattern), sound) for pattern, sound in (
     (r"bleed", "Blood Barrage"), (r"sleep", "Confuse"), (r"slow", "Bind"), (r"curse", "Curse"), (r"silence", "Vulnerability"),
 )]
 ENEMY_ATTACK_STYLES = {"melee": WEAPONS["slash"], "ranged": WEAPONS["bow"], "magic": "Iban Blast"}
+MONSTER_DEATH_RULES = [(re.compile(pattern), f"synth:{death}_death") for pattern, death in (
+    (r"spider (king|queen)|rancora", "big_spider"),
+    (r"spider|weaver", "small_spider"),
+    (r"crab", "rock_crab"),
+    (r"tentacle|kraken|octopus", "lore_karamthulhu"),
+    (r"jellyfish", "jelly"),
+    (r"\beyes?\b|eyed|beholder|gazer|mindeater", "eyeglo_creature"),
+    (r"goo\b|bloater", "slime"),
+    (r"\bchick\b", "chicken"),
+    (r"serpent|viper|\bconda\b|snake|nagaia", "snake"),
+    (r"leviathan", "big_seasnake"),
+    (r"\boak\b|willow|teak|maple|mahogany|treant|tree spirit", "lore_ent"),
+    (r"tangle|thorn|roots\b", "tanglewood_small"),
+    (r"plant|bloom|alraune|morellia|sporeslinger", "lore_stranger_plant"),
+    (r"wurm|wyrm", "wyrm"),
+    (r"wyvern|drake", "drake"),
+    (r"werewolf", "half_werewolf"),
+    (r"hound|cerberus|wolf|fang\b", "wolf"),
+    (r"devil|demon|fiend|horned elite|\bbane\b", "demon"),
+    (r"\bmoth\b|mantis|sprayer", "insect"),
+    (r"leech", "leech"),
+    (r"croc\b", "crocodile"),
+    (r"manticore", "godwars_lion"),
+    (r"hydra", "lore_hydra"),
+    (r"tortoise", "gnome_tortoise"),
+    (r"manta\b", "water_creature"),
+    (r"griffin|phoenix|kongamato|razortalon|dreadwing|shadewing|razu\b", "giant_roc"),
+    (r"crystal|behemoth", "golem"),
+    (r"lich\b|bone", "skeleton"),
+    (r"\bair (guard|monster)|aleron|voltaire|aeris|lightning", "air_elemental"),
+    (r"water (guard|monster)|lissia|murtia|glacia", "water_elemental"),
+    (r"earth (guard|monster)|mistral|ophidia", "earth_elemental"),
+    (r"fire (guard|monster)|pyra\b|ignis|ragnar|incendius", "fire_elemental"),
+    (r"^ice$|protector of ice", "icefiend"),
+    (r"mermaid|siren|maiden|witch|valkyrie|angel|\blady\b|ahrenia", "female"),
+    (r"elerine", "elf"),
+    (r"golbin", "goblin"),
+    (r"knight|wizard|pirate|farmer|bandit|archer|warrior|mage\b|druid|thief|shaman|necromancer|priest|paladin|bard\b|hunter|turkul|captain|first mate|figure|doctor|cult|elementalist|merman|master|prat\b|malcs", "human"),
+    (r"mirror|barrel|door|scarecrow", "animated"),
+    (r"phantom|spectre|specter|poltergeist|wailing|wisp|spirit|echo|drifter", "ghost"),
+    (r"shadow|illusion|trickster", "shade"),
+    (r"reaper|revenant|dreadwalker|hollow|nightstalker", "wraith"),
+)]
+MONSTER_DEATH_FALLBACKS = {"melvorItA": "synth:abyssal_death"}
+MONSTER_DEATH_FALLBACK = "synth:beast_death"
 SPELL_SOUNDS = {
     "melvorTotH:PoisonPods": "File:Smoke Burst.ogg",
     "melvorTotH:GiantFireball": "File:Fire Surge.ogg",
@@ -180,7 +225,7 @@ ABYSSAL_SPELL_TIERS = {
 }
 SPELL_TIERS = ("Blast", "Wave", "Surge", "Eruption")
 NUMERAL = re.compile(r"\s+(I|II|III|IV|V)$")
-SFX_GROUPS = ("spells", "monsters", "skills", "categories", "prayers", "levelUps", "levelUpsHigh", "weapons", "enemyAttacks")
+SFX_GROUPS = ("spells", "monsters", "monsterAttacks", "skills", "categories", "prayers", "levelUps", "levelUpsHigh", "weapons", "enemyAttacks")
 SINGLE_SOUNDS = ("levelUpFallback", "pet", *EVENT_SOUNDS)
 SFX_BITRATE = "48k"
 DEATH_SUFFIXES = [" death", " death 01", " death01"]
@@ -236,6 +281,11 @@ def find_sound(available, names, suffixes):
     return None
 
 
+def monster_death_by_kind(namespace, monster):
+    text = (monster["name"].strip() or re.sub(r"(?<=[a-z])(?=[A-Z])", " ", monster["id"])).lower()
+    return next((sound for pattern, sound in MONSTER_DEATH_RULES if pattern.search(text)), MONSTER_DEATH_FALLBACKS.get(namespace, MONSTER_DEATH_FALLBACK))
+
+
 def enemy_attack_sound(available, attack, style):
     words = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", attack["id"])
     text = f"{attack.get('name', '')} {words}".lower()
@@ -249,7 +299,8 @@ def enemy_attack_sound(available, attack, style):
 def sfx_plan():
     available = sfx_titles()
     names = synth_names(Wiki(CACHE))
-    spells, monsters, prayers, spell_stems, unmatched_spells = {}, {}, {}, {}, []
+    spells, monsters, monster_attacks, prayers, spell_stems, unmatched_spells = {}, {}, {}, {}, {}, []
+    style_sounds = {style: sound if sound.startswith(("synth:", "File:")) else find_sound(available, [sound], [""]) for style, sound in ENEMY_ATTACK_STYLES.items()}
     attacks, attack_styles = {}, {}
     spell_picks, monster_picks = sprite_picks("spell"), sprite_picks("monster")
     for package in BASE_PACKAGES + EXPANSION_PACKAGES:
@@ -287,9 +338,9 @@ def sfx_plan():
             candidates = [n for n in (monster["name"].strip(), monster_picks.get(melvor_id)) if n]
             words = list(reversed(re.split(r"[\s,]+", monster["name"].strip())))
             words = [w for i, w in enumerate(words) if len(w) > 2 and (i == 0 or w.lower() not in SIZE_WORDS)]
-            sound = synth_death(names, candidates + words) or find_sound(available, candidates + words, DEATH_SUFFIXES)
-            if sound:
-                monsters[melvor_id] = sound
+            monsters[melvor_id] = synth_death(names, candidates + words) or find_sound(available, candidates + words, DEATH_SUFFIXES) or monster_death_by_kind(ns, monster)
+            if not monster.get("specialAttacks"):
+                monster_attacks[melvor_id] = style_sounds.get(monster.get("attackType"), style_sounds["melee"])
     for melvor_id, stem in unmatched_spells:
         if stem in spell_stems:
             spells[melvor_id] = spell_stems[stem]
@@ -302,7 +353,7 @@ def sfx_plan():
         else:
             level_ups[skill_id] = f"File:{osrs_skill} Level Up!.ogg"
     return {
-        "spells": spells, "monsters": monsters, "skills": SKILL_ACTIONS, "categories": RECIPE_CATEGORY_ACTIONS, "prayers": prayers,
+        "spells": spells, "monsters": monsters, "monsterAttacks": monster_attacks, "skills": SKILL_ACTIONS, "categories": RECIPE_CATEGORY_ACTIONS, "prayers": prayers,
         "levelUps": level_ups, "levelUpsHigh": level_ups_high, "levelUpFallback": LEVEL_UP_FALLBACK, "pet": PET_UNLOCK,
         "weapons": WEAPONS, "enemyAttacks": enemy_attacks, **EVENT_SOUNDS,
     }

@@ -573,9 +573,9 @@ test('prayers, eating, attacks, skilling and your death all layer instead of cut
   assert.strictEqual(log.stopped.length, stopped, 'none of them cut another');
 });
 
-test('an enemy special attack plays its sound once, on its first hit, and the player and normal attacks play none', async () => {
+test('an enemy special attack plays its sound once, on its first hit, and the player and the normal attacks of a monster with specials play none', async () => {
   const { log, hooks, patches, tick } = await boot();
-  const enemy = { attackCount: 0 };
+  const enemy = { attackCount: 0, monster: { id: 'melvorD:GreenDragon' } };
   globalThis.game = { activeAction: undefined, skills: [], combat: { player: { on() {} }, enemy, on() {} }, farming: { on() {} }, on() {}, _isInOnlineLoop: true };
   hooks.character();
   hooks.ready();
@@ -592,6 +592,27 @@ test('an enemy special attack plays its sound once, on its first hit, and the pl
   await tick();
   assert.strictEqual(log.started.length, before + 1, 'one sound for the whole 20-hit breath');
   assert.match(log.started.at(-1).buffer.url, /dragonslayer_dragonbreath/, 'and it is the OSRS dragon breath');
+});
+
+test('a monster with no special attacks plays the sound of its attack style on every attack', async () => {
+  const { log, hooks, patches, tick } = await boot();
+  const enemy = { attackCount: 1, monster: { id: 'melvorD:AdamantKnight' } };
+  globalThis.game = { activeAction: undefined, skills: [], combat: { player: { on() {} }, enemy, on() {} }, farming: { on() {} }, on() {}, _isInOnlineLoop: true };
+  hooks.character();
+  hooks.ready();
+  await tick();
+  const before = log.started.length;
+  patches['Character.attack'].call(enemy, 0, {}, { id: 'melvorD:Normal' });
+  patches['Character.attack'].call(enemy, 0, {}, { id: 'melvorD:Normal' });
+  await tick();
+  assert.strictEqual(log.started.length, before + 2);
+  assert.match(log.started.at(-1).buffer.url, /Hacksword/, 'a melee knight slashes');
+});
+
+test('every monster has a death sound, picked by what it is when OSRS has none of its name', () => {
+  assert.match(audio.sfx.monsters['melvorD:AdamantKnight'], /synth_human_death/);
+  assert.match(audio.sfx.monsters['melvorD:Spider'], /synth_small_spider_death/);
+  assert.match(audio.sfx.monsters['melvorItA:VoidApostle'], /synth_abyssal_death/);
 });
 
 test('other mods can play sounds and give their own monsters and attacks OSRS sounds', async () => {
