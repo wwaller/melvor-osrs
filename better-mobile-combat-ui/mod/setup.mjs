@@ -12,8 +12,12 @@ const HIDE_HP_CLASS = 'mobile-combat-hide-hp-on';
 const HP_BAR_CLASS = 'mobile-combat-hp-bar';
 const HIDE_FOOD_CLASS = 'mobile-combat-hide-food-on';
 const FOOD_SECTION_CLASS = 'mobile-combat-food-section';
+const wornHelmet = (player) => {
+  const helmet = player.equipment.getItemInSlot('melvorD:Helmet');
+  return helmet === game.emptyEquipmentItem ? undefined : helmet;
+};
 const CORNER_MENUS = [
-  { tab: 0, label: 'Equipment', element: 'combat-menu-0', media: 'assets/media/bank/armour_helmet_bronze.png' },
+  { tab: 0, label: 'Equipment', element: 'combat-menu-0', media: 'assets/media/bank/armour_helmet_bronze.png', active: wornHelmet },
   { tab: 1, label: 'Spellbook', element: 'combat-menu-1', media: 'assets/media/skills/combat/spellbook.png', skill: 'altMagic', active: (player) => (player.attackType === 'magic' ? player.spellSelection.attack : undefined) },
   { tab: 2, label: 'Prayer', element: 'combat-menu-2', media: 'assets/media/skills/prayer/prayer.png', skill: 'prayer', active: (player) => player.activePrayers.values().next().value, count: (player) => player.prayerPoints },
   { tab: 5, label: 'Slayer', element: 'combat-slayer-task-menu', media: 'assets/media/skills/slayer/slayer.png', count: () => (game.combat.slayerTask?.active ? game.combat.slayerTask.killsLeft : undefined) },

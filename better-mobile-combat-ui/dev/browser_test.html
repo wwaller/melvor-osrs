@@ -422,10 +422,15 @@ const windStrike = { id: 'melvorD:WindStrike', media: '/mod/icon.png?wind-strike
 const fireStrike = { id: 'melvorD:FireStrike', media: '/mod/icon.png?fire-strike' };
 const thickSkin = { id: 'melvorD:Thick_Skin', media: '/mod/icon.png?thick-skin' };
 const protectFromMelee = { id: 'melvorF:Protect_from_Melee', media: '/mod/icon.png?protect-from-melee' };
+const emptyEquipmentItem = { id: 'melvorD:Empty_Equipment', media: '/mod/icon.png?empty' };
+const runeHelmet = { id: 'melvorD:Rune_Helmet', media: '/mod/icon.png?rune-helmet' };
+const dragonHelmet = { id: 'melvorD:Dragon_Helmet', media: '/mod/icon.png?dragon-helmet' };
+const worn = { 'melvorD:Helmet': emptyEquipmentItem };
+game.emptyEquipmentItem = emptyEquipmentItem;
 const fights = [];
 const combat = {
   isActive: false, selectedArea: undefined, selectedMonster: undefined, strongholdTier: 'Standard', activeEvent: undefined,
-  player: { attackType: 'melee', spellSelection: { attack: windStrike }, activePrayers: new Set(), prayerPoints: 3860 },
+  player: { attackType: 'melee', spellSelection: { attack: windStrike }, activePrayers: new Set(), prayerPoints: 3860, equipment: { getItemInSlot: (slot) => worn[slot] ?? emptyEquipmentItem } },
   selectMonster: (monster, area) => fights.push(`monster ${monster.id} in ${area.id}`),
   selectDungeon: (area) => fights.push(`dungeon ${area.id}`),
   selectAbyssDepth: (area) => fights.push(`depth ${area.id}`),
@@ -923,12 +928,22 @@ check('and it follows a new spell', cornerIcon('Spellbook') === 'fire-strike');
 combat.player.attackType = 'ranged';
 render();
 check('switching away from magic brings Melvor\'s icon back', cornerIcon('Spellbook') === 'spellbook');
+check('with no helmet on, Equipment keeps Melvor\'s icon', cornerIcon('Equipment') === 'equipment');
+worn['melvorD:Helmet'] = runeHelmet;
+render();
+check('putting a helmet on puts it on the Equipment button', cornerIcon('Equipment') === 'rune-helmet');
+worn['melvorD:Helmet'] = dragonHelmet;
+render();
+check('and it follows a new helmet', cornerIcon('Equipment') === 'dragon-helmet');
+worn['melvorD:Helmet'] = emptyEquipmentItem;
+render();
+check('taking it off brings Melvor\'s icon back', cornerIcon('Equipment') === 'equipment');
 check('the Prayer button shows your prayer points along its bottom edge, over the icon', cornerCount()?.textContent === '3,860' && shown(cornerCount()) && Math.abs(box(cornerCount()).bottom - box(cornerButton('Prayer')).bottom) < 3 && box(cornerCount()).width <= box(cornerButton('Prayer')).width, `${cornerCount()?.textContent} ${JSON.stringify(box(cornerCount()))}`);
 check('the Prayer menu heading shows them too, the way Melvor\'s sidebar does', prayerHeading().textContent === 'Prayer3,860' && prayerHeading().querySelector('small').className === 'ml-1 text-success' && document.querySelectorAll('#combat-prayer-book-menu small.text-success').length === 1, prayerHeading().textContent);
 combat.player.prayerPoints = 1234567;
 render();
 check('a big total stays short on the button and in full in the heading', cornerCount().textContent === '1,234K' && prayerHeading().textContent === 'Prayer1,234,567', `${cornerCount().textContent} ${prayerHeading().textContent}`);
-const raid = { isActive: true, player: { attackType: 'magic', spellSelection: { attack: windStrike }, activePrayers: new Set([protectFromMelee]), prayerPoints: 12 } };
+const raid = { isActive: true, player: { attackType: 'magic', spellSelection: { attack: windStrike }, activePrayers: new Set([protectFromMelee]), prayerPoints: 12, equipment: { getItemInSlot: () => emptyEquipmentItem } } };
 Object.assign(window.game, { isGolbinRaid: true, golbinRaid: raid });
 render();
 check('in a Golbin Raid they show the raid\'s own prayer, spell and prayer points', cornerIcon('Prayer') === 'protect-from-melee' && cornerIcon('Spellbook') === 'wind-strike' && cornerCount().textContent === '12' && prayerHeading().textContent === 'Prayer12');
