@@ -148,7 +148,25 @@ const ASSETS = {
   '--osrs-recipe-book': 'img/recipe-book.png',
 };
 
+export function renameRunecrafting(strings) {
+  if (!strings || typeof strings !== 'object') return 0;
+  let changed = 0;
+  for (const key of Object.keys(strings)) {
+    const value = strings[key];
+    if (typeof value === 'string' && value.includes('Runecrafting')) {
+      strings[key] = value.replaceAll('Runecrafting', 'Runecraft');
+      changed++;
+    }
+  }
+  return changed;
+}
+
 export async function setup(ctx) {
+  try {
+    if (typeof loadedLangJson !== 'undefined') renameRunecrafting(loadedLangJson);
+  } catch (error) {
+    console.warn('Could not rename Runecrafting', error);
+  }
   const failures = [];
   const events = [];
   const fontStatus = {};
