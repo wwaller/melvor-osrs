@@ -50,7 +50,7 @@ export const quest = {
           { player: 'The Duke of Lumbridge sent me with this talisman.' },
           { do: (q) => q.take(TALISMAN) },
           { text: 'You hand the talisman to the Archmage.' },
-          { npc: 'sedridor', say: ['By Saradomin! This could be the key to the lost art of Runecrafting!', 'In the past, wizards could teleport to a mine of rune essence and craft their own runes. That knowledge was lost. With this talisman, we may find the way again.', 'Take this package of my research to Aubury, who keeps a rune shop in Varrock. He has been studying the same problem.'] },
+          { npc: 'sedridor', say: ['By Saradomin! This could be the key to the lost art of Runecraft!', 'In the past, wizards could teleport to a mine of rune essence and craft their own runes. That knowledge was lost. With this talisman, we may find the way again.', 'Take this package of my research to Aubury, who keeps a rune shop in Varrock. He has been studying the same problem.'] },
           { do: (q) => q.give(PACKAGE) },
           { item: PACKAGE, say: 'The Archmage hands you a research package.' },
           { do: (q) => q.setStage('aubury') },
@@ -58,7 +58,7 @@ export const quest = {
       },
     },
     aubury: {
-      journal: ['*Archmage Sedridor* believes the talisman could unlock the lost art of *Runecrafting*.', 'He asked me to deliver his *research package* to *Aubury* in *Varrock*.'],
+      journal: ['*Archmage Sedridor* believes the talisman could unlock the lost art of *Runecraft*.', 'He asked me to deliver his *research package* to *Aubury* in *Varrock*.'],
       talk: {
         aubury: [
           { npc: 'aubury', say: 'Do you want to buy some runes?' },
@@ -83,7 +83,7 @@ export const quest = {
           { npc: 'sedridor', say: 'Ah, you\'re back. Did Aubury have anything for me?' },
           { player: 'He sent you these notes.' },
           { text: 'You hand the notes to the Archmage.' },
-          { npc: 'sedridor', say: ['Marvellous! With these I can teleport anyone to the rune essence mine. The art of Runecrafting is ours again!', 'Keep the talisman, and take some essence to start you off. You have done the world of magic a great service.'] },
+          { npc: 'sedridor', say: ['Marvellous! With these I can teleport anyone to the rune essence mine. The art of Runecraft is ours again!', 'Keep the talisman, and take some essence to start you off. You have done the world of magic a great service.'] },
           { do: (q) => q.complete() },
         ],
       },
